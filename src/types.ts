@@ -5,13 +5,26 @@ export interface Product {
   description: string;
   price: number;
   image: string;
-  category?: string; // For backward compatibility
+  category?: string;
+  option_groups?: ProductOptionGroup[];
+}
+
+export interface ProductOptionGroup {
+  id: string;
+  product_id: string;
+  name: string;
+  min_options: number;
+  max_options: number;
+  required: boolean;
   options?: ProductOption[];
 }
 
 export interface ProductOption {
+  id: string;
+  group_id: string;
   name: string;
   price: number;
+  available: boolean;
 }
 
 export interface Category {

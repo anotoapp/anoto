@@ -7,25 +7,27 @@ export const formatWhatsAppMessage = (
 ) => {
   const itemsText = cart
     .map(
-      (item) =>
-        `*${item.quantity}x ${item.product.name}* ${
-          item.selectedOptions.length > 0
-            ? `\n  _Opções: ${item.selectedOptions.map((o) => o.name).join(', ')}_`
-            : ''
-        }${item.notes ? `\n  _Obs: ${item.notes}_` : ''}\n  R$ ${(
-          (item.product.price +
-            item.selectedOptions.reduce((acc, o) => acc + o.price, 0)) *
-          item.quantity
-        ).toFixed(2)}`
+      (item) => {
+        const optionsPrice = item.selectedOptions.reduce((acc, o) => acc + Number(o.price), 0);
+        const itemTotal = (item.product.price + optionsPrice) * item.quantity;
+        
+        const optionsText = item.selectedOptions.length > 0
+          ? `\n  _Opcionais: ${item.selectedOptions.map((o) => o.name).join(', ')}_`
+          : '';
+          
+        const notesText = item.notes ? `\n  _Obs: ${item.notes}_` : '';
+
+        return `*${item.quantity}x ${item.product.name}*\n  R$ ${item.product.price.toFixed(2)}${optionsText}${notesText}\n  *Subtotal: R$ ${itemTotal.toFixed(2)}*`;
+      }
     )
     .join('\n\n');
 
   const total = cart.reduce((acc, item) => {
-    const optionsPrice = item.selectedOptions.reduce((sum, o) => sum + o.price, 0);
+    const optionsPrice = item.selectedOptions.reduce((sum, o) => sum + Number(o.price), 0);
     return acc + (item.product.price + optionsPrice) * item.quantity;
   }, 0);
 
-  const finalTotal = total + config.deliveryFee;
+  const finalTotal = total + (customerInfo.type === 'delivery' ? config.deliveryFee : 0);
 
   const message = `
 🍔 *NOVO PEDIDO - ${config.name}*
@@ -35,17 +37,18 @@ ${itemsText}
 
 ------------------------------
 *Subtotal:* R$ ${total.toFixed(2)}
-*Taxa de Entrega:* R$ ${config.deliveryFee.toFixed(2)}
-*TOTAL:* R$ ${finalTotal.toFixed(2)}
+${customerInfo.type === 'delivery' ? `*Taxa de Entrega:* R$ ${config.deliveryFee.toFixed(2)}` : '*Retirada no Balcão*'}
+*TOTAL: R$ ${finalTotal.toFixed(2)}*
 
-📍 *DADOS DE ENTREGA*
+📍 *DADOS DO CLIENTE*
 *Nome:* ${customerInfo.name}
-*Tipo:* ${customerInfo.type === 'delivery' ? 'Entrega' : 'Retirada'}
+*Tipo:* ${customerInfo.type === 'delivery' ? '🚀 Entrega' : '🏪 Retirada'}
 *Endereço:* ${customerInfo.address}
-*Pagamento:* ${customerInfo.payment}
+*Pagamento:* 💳 ${customerInfo.payment}
 
-_Pedido feito via Web App_
+_Pedido enviado via ANOTÔ_
   `.trim();
 
-  return `https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent(message)}`;
+  const phone = config.whatsappNumber.replace(/\D/g, '');
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 };

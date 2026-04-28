@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { X, Minus, Plus } from 'lucide-react';
-import type { Product, ProductOption } from '../types';
+import React, { useState, useEffect } from 'react';
+import { X, Minus, Plus, Check } from 'lucide-react';
+import type { Product, ProductOption, ProductOptionGroup } from '../types';
+import { supabase } from '../lib/supabase';
 import './ProductModal.css';
 
 interface ProductModalProps {
@@ -16,17 +17,60 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<ProductOption[]>([]);
+  const [optionGroups, setOptionGroups] = useState<ProductOptionGroup[]>([]);
+  const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState('');
 
-  const toggleOption = (option: ProductOption) => {
-    if (selectedOptions.find((o) => o.name === option.name)) {
-      setSelectedOptions(selectedOptions.filter((o) => o.name !== option.name));
+  useEffect(() => {
+    async function loadOptions() {
+      setLoading(true);
+      const { data: groups, error } = await supabase
+        .from('product_option_groups')
+        .select(`
+          *,
+          options:product_options(*)
+        `)
+        .eq('product_id', product.id)
+        .order('created_at', { ascending: true });
+
+      if (groups) {
+        setOptionGroups(groups);
+      }
+      setLoading(false);
+    }
+
+    loadOptions();
+  }, [product.id]);
+
+  const toggleOption = (group: ProductOptionGroup, option: ProductOption) => {
+    const isSelected = selectedOptions.some(o => o.id === option.id);
+    const groupSelectedCount = selectedOptions.filter(o => o.group_id === group.id).length;
+
+    if (isSelected) {
+      // Remover se já estiver selecionado
+      setSelectedOptions(selectedOptions.filter(o => o.id !== option.id));
     } else {
-      setSelectedOptions([...selectedOptions, option]);
+      // Se for seleção única (max_options = 1)
+      if (group.max_options === 1) {
+        const otherOptionsInGroup = selectedOptions.filter(o => o.group_id !== group.id);
+        setSelectedOptions([...otherOptionsInGroup, option]);
+      } else {
+        // Se for múltipla, verificar o limite máximo
+        if (groupSelectedCount < group.max_options) {
+          setSelectedOptions([...selectedOptions, option]);
+        }
+      }
     }
   };
 
-  const totalPrice = (product.price + selectedOptions.reduce((acc, o) => acc + o.price, 0)) * quantity;
+  const isGroupValid = (group: ProductOptionGroup) => {
+    const count = selectedOptions.filter(o => o.group_id === group.id).length;
+    return count >= group.min_options;
+  };
+
+  const allGroupsValid = optionGroups.every(isGroupValid);
+
+  const totalPrice = (product.price + selectedOptions.reduce((acc, o) => acc + Number(o.price), 0)) * quantity;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -45,22 +89,47 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             <p>{product.description}</p>
           </div>
 
-          {product.options && product.options.length > 0 && (
-            <div className="options-section">
-              <h3>Adicionais</h3>
-              <div className="options-list">
-                {product.options.map((option) => (
-                  <div 
-                    key={option.name} 
-                    className={`option-item ${selectedOptions.find(o => o.name === option.name) ? 'selected' : ''}`}
-                    onClick={() => toggleOption(option)}
-                  >
-                    <span>{option.name}</span>
-                    <span className="option-price">+ R$ {option.price.toFixed(2)}</span>
+          {loading ? (
+            <div className="loading-options">Carregando opcionais...</div>
+          ) : (
+            optionGroups.map((group) => (
+              <div key={group.id} className="option-group">
+                <div className="group-header">
+                  <div>
+                    <h3>{group.name}</h3>
+                    <p className="group-info">
+                      {group.min_options > 0 
+                        ? `Obrigatório • Escolha pelo menos ${group.min_options}` 
+                        : `Opcional • Escolha até ${group.max_options}`}
+                    </p>
                   </div>
-                ))}
+                  {isGroupValid(group) && <Check size={18} className="text-success" />}
+                </div>
+
+                <div className="options-list">
+                  {group.options?.map((option) => {
+                    const isSelected = selectedOptions.some(o => o.id === option.id);
+                    return (
+                      <div 
+                        key={option.id} 
+                        className={`option-item ${isSelected ? 'selected' : ''}`}
+                        onClick={() => toggleOption(group, option)}
+                      >
+                        <div className="option-info">
+                          <span className="option-name">{option.name}</span>
+                          {option.price > 0 && (
+                            <span className="option-price">+ R$ {Number(option.price).toFixed(2)}</span>
+                          )}
+                        </div>
+                        <div className={`selector ${group.max_options === 1 ? 'radio' : 'checkbox'}`}>
+                          {isSelected && <div className="selector-inner" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            ))
           )}
 
           <div className="notes-section">
@@ -84,10 +153,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             </button>
           </div>
           <button 
-            className="add-to-cart-button"
-            onClick={() => onAddToCart(quantity, selectedOptions, notes)}
+            className={`add-to-cart-button ${!allGroupsValid ? 'disabled' : ''}`}
+            onClick={() => allGroupsValid && onAddToCart(quantity, selectedOptions, notes)}
+            disabled={!allGroupsValid}
           >
-            <span>Adicionar</span>
+            <span>{allGroupsValid ? 'Adicionar' : 'Selecione os obrigatórios'}</span>
             <span>R$ {totalPrice.toFixed(2)}</span>
           </button>
         </div>
