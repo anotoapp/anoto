@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingCart, MapPin, Clock } from 'lucide-react';
+import { ShoppingCart, MapPin, Clock, Search, X } from 'lucide-react';
 import { Header } from '../components/Header';
 import { CategoryNav } from '../components/CategoryNav';
 import { ProductCard } from '../components/ProductCard';
@@ -37,6 +37,7 @@ function App() {
   const { storeSlug } = useParams<{ storeSlug?: string }>();
   const [config, setConfig] = useState<RestaurantConfig | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -233,7 +234,12 @@ function App() {
   }
 
   const isOpen = isStoreOpen(config.opening_hours);
-  const filteredProducts = config.products.filter(p => p.category === activeCategory);
+  const filteredProducts = config.products.filter(p => {
+    const matchesCategory = p.category === activeCategory;
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          p.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className={`app ${!isOpen ? 'store-closed' : ''}`}>
@@ -250,6 +256,23 @@ function App() {
       />
 
       <main className="container">
+        <div className="search-container fade-in">
+          <div className="search-wrapper">
+            <Search size={20} className="search-icon" />
+            <input 
+              type="text" 
+              placeholder="O que você está procurando?" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button className="clear-search" onClick={() => setSearchQuery('')}>
+                <X size={18} />
+              </button>
+            )}
+          </div>
+        </div>
+
         <CategoryNav 
           categories={config.categories} 
           activeCategory={activeCategory} 

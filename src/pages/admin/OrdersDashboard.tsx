@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Clock, CheckCircle, Package, XCircle } from 'lucide-react';
-import './Admin.css'; // Garantindo os estilos
+import { Clock, CheckCircle, Package, XCircle, Printer } from 'lucide-react';
+import './Admin.css';
 
 interface Order {
   id: string;
@@ -13,6 +13,7 @@ interface Order {
   total: number;
   status: string;
   created_at: string;
+  items?: any[];
 }
 
 export default function OrdersDashboard() {
@@ -79,7 +80,13 @@ export default function OrdersDashboard() {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          items:order_items(
+            *,
+            product:products(name)
+          )
+        `)
         .eq('store_id', storeId)
         .order('created_at', { ascending: false });
 
@@ -91,6 +98,56 @@ export default function OrdersDashboard() {
       setLoading(false);
     }
   }
+
+  const handlePrint = (order: Order) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const itemsHtml = order.items?.map(item => `
+      <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px;">
+        <span>${item.quantity}x ${item.product?.name || 'Produto'}</span>
+        <span>R$ ${(item.price * item.quantity).toFixed(2)}</span>
+      </div>
+      ${item.notes ? `<div style="font-size: 12px; color: #666; margin-bottom: 8px;">Obs: ${item.notes}</div>` : ''}
+    `).join('') || 'Nenhum item';
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Comanda - ${order.customer_name}</title>
+          <style>
+            body { font-family: 'Courier New', Courier, monospace; padding: 20px; color: #000; width: 300px; }
+            .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+            .footer { border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px; text-align: center; font-size: 12px; }
+            .total { font-weight: bold; font-size: 18px; display: flex; justify-content: space-between; margin-top: 10px; }
+          </style>
+        </head>
+        <body onload="window.print(); window.close();">
+          <div class="header">
+            <h2 style="margin: 0;">ANOTÔ</h2>
+            <p style="margin: 5px 0;">Pedido #${order.id.slice(0, 4)}</p>
+            <p style="margin: 5px 0;">${new Date(order.created_at).toLocaleString()}</p>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <strong>Cliente:</strong> ${order.customer_name}<br>
+            <strong>Tipo:</strong> ${order.order_type === 'delivery' ? 'Entrega' : 'Retirada'}<br>
+            ${order.order_type === 'delivery' ? `<strong>Endereço:</strong> ${order.customer_address}` : ''}
+          </div>
+          <div style="border-bottom: 1px dashed #000; padding-bottom: 10px;">
+            ${itemsHtml}
+          </div>
+          <div class="total">
+            <span>TOTAL:</span>
+            <span>R$ ${order.total.toFixed(2)}</span>
+          </div>
+          <div class="footer">
+            <p>Obrigado pela preferência!</p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   async function updateOrderStatus(id: string, newStatus: string) {
     try {
@@ -167,6 +224,16 @@ export default function OrdersDashboard() {
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.95rem', color: '#555', marginBottom: '20px', flex: 1 }}>
+                <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+                  <p style={{ margin: '0 0 8px 0', fontWeight: '600', fontSize: '0.85rem', color: '#888', textTransform: 'uppercase' }}>Itens do Pedido</p>
+                  {order.items?.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: '#333' }}>
+                      <span>{item.quantity}x {item.product?.name}</span>
+                      <span style={{ fontWeight: '500' }}>R$ {(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+
                 <p style={{ margin: 0 }}><strong>Tipo:</strong> {order.order_type === 'delivery' ? 'Entrega' : 'Retirada'}</p>
                 {order.order_type === 'delivery' && <p style={{ margin: 0 }}><strong>Endereço:</strong> {order.customer_address}</p>}
                 <p style={{ margin: 0 }}><strong>Pagamento:</strong> {order.payment_method}</p>
@@ -186,10 +253,17 @@ export default function OrdersDashboard() {
                   </>
                 )}
                 {order.status === 'preparing' && (
-                  <button onClick={() => updateOrderStatus(order.id, 'delivered')} style={{ width: '100%', padding: '10px', background: '#4caf50', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}>
-                    Despachar / Concluir
+                  <button onClick={() => updateOrderStatus(order.id, 'delivered')} style={{ flex: 1, padding: '10px', background: '#4caf50', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}>
+                    Finalizar
                   </button>
                 )}
+                <button 
+                  onClick={() => handlePrint(order)} 
+                  style={{ padding: '10px', background: '#fff', color: '#333', border: '1px solid #ddd', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  title="Imprimir Comanda"
+                >
+                  <Printer size={18} />
+                </button>
                 {/* Entregue ou Cancelado não tem ações principais */}
               </div>
             </div>
