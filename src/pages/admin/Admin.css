@@ -15,18 +15,16 @@
 }
 
 .admin-brand {
-  padding: 30px;
-  background-color: #d10000; /* Vermelho do logo Anotô */
+  padding: 20px;
+  background-color: #ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 10;
-  position: relative;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .admin-brand img {
-  height: 120px; /* Aumentado em ~3x */
+  height: 50px;
   width: auto;
 }
 
