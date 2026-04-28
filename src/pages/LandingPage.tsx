@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Smartphone, Zap, Heart, CheckCircle, ArrowRight, 
-  ShieldCheck, TrendingUp, HelpCircle, Star, 
-  ChevronDown, Layout, Bell, DollarSign
+  CheckCircle, ArrowRight, 
+  ShieldCheck, TrendingUp,
+  ChevronDown, Layout, Bell
 } from 'lucide-react';
 import './LandingPage.css';
 

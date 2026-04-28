@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingCart, MapPin, Clock, Search, X } from 'lucide-react';
+import { Clock, Search, X } from 'lucide-react';
 import { Header } from '../components/Header';
 import { CategoryNav } from '../components/CategoryNav';
 import { ProductCard } from '../components/ProductCard';
