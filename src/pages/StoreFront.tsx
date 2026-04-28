@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { ShoppingCart, MapPin, Clock } from 'lucide-react';
 import { Header } from '../components/Header';
 import { CategoryNav } from '../components/CategoryNav';
 import { ProductCard } from '../components/ProductCard';
@@ -10,6 +11,27 @@ import type { Product, CartItem, ProductOption, RestaurantConfig } from '../type
 import { formatWhatsAppMessage } from '../utils/whatsapp';
 
 import '../App.css';
+
+const isStoreOpen = (hours: any) => {
+  if (!hours) return true;
+  
+  const now = new Date();
+  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+  const dayConfig = hours[dayName];
+  
+  if (!dayConfig || !dayConfig.isOpen) return false;
+  
+  const currentTime = now.getHours() * 100 + now.getMinutes();
+  const openTime = parseInt(dayConfig.open.replace(':', ''));
+  const closeTime = parseInt(dayConfig.close.replace(':', ''));
+  
+  // Caso de horários que passam da meia-noite (ex: 18:00 às 02:00)
+  if (closeTime < openTime) {
+    return currentTime >= openTime || currentTime <= closeTime;
+  }
+  
+  return currentTime >= openTime && currentTime <= closeTime;
+};
 
 function App() {
   const { storeSlug } = useParams<{ storeSlug?: string }>();
@@ -210,10 +232,17 @@ function App() {
     );
   }
 
+  const isOpen = isStoreOpen(config.opening_hours);
   const filteredProducts = config.products.filter(p => p.category === activeCategory);
 
   return (
-    <div className="app">
+    <div className={`app ${!isOpen ? 'store-closed' : ''}`}>
+      {!isOpen && (
+        <div className="closed-top-bar">
+          <Clock size={16} /> 
+          <span>Estamos fechados no momento. Abrimos hoje às {config.opening_hours?.[new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()]?.open || '--:--'}</span>
+        </div>
+      )}
       <Header 
         config={config} 
         cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)} 
@@ -236,7 +265,8 @@ function App() {
               <ProductCard 
                 key={product.id} 
                 product={product} 
-                onAdd={() => setSelectedProduct(product)} 
+                onAdd={() => isOpen && setSelectedProduct(product)} 
+                disabled={!isOpen}
               />
             ))}
           </div>

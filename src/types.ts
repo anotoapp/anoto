@@ -60,6 +60,7 @@ export interface RestaurantConfig {
   address: string;
   deliveryFee: number;
   minOrder: number;
+  opening_hours?: any;
   theme: ThemeConfig;
   categories: Category[];
   products: Product[];

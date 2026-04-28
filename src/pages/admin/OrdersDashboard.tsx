@@ -19,6 +19,13 @@ export default function OrdersDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [storeId, setStoreId] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
+  const playNotificationSound = () => {
+    if (!soundEnabled) return;
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    audio.play().catch(e => console.error("Erro ao tocar som:", e));
+  };
 
   useEffect(() => {
     let channel: any;
@@ -27,7 +34,6 @@ export default function OrdersDashboard() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Primeiro pega a loja do dono
       const { data: storeData } = await supabase
         .from('stores')
         .select('id')
@@ -38,7 +44,6 @@ export default function OrdersDashboard() {
         setStoreId(storeData.id);
         fetchOrders(storeData.id);
 
-        // Subscribe to realtime changes APENAS para esta loja
         channel = supabase
           .channel('public:orders')
           .on(
@@ -47,6 +52,7 @@ export default function OrdersDashboard() {
             (payload) => {
               if (payload.eventType === 'INSERT') {
                 setOrders(current => [payload.new as Order, ...current]);
+                playNotificationSound();
               } else if (payload.eventType === 'UPDATE') {
                 setOrders(current =>
                   current.map(order =>
@@ -121,9 +127,28 @@ export default function OrdersDashboard() {
 
   return (
     <div className="orders-dashboard fade-in">
-      <header className="dashboard-header" style={{ marginBottom: '32px' }}>
-        <h1>Fila de Pedidos</h1>
-        <p>Gerencie e acompanhe os pedidos em tempo real</p>
+      <header className="dashboard-header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1>Fila de Pedidos</h1>
+          <p>Gerencie e acompanhe os pedidos em tempo real</p>
+        </div>
+        <button 
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          style={{
+            padding: '10px 20px',
+            background: soundEnabled ? '#e8f5e9' : '#f5f5f5',
+            color: soundEnabled ? '#2e7d32' : '#666',
+            border: `1px solid ${soundEnabled ? '#2e7d32' : '#ddd'}`,
+            borderRadius: '8px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          {soundEnabled ? '🔔 Alerta Ativo' : '🔕 Ativar Alerta'}
+        </button>
       </header>
 
       <div className="orders-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>

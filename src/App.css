@@ -4,6 +4,32 @@
   padding-bottom: 2rem;
 }
 
+.closed-top-bar {
+  background: #ef4444;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  font-size: 0.9rem;
+}
+
+.product-card.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.product-card.disabled .add-button {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
 .container {
   max-width: 800px;
   margin: 0 auto;
