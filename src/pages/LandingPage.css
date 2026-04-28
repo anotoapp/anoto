@@ -82,7 +82,7 @@
 }
 
 .nav-logo {
-  height: 45px;
+  height: 180px; /* Aumentado em 4x */
   width: auto;
   transition: transform 0.3s;
 }

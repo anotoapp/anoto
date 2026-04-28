@@ -24,7 +24,7 @@
 }
 
 .admin-brand img {
-  height: 50px;
+  height: 200px; /* Aumentado em 4x */
   width: auto;
 }
 
