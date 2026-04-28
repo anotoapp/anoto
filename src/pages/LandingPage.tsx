@@ -208,6 +208,17 @@ export default function LandingPage() {
           <p className="footer-copy">&copy; 2024 ANOTÔ. Todos os direitos reservados.</p>
         </div>
       </footer>
+
+      {/* Floating WhatsApp Button */}
+      <a 
+        href="https://wa.me/5519995933655?text=Olá! Gostaria de saber mais sobre o ANOTÔ."
+        className="whatsapp-float"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span className="whatsapp-tooltip">Fale com a Lívia</span>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
+      </a>
     </div>
   );
 }
