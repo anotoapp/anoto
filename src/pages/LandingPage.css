@@ -1,12 +1,13 @@
 :root {
-  --landing-primary: #ff4d4d;
-  --landing-primary-hover: #ff3333;
-  --landing-bg: #0f172a;
-  --landing-card-bg: rgba(30, 41, 59, 0.7);
-  --landing-text: #f8fafc;
+  --landing-primary: #e63946; /* Vermelho Vibrante */
+  --landing-primary-hover: #d62828;
+  --landing-secondary: #ffb703; /* Amarelo/Dourado */
+  --landing-bg: #0b0e14;
+  --landing-card-bg: rgba(22, 27, 34, 0.8);
+  --landing-text: #ffffff;
   --landing-text-muted: #94a3b8;
-  --landing-accent: #38bdf8;
-  --glass: rgba(255, 255, 255, 0.03);
+  --landing-accent: #ffb703;
+  --glass: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
 }
 
