@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, MapPin, ShoppingBag } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import type { CartItem, RestaurantConfig } from '../types';
 import { CustomerAuth } from './CustomerAuth';
 import './CartDrawer.css';
