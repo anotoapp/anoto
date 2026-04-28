@@ -1,0 +1,58 @@
+.customer-auth-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.customer-auth-content {
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.customer-auth-content h2 {
+  margin: 0 0 8px 0;
+  color: #212121;
+}
+
+.auth-subtitle {
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.auth-buttons button {
+  flex: 1;
+}
+
+.toggle-auth {
+  text-align: center;
+  margin-top: 20px;
+  color: #2962ff;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.toggle-auth:hover {
+  text-decoration: underline;
+}

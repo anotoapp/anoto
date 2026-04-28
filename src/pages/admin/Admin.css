@@ -1,0 +1,182 @@
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #f4f6f8;
+  font-family: 'Outfit', sans-serif;
+  color: #212121;
+}
+
+.admin-sidebar {
+  width: 250px;
+  background-color: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-brand {
+  padding: 30px;
+  background-color: #d10000; /* Vermelho do logo Anotô */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 10;
+  position: relative;
+}
+
+.admin-brand img {
+  height: 120px; /* Aumentado em ~3x */
+  width: auto;
+}
+
+.admin-nav {
+  flex: 1;
+  padding: 16px 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  color: #666;
+  text-decoration: none;
+  gap: 12px;
+  transition: all 0.2s;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.nav-item:hover, .nav-item.active {
+  background-color: #f0f4ff;
+  color: #2962ff;
+  border-right: 3px solid #2962ff;
+}
+
+.admin-footer {
+  padding: 16px 0;
+  border-top: 1px solid #e0e0e0;
+}
+
+.logout {
+  color: #d32f2f;
+}
+
+.logout:hover {
+  background-color: #fee;
+  color: #d32f2f;
+  border-right: 3px solid #d32f2f;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+}
+
+/* Orders Dashboard */
+.orders-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  margin-bottom: 24px;
+}
+
+.dashboard-header h1 {
+  margin: 0 0 8px 0;
+}
+
+.dashboard-header p {
+  color: #666;
+  margin: 0;
+}
+
+.orders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.order-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 16px;
+}
+
+.order-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.badge.warning { background: #fff3e0; color: #e65100; }
+.badge.info { background: #e3f2fd; color: #1565c0; }
+.badge.success { background: #e8f5e9; color: #2e7d32; }
+.badge.danger { background: #ffebee; color: #c62828; }
+
+.order-details p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+}
+
+.order-time {
+  color: #888;
+  font-size: 0.85rem !important;
+  margin-top: 12px !important;
+}
+
+.order-actions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.order-actions button {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  color: white;
+}
+
+.order-actions button:hover {
+  opacity: 0.9;
+}
+
+.btn-preparing { background-color: #2196f3; }
+.btn-delivered { background-color: #4caf50; }
+.btn-cancelled { background-color: #f44336; }
