@@ -221,10 +221,6 @@ function App() {
       />
 
       <main className="container">
-        <div className="banner fade-in">
-          <img src={config.banner} alt="Banner" />
-        </div>
-
         <CategoryNav 
           categories={config.categories} 
           activeCategory={activeCategory} 

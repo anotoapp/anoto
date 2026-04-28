@@ -9,19 +9,6 @@
   margin: 0 auto;
 }
 
-.banner {
-  width: 100%;
-  height: 200px;
-  margin-bottom: 0;
-  overflow: hidden;
-}
-
-.banner img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .product-list {
   padding: 1rem;
 }

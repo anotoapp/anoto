@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, MapPin } from 'lucide-react';
+import { ShoppingCart, MapPin, Clock } from 'lucide-react';
 import type { RestaurantConfig } from '../types';
 
 import './Header.css';
@@ -12,24 +12,37 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ config, cartCount, onCartClick }) => {
   return (
-    <header className="header fade-in">
-      <div className="header-content">
-        <div className="brand">
-          <img src={config.logo} alt={config.name} className="logo" />
-          <div className="brand-info">
-            <h1>{config.name}</h1>
-            <p className="address">
-              <MapPin size={12} /> {config.address}
-            </p>
+    <header className="store-header">
+      <div className="store-banner-wrapper">
+        <img src={config.banner} alt="Banner" className="store-banner-img" />
+        <div className="banner-overlay"></div>
+        
+        <button className="floating-cart-button" onClick={onCartClick}>
+          <ShoppingCart size={24} />
+          {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+        </button>
+      </div>
+
+      <div className="store-info-section">
+        <div className="store-logo-floating">
+          <img src={config.logo} alt={config.name} />
+        </div>
+
+        <div className="store-text-info">
+          <h1>{config.name}</h1>
+          <p className="store-address">
+            <MapPin size={14} style={{ marginRight: '4px' }} />
+            {config.address}
+          </p>
+
+          <div className="store-meta-badges">
+            <span className="meta-badge status-open">Aberto agora</span>
+            <span className="meta-badge status-time">
+              <Clock size={14} style={{ marginRight: '4px' }} />
+              30-45 min
+            </span>
           </div>
         </div>
-        
-        <button className="cart-button" onClick={onCartClick}>
-          <div className="cart-icon-wrapper">
-            <ShoppingCart size={20} />
-            {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-          </div>
-        </button>
       </div>
     </header>
   );
