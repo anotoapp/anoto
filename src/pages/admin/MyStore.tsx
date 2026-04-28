@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Save, Upload } from 'lucide-react';
+import { optimizeImage } from '../../lib/image-optimizer';
 
 const defaultOpeningHours = {
   monday: { isOpen: true, open: '18:00', close: '23:00' },
@@ -75,14 +76,22 @@ export default function MyStore() {
 
       if (!e.target.files || e.target.files.length === 0) return;
 
-      const file = e.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${field}-${Math.random()}.${fileExt}`;
+      const originalFile = e.target.files[0];
+      
+      // Otimizar: Logo (800x800) | Banner (1200x600)
+      const optimizedBlob = field === 'logo' 
+        ? await optimizeImage(originalFile, 800, 800, 0.8)
+        : await optimizeImage(originalFile, 1200, 600, 0.7);
+
+      const fileName = `${field}-${Math.random()}.webp`;
       const filePath = `${store.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('store-assets')
-        .upload(filePath, file);
+        .upload(filePath, optimizedBlob, {
+          contentType: 'image/webp',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 

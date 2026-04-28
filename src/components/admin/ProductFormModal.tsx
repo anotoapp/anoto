@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { optimizeImage } from '../../lib/image-optimizer';
 import type { Product, Category, ProductOptionGroup, ProductOption } from '../../types';
 
 interface ProductFormModalProps {
@@ -104,14 +105,21 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
       setUploading(true);
       if (!e.target.files || e.target.files.length === 0) return;
 
-      const file = e.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const originalFile = e.target.files[0];
+      
+      // Otimizar a imagem antes de enviar
+      const optimizedBlob = await optimizeImage(originalFile);
+      
+      // Criar um nome de arquivo único com extensão .webp
+      const fileName = `${Math.random()}.webp`;
       const filePath = `${storeId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('store-assets')
-        .upload(filePath, file);
+        .upload(filePath, optimizedBlob, {
+          contentType: 'image/webp',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
