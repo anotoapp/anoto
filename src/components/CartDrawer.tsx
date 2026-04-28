@@ -29,6 +29,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [address, setAddress] = useState('');
   const [payment, setPayment] = useState('Cartão de Crédito/Débito (Máquina)');
   const [type, setType] = useState('delivery');
+  const [cep, setCep] = useState('');
+  const [cepLoading, setCepLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState<{ type: 'fixed' | 'percentage', value: number } | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   useEffect(() => {
     if (customer) {
@@ -42,7 +48,64 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     return acc + (item.product.price + optionsPrice) * item.quantity;
   }, 0);
 
-  const total = subtotal + (type === 'delivery' ? config.deliveryFee : 0);
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setApplyingCoupon(true);
+    setCouponError('');
+    
+    try {
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('store_id', config.id)
+        .eq('code', couponCode.toUpperCase())
+        .eq('active', true)
+        .single();
+
+      if (error || !data) {
+        setCouponError('Cupom inválido ou expirado');
+        setCouponDiscount(null);
+        return;
+      }
+
+      if (subtotal < data.min_purchase) {
+        setCouponError(`Pedido mínimo: R$ ${data.min_purchase.toFixed(2)}`);
+        setCouponDiscount(null);
+        return;
+      }
+
+      setCouponDiscount({ type: data.discount_type, value: data.discount_value });
+      setCouponError('');
+    } catch (err) {
+      setCouponError('Erro ao aplicar cupom');
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  const discountAmount = couponDiscount 
+    ? (couponDiscount.type === 'fixed' ? couponDiscount.value : (subtotal * (couponDiscount.value / 100)))
+    : 0;
+
+  const total = subtotal - discountAmount + (type === 'delivery' ? config.deliveryFee : 0);
+
+  const handleCepLookup = async (zip: string) => {
+    const cleanZip = zip.replace(/\D/g, '');
+    if (cleanZip.length !== 8) return;
+
+    setCepLoading(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanZip}/json/`);
+      const data = await response.json();
+      if (!data.erro) {
+        setAddress(`${data.logradouro}, , ${data.bairro}, ${data.localidade} - ${data.uf}`);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+    } finally {
+      setCepLoading(false);
+    }
+  };
 
   const handleContinue = () => {
     if (!customer) {
@@ -104,6 +167,35 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       <span>Subtotal</span>
                       <span>R$ {subtotal.toFixed(2)}</span>
                     </div>
+                    
+                    <div className="coupon-wrapper">
+                      <div className="coupon-input">
+                        <input 
+                          type="text" 
+                          placeholder="Cupom de desconto" 
+                          value={couponCode} 
+                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                          disabled={!!couponDiscount}
+                        />
+                        <button 
+                          onClick={couponDiscount ? () => { setCouponDiscount(null); setCouponCode(''); } : handleApplyCoupon}
+                          className={couponDiscount ? 'btn-remove' : 'btn-apply'}
+                          disabled={applyingCoupon}
+                        >
+                          {applyingCoupon ? '...' : (couponDiscount ? 'X' : 'Aplicar')}
+                        </button>
+                      </div>
+                      {couponError && <p className="coupon-error">{couponError}</p>}
+                      {couponDiscount && <p className="coupon-success">Cupom aplicado!</p>}
+                    </div>
+
+                    {discountAmount > 0 && (
+                      <div className="summary-line discount">
+                        <span>Desconto</span>
+                        <span>- R$ {discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+
                     <div className="summary-line">
                       <span>Taxa de Entrega</span>
                       <span>{type === 'delivery' ? `R$ ${config.deliveryFee.toFixed(2)}` : 'Grátis'}</span>
@@ -131,13 +223,40 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
 
                 {type === 'delivery' && (
-                  <div className="form-group">
-                    <label>Endereço de Entrega</label>
-                    <div className="input-with-icon">
-                      <MapPin size={18} />
-                      <input type="text" placeholder="Rua, número, bairro..." value={address} onChange={(e) => setAddress(e.target.value)} />
+                  <>
+                    <div className="form-group">
+                      <label>CEP (Opcional para preenchimento rápido)</label>
+                      <div className="input-with-icon">
+                        <MapPin size={18} />
+                        <input 
+                          type="text" 
+                          placeholder="00000-000" 
+                          value={cep} 
+                          maxLength={9}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').replace(/^(\d{5})(\d)/, '$1-$2');
+                            setCep(val);
+                            if (val.length === 9) handleCepLookup(val);
+                          }} 
+                        />
+                      </div>
                     </div>
-                  </div>
+
+                    <div className="form-group">
+                      <label>Endereço de Entrega</label>
+                      <div className="input-with-icon">
+                        <MapPin size={18} />
+                        <input 
+                          type="text" 
+                          placeholder="Rua, número, bairro..." 
+                          value={address} 
+                          onChange={(e) => setAddress(e.target.value)} 
+                          disabled={cepLoading}
+                        />
+                      </div>
+                      {cepLoading && <p className="loading-text">Buscando endereço...</p>}
+                    </div>
+                  </>
                 )}
 
                 <div className="form-group">

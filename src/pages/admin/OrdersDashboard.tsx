@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Clock, CheckCircle, Package, XCircle, Printer } from 'lucide-react';
+import { Clock, CheckCircle, Package, XCircle, Printer, DollarSign, ShoppingBag, TrendingUp } from 'lucide-react';
 import './Admin.css';
 
 interface Order {
@@ -182,6 +182,14 @@ export default function OrdersDashboard() {
 
   // Sem estatísticas não utilizadas no momento
 
+  const todayOrders = orders.filter(o => {
+    const today = new Date().toISOString().split('T')[0];
+    return o.created_at.split('T')[0] === today && o.status !== 'cancelled';
+  });
+
+  const todayRevenue = todayOrders.reduce((acc, o) => acc + o.total, 0);
+  const avgTicket = todayOrders.length > 0 ? todayRevenue / todayOrders.length : 0;
+
   return (
     <div className="orders-dashboard fade-in">
       <header className="dashboard-header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -207,6 +215,31 @@ export default function OrdersDashboard() {
           {soundEnabled ? '🔔 Alerta Ativo' : '🔕 Ativar Alerta'}
         </button>
       </header>
+
+      {/* Métricas do Dia */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ background: '#eef2ff', color: '#4f46e5', padding: '12px', borderRadius: '10px' }}><DollarSign size={24} /></div>
+          <div>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Faturamento Hoje</p>
+            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>R$ {todayRevenue.toFixed(2)}</h2>
+          </div>
+        </div>
+        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ background: '#f0fdf4', color: '#16a34a', padding: '12px', borderRadius: '10px' }}><ShoppingBag size={24} /></div>
+          <div>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Pedidos Hoje</p>
+            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>{todayOrders.length}</h2>
+          </div>
+        </div>
+        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ background: '#fff7ed', color: '#ea580c', padding: '12px', borderRadius: '10px' }}><TrendingUp size={24} /></div>
+          <div>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Ticket Médio</p>
+            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>R$ {avgTicket.toFixed(2)}</h2>
+          </div>
+        </div>
+      </div>
 
       <div className="orders-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
         {orders.length === 0 ? (
