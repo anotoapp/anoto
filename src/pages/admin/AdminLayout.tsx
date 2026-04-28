@@ -3,7 +3,6 @@ import { LayoutDashboard, ShoppingBag, Settings, LogOut, Store, Home } from 'luc
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import './Admin.css';
-import logoAdmin from '../../assets/admin-logo.png';
 
 export default function AdminLayout() {
   const [loading, setLoading] = useState(true);
@@ -40,7 +39,7 @@ export default function AdminLayout() {
     <div className="admin-layout">
       <aside className="admin-sidebar">
         <div className="admin-brand">
-          <img src={logoAdmin} alt="Anotô" />
+          <img src="/assets/logo-anoto-clean.png" alt="Anotô" style={{ height: '40px', width: 'auto' }} />
         </div>
         
         <nav className="admin-nav">
