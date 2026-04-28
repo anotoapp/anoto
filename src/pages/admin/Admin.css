@@ -51,9 +51,9 @@
 }
 
 .nav-item:hover, .nav-item.active {
-  background-color: #f0f4ff;
-  color: #2962ff;
-  border-right: 3px solid #2962ff;
+  background-color: #fff5f5;
+  color: #d10000;
+  border-right: 3px solid #d10000;
 }
 
 .admin-footer {
