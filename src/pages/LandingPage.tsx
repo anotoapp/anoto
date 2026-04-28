@@ -5,7 +5,9 @@ export default function LandingPage() {
   return (
     <div className="landing-page">
       <nav className="landing-nav landing-container">
-        <Link to="/" className="logo" style={{ fontSize: '2rem', letterSpacing: '-1px' }}>ANOTÔ</Link>
+        <Link to="/" className="logo-container">
+          <img src="/assets/logo-anoto-clean.png" alt="ANOTÔ Logo" className="nav-logo" />
+        </Link>
         <div className="nav-links">
           <a href="#features" className="nav-link">Recursos</a>
           <a href="#about" className="nav-link">Planos</a>
