@@ -24,7 +24,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   useEffect(() => {
     async function loadOptions() {
       setLoading(true);
-      const { data: groups, error } = await supabase
+      const { data: groups } = await supabase
         .from('product_option_groups')
         .select(`
           *,

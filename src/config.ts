@@ -32,11 +32,6 @@ export const config: RestaurantConfig = {
       image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
       category_id: 'burgers',
       category: 'burgers',
-      options: [
-        { name: 'Bacon extra', price: 4.50 },
-        { name: 'Ovo frito', price: 3.00 },
-        { name: 'Picles extra', price: 2.00 },
-      ]
     },
     {
       id: '2',

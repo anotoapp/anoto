@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
+import { X, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type { Product, Category, ProductOptionGroup, ProductOption } from '../../types';
 
