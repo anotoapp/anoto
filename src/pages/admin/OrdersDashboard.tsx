@@ -117,15 +117,7 @@ export default function OrdersDashboard() {
   if (loading) return <div className="p-4">Carregando painel de pedidos...</div>;
   if (!storeId) return <div className="p-4">Por favor, configure sua loja antes de ver os pedidos.</div>;
 
-  // Calculando estatísticas
-  const todayOrders = orders.filter(o => new Date(o.created_at).toDateString() === new Date().toDateString());
-  const pendingCount = orders.filter(o => o.status === 'pending').length;
-  const preparingCount = orders.filter(o => o.status === 'preparing').length;
-  
-  // Faturamento apenas de pedidos entregues hoje
-  const todayRevenue = todayOrders
-    .filter(o => o.status === 'delivered')
-    .reduce((acc, curr) => acc + curr.total, 0);
+  // Sem estatísticas não utilizadas no momento
 
   return (
     <div className="orders-dashboard fade-in">

@@ -41,7 +41,7 @@ export default function Dashboard() {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('total, status, created_at')
+        .select('id, total, status, created_at')
         .eq('store_id', storeId);
 
       if (error) throw error;

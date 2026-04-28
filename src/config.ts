@@ -18,10 +18,10 @@ export const config: RestaurantConfig = {
     fontFamily: "'Outfit', sans-serif",
   },
   categories: [
-    { id: 'burgers', name: 'Burgers', icon: '🍔' },
-    { id: 'sides', name: 'Acompanhamentos', icon: '🍟' },
-    { id: 'drinks', name: 'Bebidas', icon: '🥤' },
-    { id: 'desserts', name: 'Sobremesas', icon: '🍦' },
+    { id: 'burgers', store_id: 'default', name: 'Burgers', icon: '🍔' },
+    { id: 'sides', store_id: 'default', name: 'Acompanhamentos', icon: '🍟' },
+    { id: 'drinks', store_id: 'default', name: 'Bebidas', icon: '🥤' },
+    { id: 'desserts', store_id: 'default', name: 'Sobremesas', icon: '🍦' },
   ],
   products: [
     {
@@ -30,6 +30,7 @@ export const config: RestaurantConfig = {
       description: 'Pão brioche, blend bovino 180g, queijo cheddar maçaricado, alface, tomate e maionese da casa.',
       price: 32.00,
       image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
+      category_id: 'burgers',
       category: 'burgers',
       options: [
         { name: 'Bacon extra', price: 4.50 },
@@ -43,6 +44,7 @@ export const config: RestaurantConfig = {
       description: 'Dois blends de 150g, bacon crocante, cebola caramelizada e molho barbecue artesanal.',
       price: 42.00,
       image: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=800&q=80',
+      category_id: 'burgers',
       category: 'burgers',
     },
     {
@@ -51,6 +53,7 @@ export const config: RestaurantConfig = {
       description: 'Batatas cortadas à mão com alecrim e sal grosso. Acompanha maionese de alho.',
       price: 18.00,
       image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=800&q=80',
+      category_id: 'sides',
       category: 'sides',
     },
     {
@@ -59,6 +62,7 @@ export const config: RestaurantConfig = {
       description: 'Lata gelada.',
       price: 6.50,
       image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80',
+      category_id: 'drinks',
       category: 'drinks',
     },
   ]
