@@ -1,69 +1,72 @@
 import { Link } from 'react-router-dom';
+import { Smartphone, Zap, Heart, CheckCircle } from 'lucide-react';
 import './LandingPage.css';
 
 export default function LandingPage() {
   return (
     <div className="landing-page">
       <nav className="landing-nav landing-container">
-        <Link to="/" className="logo-container">
-          <img src="/assets/LOGO2.webp" alt="ANOTÔ Logo" className="nav-logo" />
-        </Link>
+        <Link to="/" className="logo-text">ANOTÔ</Link>
         <div className="nav-links">
           <a href="#features" className="nav-link">Recursos</a>
-          <a href="#about" className="nav-link">Planos</a>
-          <Link to="/admin/login" className="btn-login">Área do Lojista</Link>
+          <Link to="/admin/login" className="btn-login-outline">Área do Lojista</Link>
+          <Link to="/admin/register" className="btn-primary-small">Criar Minha Loja</Link>
         </div>
       </nav>
 
-      <main className="landing-container">
-        <section className="hero">
+      <main>
+        <section className="hero landing-container">
+          <div className="hero-badge fade-up">✨ O Cardápio Digital que Vende por Você</div>
           <h1 className="fade-up">
-            <span style={{ color: 'var(--landing-secondary)' }}>Anota aí:</span> <br />
-            Seu restaurante pronto para vender online.
+            Transforme seu WhatsApp em uma <span className="text-gradient">Máquina de Vendas</span>.
           </h1>
-          <p className="fade-up delay-1">
-            Com o <strong>ANOTÔ</strong>, você cria seu cardápio digital em minutos, recebe pedidos direto no WhatsApp e tem o controle total do seu negócio. Simples, rápido e eficiente.
+          <p className="hero-subtitle fade-up delay-1">
+            Chega de anotar pedidos manualmente. Com o <strong>ANOTÔ</strong>, seus clientes fazem o pedido sozinhos e você recebe tudo organizado no seu WhatsApp.
           </p>
           <div className="hero-actions fade-up delay-2">
-            <Link to="/admin/register" className="btn-primary">Começar agora gratuitamente</Link>
-            <Link to="/admin/login" className="btn-login">Acessar meu painel</Link>
+            <Link to="/admin/register" className="btn-primary-main">Começar Agora — É Grátis</Link>
+            <p className="hero-caption">Sem taxas por pedido. Sem fidelidade.</p>
           </div>
         </section>
 
-        <section id="features" className="features">
-          <div className="feature-card fade-up delay-1">
-            <div className="feature-icon" style={{ background: 'rgba(255, 183, 3, 0.1)', color: 'var(--landing-secondary)' }}>📝</div>
-            <h3>Cardápio Inteligente</h3>
-            <p>Organize seus produtos por categorias, adicione adicionais e fotos incríveis que dão fome.</p>
+        <section id="features" className="features-grid landing-container">
+          <div className="feature-card-new fade-up delay-1">
+            <div className="feature-icon-wrapper"><Smartphone size={32} /></div>
+            <h3>Cardápio Mobile-First</h3>
+            <p>Seu cardápio abre instantaneamente no celular do cliente, sem precisar baixar nada.</p>
           </div>
-
-          <div className="feature-card fade-up delay-2">
-            <div className="feature-icon" style={{ background: 'rgba(230, 57, 70, 0.1)', color: 'var(--landing-primary)' }}>🟢</div>
-            <h3>Direto no WhatsApp</h3>
-            <p>Nada de taxas abusivas de aplicativos. O pedido chega limpo e organizado no seu WhatsApp.</p>
+          <div className="feature-card-new fade-up delay-2">
+            <div className="feature-icon-wrapper"><Zap size={32} /></div>
+            <h3>Rapidez no WhatsApp</h3>
+            <p>O cliente seleciona os adicionais e o pedido chega pronto para você imprimir ou produzir.</p>
           </div>
-
-          <div className="feature-card fade-up delay-3">
-            <div className="feature-icon" style={{ background: 'rgba(255, 183, 3, 0.1)', color: 'var(--landing-secondary)' }}>🎨</div>
-            <h3>Sua Identidade</h3>
-            <p>Personalize cores, logo e banners para deixar o cardápio com a cara da sua marca.</p>
+          <div className="feature-card-new fade-up delay-3">
+            <div className="feature-icon-wrapper"><Heart size={32} /></div>
+            <h3>Fidelize Clientes</h3>
+            <p>Crie um banco de dados dos seus clientes e mande promoções direto no WhatsApp deles.</p>
           </div>
         </section>
 
-        <section className="hero" style={{ padding: '5rem 0' }}>
-          <h2 className="fade-up">O sistema que <span style={{ color: 'var(--landing-primary)' }}>anota</span> e você lucra.</h2>
-          <p className="fade-up delay-1">Pare de perder pedidos por demora no atendimento humano. Automatize com o ANOTÔ.</p>
-          <div className="hero-actions fade-up delay-2" style={{ marginTop: '2rem' }}>
-            <Link to="/admin/register" className="btn-primary" style={{ padding: '1.2rem 3rem', fontSize: '1.2rem' }}>
-              Quero o ANOTÔ no meu negócio
-            </Link>
+        <section className="cta-section landing-container">
+          <div className="cta-card fade-up">
+            <h2>Pronto para profissionalizar seu delivery?</h2>
+            <p>Junte-se a centenas de estabelecimentos que já usam o ANOTÔ.</p>
+            <Link to="/admin/register" className="btn-secondary">Criar meu cardápio agora</Link>
+            
+            <div className="cta-benefits">
+              <span><CheckCircle size={16} /> Domínio próprio</span>
+              <span><CheckCircle size={16} /> Suporte humanizado</span>
+              <span><CheckCircle size={16} /> Painel administrativo</span>
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="landing-container" style={{ padding: '3rem 0', textAlign: 'center', borderTop: '1px solid var(--glass-border)', marginTop: '4rem' }}>
-        <p style={{ color: 'var(--landing-text)', fontWeight: '700', marginBottom: '1rem', fontSize: '1.2rem' }}>ANOTÔ</p>
-        <p style={{ color: 'var(--landing-text-muted)' }}>&copy; 2024 ANOTÔ White Label. A tecnologia que seu restaurante precisa.</p>
+      <footer className="landing-footer landing-container">
+        <div className="footer-content">
+          <p className="footer-brand">ANOTÔ</p>
+          <p className="footer-copy">&copy; 2024 ANOTÔ. Todos os direitos reservados.</p>
+        </div>
       </footer>
     </div>
   );
