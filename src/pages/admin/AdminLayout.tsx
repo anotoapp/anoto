@@ -39,7 +39,7 @@ export default function AdminLayout() {
     <div className="admin-layout">
       <aside className="admin-sidebar">
         <div className="admin-brand">
-          <img src="/assets/LOGO ANOTO.webp" alt="Anotô" style={{ height: '40px', width: 'auto' }} />
+          <img src="/assets/LOGO ANOTO.webp" alt="Anotô" style={{ height: '160px', width: 'auto' }} />
         </div>
         
         <nav className="admin-nav">
