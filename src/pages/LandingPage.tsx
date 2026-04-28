@@ -6,7 +6,7 @@ export default function LandingPage() {
     <div className="landing-page">
       <nav className="landing-nav landing-container">
         <Link to="/" className="logo-container">
-          <img src="/assets/LOGO ANOTO.webp" alt="ANOTÔ Logo" className="nav-logo" />
+          <img src="/assets/LOGO2.webp" alt="ANOTÔ Logo" className="nav-logo" />
         </Link>
         <div className="nav-links">
           <a href="#features" className="nav-link">Recursos</a>
