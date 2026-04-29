@@ -9,6 +9,8 @@ import MyStore from './pages/admin/MyStore';
 import LoginAdmin from './pages/admin/LoginAdmin';
 import RegisterStore from './pages/admin/RegisterStore';
 import ProductsAdmin from './pages/admin/ProductsAdmin';
+import SuperAdmin from './pages/admin/SuperAdmin';
+import DeliveryFeesAdmin from './pages/admin/DeliveryFeesAdmin';
 
 function App() {
   return (
@@ -29,7 +31,9 @@ function App() {
         <Route path="orders" element={<OrdersDashboard />} />
         <Route path="products" element={<ProductsAdmin />} />
         <Route path="my-store" element={<MyStore />} />
+        <Route path="delivery-fees" element={<DeliveryFeesAdmin />} />
         <Route path="settings" element={<StoreSettings />} />
+        <Route path="master" element={<SuperAdmin />} />
       </Route>
     </Routes>
   );

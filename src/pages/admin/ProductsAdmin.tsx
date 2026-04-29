@@ -68,6 +68,24 @@ export default function ProductsAdmin() {
     }
   };
 
+  const toggleAvailability = async (id: string, currentStatus: boolean) => {
+    try {
+      // Optimistic update
+      setProducts(current => current.map(p => p.id === id ? { ...p, is_available: !currentStatus } : p));
+      
+      const { error } = await supabase
+        .from('products')
+        .update({ is_available: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error toggling availability:', error);
+      // Rollback
+      setProducts(current => current.map(p => p.id === id ? { ...p, is_available: currentStatus } : p));
+    }
+  };
+
   const openNewModal = () => {
     if (categories.length === 0) {
       alert('Você precisa criar uma categoria primeiro.');
@@ -109,16 +127,39 @@ export default function ProductsAdmin() {
                 
                 <div style={{ padding: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{product.name}</h3>
-                    <span style={{ fontWeight: 'bold', color: '#2962ff' }}>R$ {product.price.toFixed(2)}</span>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: product.is_available ? 'inherit' : '#888' }}>
+                      {product.name} {!product.is_available && <span style={{ fontSize: '0.75rem', background: '#eee', padding: '2px 6px', borderRadius: '4px', verticalAlign: 'middle' }}>ESGOTADO</span>}
+                    </h3>
+                    <span style={{ fontWeight: 'bold', color: product.is_available ? '#2962ff' : '#888' }}>R$ {product.price.toFixed(2)}</span>
                   </div>
                   
                   <p style={{ color: '#666', fontSize: '0.9rem', margin: '0 0 12px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {product.description}
                   </p>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: '#888', marginBottom: '16px' }}>
-                    <Tag size={14} /> {category?.name || 'Sem categoria'}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', color: '#888', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Tag size={14} /> {category?.name || 'Sem categoria'}
+                    </div>
+                    
+                    <div 
+                      onClick={() => toggleAvailability(product.id, product.is_available ?? true)}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px', 
+                        cursor: 'pointer',
+                        padding: '4px 8px',
+                        borderRadius: '20px',
+                        background: product.is_available ? '#e8f5e9' : '#fafafa',
+                        color: product.is_available ? '#2e7d32' : '#999',
+                        fontWeight: '600',
+                        fontSize: '0.75rem',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {product.is_available ? '🟢 Disponível' : '🔴 Esgotado'}
+                    </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #eee', paddingTop: '16px' }}>

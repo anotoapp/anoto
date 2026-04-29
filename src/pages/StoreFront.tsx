@@ -9,29 +9,10 @@ import { CartDrawer } from '../components/CartDrawer';
 import { supabase } from '../lib/supabase';
 import type { Product, CartItem, ProductOption, RestaurantConfig } from '../types';
 import { formatWhatsAppMessage } from '../utils/whatsapp';
+import { isStoreOpen } from '../utils/storeStatus';
 
 import '../App.css';
 
-const isStoreOpen = (hours: any) => {
-  if (!hours) return true;
-  
-  const now = new Date();
-  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-  const dayConfig = hours[dayName];
-  
-  if (!dayConfig || !dayConfig.isOpen) return false;
-  
-  const currentTime = now.getHours() * 100 + now.getMinutes();
-  const openTime = parseInt(dayConfig.open.replace(':', ''));
-  const closeTime = parseInt(dayConfig.close.replace(':', ''));
-  
-  // Caso de horários que passam da meia-noite (ex: 18:00 às 02:00)
-  if (closeTime < openTime) {
-    return currentTime >= openTime || currentTime <= closeTime;
-  }
-  
-  return currentTime >= openTime && currentTime <= closeTime;
-};
 
 function App() {
   const { storeSlug } = useParams<{ storeSlug?: string }>();
@@ -98,6 +79,7 @@ function App() {
           address: storeData.address,
           deliveryFee: storeData.delivery_fee,
           minOrder: storeData.min_order,
+          is_open_manual: storeData.is_open_manual,
           theme: {
             primaryColor: storeData.primary_color,
             secondaryColor: storeData.secondary_color,
@@ -233,7 +215,9 @@ function App() {
     );
   }
 
-  const isOpen = isStoreOpen(config.opening_hours);
+  const storeStatus = config ? isStoreOpen(config) : { isOpen: true };
+  const isOpen = storeStatus.isOpen;
+
   const filteredProducts = config.products.filter(p => {
     const matchesCategory = p.category === activeCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -246,7 +230,7 @@ function App() {
       {!isOpen && (
         <div className="closed-top-bar">
           <Clock size={16} /> 
-          <span>Estamos fechados no momento. Abrimos hoje às {config.opening_hours?.[new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()]?.open || '--:--'}</span>
+          <span>{storeStatus.message || 'Estamos fechados no momento.'}</span>
         </div>
       )}
       <Header 

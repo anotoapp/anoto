@@ -178,3 +178,19 @@
 .btn-preparing { background-color: #2196f3; }
 .btn-delivered { background-color: #4caf50; }
 .btn-cancelled { background-color: #f44336; }
+
+.nav-item.superadmin {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.nav-item.superadmin:hover, .nav-item.superadmin.active {
+  background-color: #fff1f1;
+  color: #d32f2f;
+  border-right: 3px solid #d32f2f;
+}
+
+.nav-divider {
+  border-top: 1px solid #eee;
+  margin: 16px 0;
+}

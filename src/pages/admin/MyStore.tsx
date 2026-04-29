@@ -124,7 +124,8 @@ export default function MyStore() {
           delivery_fee: store.delivery_fee,
           min_order: store.min_order,
           logo: store.logo,
-          banner: store.banner
+          banner: store.banner,
+          is_open_manual: store.is_open_manual
         })
         .eq('id', store.id);
 
@@ -168,6 +169,26 @@ export default function MyStore() {
         >
           Visualizar Loja
         </a>
+
+        <div 
+          onClick={() => setStore({ ...store, is_open_manual: !store.is_open_manual })}
+          style={{ 
+            padding: '10px 24px', 
+            background: store.is_open_manual ? '#e8f5e9' : '#ffebee', 
+            color: store.is_open_manual ? '#2e7d32' : '#d32f2f', 
+            borderRadius: '8px', 
+            fontWeight: '800',
+            cursor: 'pointer',
+            border: `2px solid ${store.is_open_manual ? '#2e7d32' : '#d32f2f'}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            transition: 'all 0.2s'
+          }}
+        >
+          <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: store.is_open_manual ? '#2e7d32' : '#d32f2f' }}></div>
+          {store.is_open_manual ? 'LOJA ABERTA' : 'LOJA FECHADA'}
+        </div>
       </header>
 
       <div style={{ display: 'flex', gap: '48px', alignItems: 'flex-start' }}>

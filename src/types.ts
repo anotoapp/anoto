@@ -6,6 +6,7 @@ export interface Product {
   price: number;
   image: string;
   category?: string;
+  is_available?: boolean;
   option_groups?: ProductOptionGroup[];
 }
 
@@ -61,6 +62,7 @@ export interface RestaurantConfig {
   deliveryFee: number;
   minOrder: number;
   opening_hours?: any;
+  is_open_manual?: boolean;
   theme: ThemeConfig;
   categories: Category[];
   products: Product[];

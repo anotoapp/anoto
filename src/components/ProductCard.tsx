@@ -10,24 +10,30 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, disabled }) => {
+  const isAvailable = product.is_available !== false;
+  const isCardDisabled = disabled || !isAvailable;
+
   return (
     <div 
-      className={`product-card fade-in ${disabled ? 'disabled' : ''}`} 
-      onClick={() => !disabled && onAdd(product)}
+      className={`product-card fade-in ${isCardDisabled ? 'disabled' : ''}`} 
+      onClick={() => !isCardDisabled && onAdd(product)}
     >
       <div className="product-info">
-        <h3>{product.name}</h3>
+        <h3>
+          {product.name}
+          {!isAvailable && <span className="sold-out-badge">ESGOTADO</span>}
+        </h3>
         <p className="product-description">{product.description}</p>
         <span className="product-price">R$ {product.price.toFixed(2)}</span>
       </div>
       <div className="product-image-container">
-        <img src={product.image} alt={product.name} className="product-image" />
+        <img src={product.image} alt={product.name} className={`product-image ${!isAvailable ? 'greyscale' : ''}`} />
         <button 
           className="add-button" 
-          disabled={disabled}
+          disabled={isCardDisabled}
           onClick={(e) => {
             e.stopPropagation();
-            if (!disabled) onAdd(product);
+            if (!isCardDisabled) onAdd(product);
           }}
         >
           <Plus size={20} />

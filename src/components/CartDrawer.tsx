@@ -36,11 +36,46 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [couponDiscount, setCouponDiscount] = useState<{ type: 'fixed' | 'percentage', value: number } | null>(null);
   const [couponError, setCouponError] = useState('');
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [neighborhoods, setNeighborhoods] = useState<{ id: string; neighborhood: string; fee: number }[]>([]);
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState<{ neighborhood: string; fee: number } | null>(null);
+
+  useEffect(() => {
+    if (isOpen && config.id) {
+      loadNeighborhoods();
+    }
+  }, [isOpen, config.id]);
+
+  async function loadNeighborhoods() {
+    try {
+      const { data } = await supabase
+        .from('delivery_fees')
+        .select('*')
+        .eq('store_id', config.id)
+        .order('neighborhood');
+      
+      setNeighborhoods(data || []);
+      
+      // Auto-select from localStorage if exists
+      const savedNeighborhood = localStorage.getItem(`anoto_neighborhood_${config.id}`);
+      if (savedNeighborhood && data) {
+        const found = data.find(n => n.neighborhood === savedNeighborhood);
+        if (found) setSelectedNeighborhood({ neighborhood: found.neighborhood, fee: found.fee });
+      }
+    } catch (error) {
+      console.error('Error loading neighborhoods:', error);
+    }
+  }
 
   useEffect(() => {
     if (customer) {
       setName(customer.full_name || '');
       setAddress(customer.address || '');
+    } else {
+      // Try loading from localStorage for non-logged in users or quick fill
+      const savedName = localStorage.getItem('anoto_customer_name');
+      const savedAddress = localStorage.getItem('anoto_customer_address');
+      if (savedName) setName(savedName);
+      if (savedAddress) setAddress(savedAddress);
     }
   }, [customer]);
 
@@ -88,7 +123,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     ? (couponDiscount.type === 'fixed' ? couponDiscount.value : (subtotal * (couponDiscount.value / 100)))
     : 0;
 
-  const total = subtotal - discountAmount + (type === 'delivery' ? config.deliveryFee : 0);
+  const currentDeliveryFee = type === 'delivery' 
+    ? (selectedNeighborhood ? selectedNeighborhood.fee : config.deliveryFee)
+    : 0;
+
+  const total = subtotal - discountAmount + currentDeliveryFee;
 
   const handleCepLookup = async (zip: string) => {
     const cleanZip = zip.replace(/\D/g, '');
@@ -198,8 +237,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     )}
 
                     <div className="summary-line">
-                      <span>Taxa de Entrega</span>
-                      <span>{type === 'delivery' ? `R$ ${config.deliveryFee.toFixed(2)}` : 'Grátis'}</span>
+                      <span>Taxa de Entrega {selectedNeighborhood ? `(${selectedNeighborhood.neighborhood})` : ''}</span>
+                      <span>{type === 'delivery' ? `R$ ${currentDeliveryFee.toFixed(2)}` : 'Grátis'}</span>
                     </div>
                     <div className="summary-line total">
                       <span>Total</span>
@@ -212,7 +251,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <div className="checkout-form">
                 <div className="form-group">
                   <label>Seu Nome</label>
-                  <input type="text" placeholder="Como te chamamos?" value={name} onChange={(e) => setName(e.target.value)} />
+                  <input 
+                    type="text" 
+                    placeholder="Como te chamamos?" 
+                    value={name} 
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      localStorage.setItem('anoto_customer_name', e.target.value);
+                    }} 
+                  />
                 </div>
 
                 <div className="form-group">
@@ -223,39 +270,43 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </div>
                 </div>
 
-                {type === 'delivery' && (
-                  <>
                     <div className="form-group">
-                      <label>CEP (Opcional para preenchimento rápido)</label>
-                      <div className="input-with-icon">
-                        <MapPin size={18} />
-                        <input 
-                          type="text" 
-                          placeholder="00000-000" 
-                          value={cep} 
-                          maxLength={9}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '').replace(/^(\d{5})(\d)/, '$1-$2');
-                            setCep(val);
-                            if (val.length === 9) handleCepLookup(val);
-                          }} 
-                        />
-                      </div>
+                      <label>Bairro para Entrega</label>
+                      <select 
+                        value={selectedNeighborhood?.neighborhood || ''} 
+                        onChange={(e) => {
+                          const found = neighborhoods.find(n => n.neighborhood === e.target.value);
+                          if (found) {
+                            setSelectedNeighborhood({ neighborhood: found.neighborhood, fee: found.fee });
+                            localStorage.setItem(`anoto_neighborhood_${config.id}`, found.neighborhood);
+                          } else {
+                            setSelectedNeighborhood(null);
+                          }
+                        }}
+                      >
+                        <option value="">Selecione seu bairro...</option>
+                        {neighborhoods.map(n => (
+                          <option key={n.id} value={n.neighborhood}>
+                            {n.neighborhood} - R$ {n.fee.toFixed(2)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="form-group">
-                      <label>Endereço de Entrega</label>
+                      <label>Endereço Completo</label>
                       <div className="input-with-icon">
                         <MapPin size={18} />
                         <input 
                           type="text" 
-                          placeholder="Rua, número, bairro..." 
+                          placeholder="Rua, número, complemento..." 
                           value={address} 
-                          onChange={(e) => setAddress(e.target.value)} 
-                          disabled={cepLoading}
+                          onChange={(e) => {
+                            setAddress(e.target.value);
+                            localStorage.setItem('anoto_customer_address', e.target.value);
+                          }} 
                         />
                       </div>
-                      {cepLoading && <p className="loading-text">Buscando endereço...</p>}
                     </div>
                   </>
                 )}
@@ -286,8 +337,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <button className="secondary-action" onClick={() => setStep('cart')}>Voltar</button>
                 <button 
                   className="primary-action" 
-                  disabled={!name || (type === 'delivery' && !address)}
-                  onClick={() => onCheckout({ name, address: type === 'pickup' ? 'Retirada no local' : address, payment, type })}
+                  disabled={!name || (type === 'delivery' && (!address || !selectedNeighborhood))}
+                  onClick={() => onCheckout({ 
+                    name, 
+                    address: type === 'pickup' ? 'Retirada no local' : `${address} - ${selectedNeighborhood?.neighborhood}`, 
+                    payment, 
+                    type 
+                  })}
                 >
                   Enviar Pedido
                 </button>

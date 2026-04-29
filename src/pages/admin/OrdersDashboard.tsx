@@ -20,6 +20,7 @@ export default function OrdersDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [storeId, setStoreId] = useState<string | null>(null);
+  const [storeName, setStoreName] = useState('ANOTÔ');
   const [soundEnabled, setSoundEnabled] = useState(false);
 
   const playNotificationSound = () => {
@@ -37,12 +38,13 @@ export default function OrdersDashboard() {
 
       const { data: storeData } = await supabase
         .from('stores')
-        .select('id')
+        .select('id, name')
         .eq('owner_id', session.user.id)
         .single();
 
       if (storeData) {
         setStoreId(storeData.id);
+        setStoreName(storeData.name);
         fetchOrders(storeData.id);
 
         channel = supabase
@@ -104,44 +106,61 @@ export default function OrdersDashboard() {
     if (!printWindow) return;
 
     const itemsHtml = order.items?.map(item => `
-      <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px;">
-        <span>${item.quantity}x ${item.product?.name || 'Produto'}</span>
-        <span>R$ ${(item.price * item.quantity).toFixed(2)}</span>
+      <div style="border-bottom: 1px solid #eee; padding: 5px 0;">
+        <div style="display: flex; justify-content: space-between; font-weight: bold;">
+          <span>${item.quantity}x ${item.product?.name || 'Produto'}</span>
+          <span>R$ ${(item.price * item.quantity).toFixed(2)}</span>
+        </div>
+        ${item.notes ? `<div style="font-size: 11px; margin-top: 2px;">>> OBS: ${item.notes}</div>` : ''}
       </div>
-      ${item.notes ? `<div style="font-size: 12px; color: #666; margin-bottom: 8px;">Obs: ${item.notes}</div>` : ''}
     `).join('') || 'Nenhum item';
 
     printWindow.document.write(`
       <html>
         <head>
-          <title>Comanda - ${order.customer_name}</title>
+          <title>Pedido #${order.id.slice(0, 4)}</title>
           <style>
-            body { font-family: 'Courier New', Courier, monospace; padding: 20px; color: #000; width: 300px; }
-            .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
-            .footer { border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px; text-align: center; font-size: 12px; }
-            .total { font-weight: bold; font-size: 18px; display: flex; justify-content: space-between; margin-top: 10px; }
+            @page { margin: 0; }
+            body { 
+              font-family: 'Courier New', Courier, monospace; 
+              width: 280px; 
+              margin: 0; 
+              padding: 10px;
+              color: #000;
+              line-height: 1.2;
+            }
+            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+            .info { font-size: 13px; margin-bottom: 10px; }
+            .total { font-weight: bold; font-size: 18px; border-top: 2px solid #000; margin-top: 10px; padding-top: 5px; display: flex; justify-content: space-between; }
+            .footer { margin-top: 20px; text-align: center; font-size: 11px; font-style: italic; }
+            h2 { margin: 0; text-transform: uppercase; }
           </style>
         </head>
         <body onload="window.print(); window.close();">
           <div class="header">
-            <h2 style="margin: 0;">ANOTÔ</h2>
-            <p style="margin: 5px 0;">Pedido #${order.id.slice(0, 4)}</p>
-            <p style="margin: 5px 0;">${new Date(order.created_at).toLocaleString()}</p>
+            <h2>${storeName}</h2>
+            <div style="font-size: 14px; margin-top: 5px;">PEDIDO #${order.id.slice(0, 4).toUpperCase()}</div>
+            <div style="font-size: 11px;">${new Date(order.created_at).toLocaleString('pt-BR')}</div>
           </div>
-          <div style="margin-bottom: 10px;">
-            <strong>Cliente:</strong> ${order.customer_name}<br>
-            <strong>Tipo:</strong> ${order.order_type === 'delivery' ? 'Entrega' : 'Retirada'}<br>
-            ${order.order_type === 'delivery' ? `<strong>Endereço:</strong> ${order.customer_address}` : ''}
+          
+          <div class="info">
+            <strong>CLIENTE:</strong> ${order.customer_name}<br>
+            <strong>TIPO:</strong> ${order.order_type === 'delivery' ? 'ENTREGA 🛵' : 'RETIRADA 🥡'}<br>
+            ${order.order_type === 'delivery' ? `<strong>ENDEREÇO:</strong> ${order.customer_address}` : ''}
+            <br><strong>PAGAMENTO:</strong> ${order.payment_method}
           </div>
-          <div style="border-bottom: 1px dashed #000; padding-bottom: 10px;">
+
+          <div style="border-top: 1px solid #000; padding-top: 5px;">
             ${itemsHtml}
           </div>
+
           <div class="total">
-            <span>TOTAL:</span>
+            <span>TOTAL</span>
             <span>R$ ${order.total.toFixed(2)}</span>
           </div>
+
           <div class="footer">
-            <p>Obrigado pela preferência!</p>
+            --- Impresso via ANOTÔ ---
           </div>
         </body>
       </html>
