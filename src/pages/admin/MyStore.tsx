@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Save, Upload } from 'lucide-react';
 import { optimizeImage } from '../../lib/image-optimizer';
-import type { AdminContextType } from './AdminLayout';
 
 const defaultOpeningHours = {
   monday: { isOpen: true, open: '18:00', close: '23:00' },

@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
-import type { AdminContextType } from './AdminLayout';
 import './Admin.css';
 
 interface Order {

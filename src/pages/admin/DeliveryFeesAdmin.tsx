@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Trash2, MapPin } from 'lucide-react';
-import type { AdminContextType } from './AdminLayout';
 import './Admin.css';
 
 interface DeliveryFee {

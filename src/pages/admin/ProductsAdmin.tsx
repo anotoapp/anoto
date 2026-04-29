@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Plus, Edit2, Trash2, Tag } from 'lucide-react';
 import type { Product, Category } from '../../types';
 import { ProductFormModal } from '../../components/admin/ProductFormModal';
-import type { AdminContextType } from './AdminLayout';
 
 export default function ProductsAdmin() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -194,7 +192,7 @@ export default function ProductsAdmin() {
       <div className="orders-grid">
             {products.length === 0 ? (
               <div className="no-orders" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', background: '#fff', borderRadius: '16px', color: '#666' }}>
-                {!store ? 'Erro ao carregar dados da loja. Tente atualizar a página.' : 'Nenhum produto cadastrado.'}
+                {!storeId ? 'Erro ao carregar dados da loja. Tente atualizar a página.' : 'Nenhum produto cadastrado.'}
               </div>
             ) : (
           products.map(product => {

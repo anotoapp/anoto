@@ -1,8 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import type { AdminContextType } from './AdminLayout';
 import { Clock, CheckCircle, Package, XCircle, Printer, DollarSign, ShoppingBag, TrendingUp } from 'lucide-react';
 import './Admin.css';
 
