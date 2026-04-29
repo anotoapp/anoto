@@ -22,6 +22,10 @@ export default function DeliveryFeesAdmin() {
 
   useEffect(() => {
     if (store) loadData();
+    else if (store === null) setLoading(false);
+
+    const timeout = setTimeout(() => setLoading(false), 3000);
+    return () => clearTimeout(timeout);
   }, [store]);
 
   async function loadData() {

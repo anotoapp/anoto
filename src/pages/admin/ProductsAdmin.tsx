@@ -20,6 +20,10 @@ export default function ProductsAdmin() {
 
   useEffect(() => {
     if (store) loadData();
+    else if (store === null) setLoading(false);
+    
+    const timeout = setTimeout(() => setLoading(false), 3000);
+    return () => clearTimeout(timeout);
   }, [store]);
 
   async function loadData() {
@@ -186,9 +190,11 @@ export default function ProductsAdmin() {
       )}
 
       <div className="orders-grid">
-        {products.length === 0 ? (
-          <div className="no-orders" style={{ gridColumn: '1 / -1' }}>Nenhum produto cadastrado.</div>
-        ) : (
+            {products.length === 0 ? (
+              <div className="no-orders" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', background: '#fff', borderRadius: '16px', color: '#666' }}>
+                {!store ? 'Erro ao carregar dados da loja. Tente atualizar a página.' : 'Nenhum produto cadastrado.'}
+              </div>
+            ) : (
           products.map(product => {
             const category = categories.find(c => c.id === product.category_id);
             return (

@@ -68,7 +68,12 @@ export default function MyStore() {
       data.opening_hours = parsedHours;
       setStore(data as StoreData);
       setLoading(false);
+    } else if (contextStore === null) {
+      setLoading(false);
     }
+
+    const timeout = setTimeout(() => setLoading(false), 3000);
+    return () => clearTimeout(timeout);
   }, [contextStore]);
 
 

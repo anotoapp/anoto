@@ -65,6 +65,9 @@ export default function Dashboard() {
     }
 
     initialize();
+
+    const timeout = setTimeout(() => setLoading(false), 3000);
+    return () => clearTimeout(timeout);
   }, [store]);
 
 
