@@ -3,7 +3,9 @@ import type { CartItem, RestaurantConfig } from '../types';
 export const formatWhatsAppMessage = (
   cart: CartItem[],
   customerInfo: { name: string; address: string; payment: string; type: string },
-  config: RestaurantConfig
+  config: RestaurantConfig,
+  orderId?: string,
+  storeSlug?: string
 ) => {
   const itemsText = cart
     .map(
@@ -29,6 +31,10 @@ export const formatWhatsAppMessage = (
 
   const finalTotal = total + (customerInfo.type === 'delivery' ? config.deliveryFee : 0);
 
+  const trackingUrl = orderId && storeSlug 
+    ? `\n\n📍 *ACOMPANHE SEU PEDIDO:* \n${window.location.origin}/${storeSlug}/order/${orderId}`
+    : '';
+
   const message = `
 🍔 *NOVO PEDIDO - ${config.name}*
 ------------------------------
@@ -44,7 +50,7 @@ ${customerInfo.type === 'delivery' ? `*Taxa de Entrega:* R$ ${config.deliveryFee
 *Nome:* ${customerInfo.name}
 *Tipo:* ${customerInfo.type === 'delivery' ? '🚀 Entrega' : '🏪 Retirada'}
 *Endereço:* ${customerInfo.address}
-*Pagamento:* 💳 ${customerInfo.payment}
+*Pagamento:* 💳 ${customerInfo.payment}${trackingUrl}
 
 _Pedido enviado via ANOTÔ_
   `.trim();

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, Search, X } from 'lucide-react';
 import { Header } from '../components/Header';
 import { CategoryNav } from '../components/CategoryNav';
@@ -16,6 +16,7 @@ import '../App.css';
 
 function App() {
   const { storeSlug } = useParams<{ storeSlug?: string }>();
+  const navigate = useNavigate();
   const [config, setConfig] = useState<RestaurantConfig | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -205,8 +206,11 @@ function App() {
       setCart([]);
       setIsCartOpen(false);
       
-      const whatsappUrl = formatWhatsAppMessage(cart, customerInfo, config);
+      const whatsappUrl = formatWhatsAppMessage(cart, customerInfo, config, orderData.id, storeSlug);
       window.open(whatsappUrl, '_blank');
+      
+      // 5. Redirecionar para acompanhamento
+      navigate(`/${storeSlug}/order/${orderData.id}`);
 
     } catch (error) {
       console.error('Erro ao salvar pedido:', error);

@@ -12,14 +12,17 @@ import ProductsAdmin from './pages/admin/ProductsAdmin';
 import SuperAdmin from './pages/admin/SuperAdmin';
 import DeliveryFeesAdmin from './pages/admin/DeliveryFeesAdmin';
 
+import OrderTracking from './pages/OrderTracking';
+
 function App() {
   return (
     <Routes>
       {/* Landing Page de Vendas */}
       <Route path="/" element={<LandingPage />} />
       
-      {/* Rota do Cliente (Vitrine) - Acessível por slug */}
+      {/* Rota do Cliente (Vitrine) */}
       <Route path="/:storeSlug" element={<StoreFront />} />
+      <Route path="/:storeSlug/order/:orderId" element={<OrderTracking />} />
 
       {/* Rota de Auth Admin (Sem layout) */}
       <Route path="/admin/login" element={<LoginAdmin />} />

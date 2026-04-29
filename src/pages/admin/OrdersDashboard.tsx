@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import type { AdminContextType } from './AdminLayout';
-import { Clock, CheckCircle, Package, XCircle, Printer, DollarSign, ShoppingBag, TrendingUp } from 'lucide-react';
+import { Clock, CheckCircle, Package, XCircle, Printer, DollarSign, ShoppingBag, TrendingUp, Truck } from 'lucide-react';
 import './Admin.css';
 
 interface OrderItem {
@@ -114,7 +114,7 @@ export default function OrdersDashboard() {
     if (!printWindow) return;
 
     const itemsHtml = order.items?.map(item => `
-      <div style="border-bottom: 1px solid #eee; padding: 5px 0;">
+      <div style="border-bottom: 1px dashed #ccc; padding: 5px 0;">
         <div style="display: flex; justify-content: space-between; font-weight: bold;">
           <span>${item.quantity}x ${item.product?.name || 'Produto'}</span>
           <span>R$ ${(item.price * item.quantity).toFixed(2)}</span>
@@ -126,7 +126,7 @@ export default function OrdersDashboard() {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Pedido #${order.id.slice(0, 4)}</title>
+          <title>Pedido #${order.id.slice(0, 5)}</title>
           <style>
             @page { margin: 0; }
             body { 
@@ -136,9 +136,10 @@ export default function OrdersDashboard() {
               padding: 10px;
               color: #000;
               line-height: 1.2;
+              font-size: 13px;
             }
             .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
-            .info { font-size: 13px; margin-bottom: 10px; }
+            .info { margin-bottom: 10px; }
             .total { font-weight: bold; font-size: 18px; border-top: 2px solid #000; margin-top: 10px; padding-top: 5px; display: flex; justify-content: space-between; }
             .footer { margin-top: 20px; text-align: center; font-size: 11px; font-style: italic; }
             h2 { margin: 0; text-transform: uppercase; }
@@ -147,15 +148,15 @@ export default function OrdersDashboard() {
         <body onload="window.print(); window.close();">
           <div class="header">
             <h2>${storeName}</h2>
-            <div style="font-size: 14px; margin-top: 5px;">PEDIDO #${order.id.slice(0, 4).toUpperCase()}</div>
+            <div style="font-size: 14px; margin-top: 5px;">PEDIDO #${order.id.slice(0, 5).toUpperCase()}</div>
             <div style="font-size: 11px;">${new Date(order.created_at).toLocaleString('pt-BR')}</div>
           </div>
           
           <div class="info">
             <strong>CLIENTE:</strong> ${order.customer_name}<br>
-            <strong>TIPO:</strong> ${order.order_type === 'delivery' ? 'ENTREGA 🛵' : 'RETIRADA 🥡'}<br>
+            <strong>TIPO:</strong> ${order.order_type === 'delivery' ? 'ENTREGA 🚀' : 'RETIRADA 🥡'}<br>
             ${order.order_type === 'delivery' ? `<strong>ENDEREÇO:</strong> ${order.customer_address}` : ''}
-            <br><strong>PAGAMENTO:</strong> ${order.payment_method}
+            <br><strong>PAGAMENTO:</strong> ${order.payment_method.toUpperCase()}
           </div>
 
           <div style="border-top: 1px solid #000; padding-top: 5px;">
@@ -168,7 +169,8 @@ export default function OrdersDashboard() {
           </div>
 
           <div class="footer">
-            --- Impresso via ANOTÔ ---
+            --- Obrigado pela preferência! ---<br>
+            Sistema Anotô
           </div>
         </body>
       </html>
@@ -178,26 +180,20 @@ export default function OrdersDashboard() {
 
   async function updateOrderStatus(id: string, newStatus: string) {
     try {
-      // Optimistic update para UI mais rápida
       setOrders(current => current.map(o => o.id === id ? { ...o, status: newStatus } : o));
-
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', id);
-
+      const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Erro ao atualizar status do pedido');
-      // Em caso de erro, seria ideal fazer rollback do optimistic update
     }
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, type: string) => {
     switch (status) {
       case 'pending': return <span style={{ background: '#fff3cd', color: '#856404', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Clock size={12}/> Pendente</span>;
       case 'preparing': return <span style={{ background: '#cce5ff', color: '#004085', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Package size={12}/> Preparando</span>;
+      case 'delivering': return <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Truck size={12}/> {type === 'delivery' ? 'Em Entrega' : 'Pronto'}</span>;
       case 'delivered': return <span style={{ background: '#d4edda', color: '#155724', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={12}/> Entregue</span>;
       case 'cancelled': return <span style={{ background: '#f8d7da', color: '#721c24', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><XCircle size={12}/> Cancelado</span>;
       default: return <span>{status}</span>;
@@ -206,8 +202,6 @@ export default function OrdersDashboard() {
 
   if (loading) return <div className="p-4">Carregando painel de pedidos...</div>;
   if (!storeId) return <div className="p-4">Por favor, configure sua loja antes de ver os pedidos.</div>;
-
-  // Sem estatísticas não utilizadas no momento
 
   const todayOrders = orders.filter(o => {
     const today = new Date().toISOString().split('T')[0];
@@ -243,7 +237,6 @@ export default function OrdersDashboard() {
         </button>
       </header>
 
-      {/* Métricas do Dia */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ background: '#eef2ff', color: '#4f46e5', padding: '12px', borderRadius: '10px' }}><DollarSign size={24} /></div>
@@ -270,22 +263,19 @@ export default function OrdersDashboard() {
 
       <div className="orders-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
         {orders.length === 0 ? (
-          <div style={{ gridColumn: '1 / -1', background: '#fff', padding: '60px', borderRadius: '12px', textAlign: 'center', color: '#888', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px dashed #ddd' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📦</div>
-            <p style={{ margin: 0, fontSize: '1.1rem' }}>Nenhum pedido recebido ainda.</p>
-            <p style={{ fontSize: '0.9rem', marginTop: '8px' }}>Divulgue seu link para começar a vender!</p>
+          <div style={{ gridColumn: '1 / -1', background: '#fff', padding: '60px', borderRadius: '12px', textAlign: 'center', color: '#888', border: '1px dashed #ddd' }}>
+            <p>Nenhum pedido recebido ainda.</p>
           </div>
         ) : (
           orders.map(order => (
             <div key={order.id} style={{ background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #eee' }}>
                 <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{order.customer_name}</h3>
-                {getStatusBadge(order.status)}
+                {getStatusBadge(order.status, order.order_type)}
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.95rem', color: '#555', marginBottom: '20px', flex: 1 }}>
                 <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                  <p style={{ margin: '0 0 8px 0', fontWeight: '600', fontSize: '0.85rem', color: '#888', textTransform: 'uppercase' }}>Itens do Pedido</p>
                   {order.items?.map((item, idx) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: '#333' }}>
                       <span>{item.quantity}x {item.product?.name}</span>
@@ -295,36 +285,26 @@ export default function OrdersDashboard() {
                 </div>
 
                 <p style={{ margin: 0 }}><strong>Tipo:</strong> {order.order_type === 'delivery' ? 'Entrega' : 'Retirada'}</p>
-                {order.order_type === 'delivery' && <p style={{ margin: 0 }}><strong>Endereço:</strong> {order.customer_address}</p>}
-                <p style={{ margin: 0 }}><strong>Pagamento:</strong> {order.payment_method}</p>
-                <p style={{ margin: 0, fontSize: '1.1rem', color: '#212121', marginTop: '8px' }}><strong>Total:</strong> R$ {order.total.toFixed(2)}</p>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: '#999', marginTop: '4px' }}><Clock size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }}/> {new Date(order.created_at).toLocaleTimeString()}</p>
+                <p style={{ margin: 0 }}><strong>Total:</strong> R$ {order.total.toFixed(2)}</p>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#999' }}>{new Date(order.created_at).toLocaleTimeString()}</p>
               </div>
 
               <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
                 {order.status === 'pending' && (
                   <>
-                    <button onClick={() => updateOrderStatus(order.id, 'preparing')} style={{ flex: 1, padding: '10px', background: '#2962ff', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}>
-                      Aceitar
-                    </button>
-                    <button onClick={() => updateOrderStatus(order.id, 'cancelled')} style={{ padding: '10px', background: '#f5f5f5', color: '#d32f2f', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}>
-                      Recusar
-                    </button>
+                    <button onClick={() => updateOrderStatus(order.id, 'preparing')} style={{ flex: 1, padding: '10px', background: '#2962ff', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}>Aceitar</button>
+                    <button onClick={() => updateOrderStatus(order.id, 'cancelled')} style={{ padding: '10px', background: '#f5f5f5', color: '#d32f2f', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Recusar</button>
                   </>
                 )}
                 {order.status === 'preparing' && (
-                  <button onClick={() => updateOrderStatus(order.id, 'delivered')} style={{ flex: 1, padding: '10px', background: '#4caf50', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}>
-                    Finalizar
+                  <button onClick={() => updateOrderStatus(order.id, 'delivering')} style={{ flex: 1, padding: '10px', background: '#ffb703', color: '#000', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
+                    {order.order_type === 'delivery' ? 'Saiu para Entrega' : 'Pronto p/ Retirada'}
                   </button>
                 )}
-                <button 
-                  onClick={() => handlePrint(order)} 
-                  style={{ padding: '10px', background: '#fff', color: '#333', border: '1px solid #ddd', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                  title="Imprimir Comanda"
-                >
-                  <Printer size={18} />
-                </button>
-                {/* Entregue ou Cancelado não tem ações principais */}
+                {order.status === 'delivering' && (
+                  <button onClick={() => updateOrderStatus(order.id, 'delivered')} style={{ flex: 1, padding: '10px', background: '#4caf50', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}>Finalizar</button>
+                )}
+                <button onClick={() => handlePrint(order)} style={{ padding: '10px', background: '#fff', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer' }}><Printer size={18} /></button>
               </div>
             </div>
           ))
