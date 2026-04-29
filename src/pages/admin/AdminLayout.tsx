@@ -121,7 +121,19 @@ export default function AdminLayout() {
     navigate('/admin/login');
   };
 
-  if (loading) return <div className="p-4">Carregando painel...</div>;
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-content">
+          <img src="/LOGO NOVA SEM FUNDO.png" alt="Anotô Logo" className="loading-logo" />
+          <div className="loading-bar-container">
+            <div className="loading-bar-progress"></div>
+          </div>
+          <span className="loading-text">Preparando seu painel</span>
+        </div>
+      </div>
+    );
+  }
   if (!user) return null;
 
   const isSuperAdmin = userProfile?.role === 'superadmin';

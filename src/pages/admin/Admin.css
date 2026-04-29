@@ -194,3 +194,76 @@
   border-top: 1px solid #eee;
   margin: 16px 0;
 }
+/* Premium Loading Screen */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background-color: #FFFBF2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease-out;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  animation: fadeInScale 0.8s ease-out;
+}
+
+.loading-logo {
+  height: 120px;
+  width: auto;
+  animation: pulseLogo 2s infinite ease-in-out;
+}
+
+.loading-bar-container {
+  width: 200px;
+  height: 4px;
+  background: rgba(200, 29, 37, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.loading-bar-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #C81D25, #FFB800);
+  width: 0%;
+  border-radius: 10px;
+  animation: fillProgress 2.5s infinite ease-in-out;
+}
+
+.loading-text {
+  font-family: 'Outfit', sans-serif;
+  color: #C81D25;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+@keyframes pulseLogo {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+@keyframes fillProgress {
+  0% { width: 0%; left: 0; }
+  50% { width: 100%; left: 0; }
+  100% { width: 100%; left: 100%; }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
