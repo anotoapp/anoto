@@ -69,6 +69,19 @@ function App() {
 
         if (prodError) throw prodError;
 
+        let parsedHours = null;
+        if (storeData.opening_hours) {
+          try {
+            const parsed = typeof storeData.opening_hours === 'string' && storeData.opening_hours.startsWith('{') 
+              ? JSON.parse(storeData.opening_hours) 
+              : storeData.opening_hours;
+            
+            if (typeof parsed === 'object' && parsed.monday) {
+              parsedHours = parsed;
+            }
+          } catch(e) {}
+        }
+
         // Map data to RestaurantConfig
         const loadedConfig: RestaurantConfig = {
           id: storeData.id,
@@ -80,6 +93,7 @@ function App() {
           deliveryFee: storeData.delivery_fee,
           minOrder: storeData.min_order,
           is_open_manual: storeData.is_open_manual,
+          opening_hours: parsedHours,
           theme: {
             primaryColor: storeData.primary_color,
             secondaryColor: storeData.secondary_color,
