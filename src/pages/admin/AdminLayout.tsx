@@ -58,19 +58,35 @@ export default function AdminLayout() {
     let mounted = true;
 
     async function initAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        if (mounted) {
-          navigate('/admin/login');
+      // Fail-safe: Forçar saída do loading após 3 segundos
+      const timeout = setTimeout(() => {
+        if (mounted && loading) {
+          console.warn('AdminLayout: Load timeout reached, forcing display');
           setLoading(false);
         }
-        return;
-      }
+      }, 3000);
 
-      if (mounted) {
-        setUser(session.user);
-        await loadAllData(session.user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          if (mounted) {
+            navigate('/admin/login');
+            setLoading(false);
+          }
+          clearTimeout(timeout);
+          return;
+        }
+
+        if (mounted) {
+          setUser(session.user);
+          await loadAllData(session.user.id);
+        }
+      } catch (err) {
+        console.error('Init auth error:', err);
+        if (mounted) setLoading(false);
+      } finally {
+        clearTimeout(timeout);
       }
     }
 
