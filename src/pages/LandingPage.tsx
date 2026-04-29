@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ArrowRight, CheckCircle2, XCircle, TrendingUp, 
-  Clock, DollarSign, Zap, MessageSquare, Printer, BarChart
+  Clock, Zap, MessageSquare, Printer, BarChart
 } from 'lucide-react';
 import './LandingPage.css';
 

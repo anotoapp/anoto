@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Plus, Trash2, MapPin } from 'lucide-react';
+import { Trash2, MapPin } from 'lucide-react';
 import './Admin.css';
 
 interface DeliveryFee {

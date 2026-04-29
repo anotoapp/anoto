@@ -30,8 +30,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [address, setAddress] = useState('');
   const [payment, setPayment] = useState('Cartão de Crédito/Débito (Máquina)');
   const [type, setType] = useState('delivery');
-  const [cep, setCep] = useState('');
-  const [cepLoading, setCepLoading] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState<{ type: 'fixed' | 'percentage', value: number } | null>(null);
   const [couponError, setCouponError] = useState('');
@@ -128,24 +126,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     : 0;
 
   const total = subtotal - discountAmount + currentDeliveryFee;
-
-  const handleCepLookup = async (zip: string) => {
-    const cleanZip = zip.replace(/\D/g, '');
-    if (cleanZip.length !== 8) return;
-
-    setCepLoading(true);
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanZip}/json/`);
-      const data = await response.json();
-      if (!data.erro) {
-        setAddress(`${data.logradouro}, , ${data.bairro}, ${data.localidade} - ${data.uf}`);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
-    } finally {
-      setCepLoading(false);
-    }
-  };
 
   const handleContinue = () => {
     if (!customer) {
@@ -270,9 +250,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </div>
                 </div>
 
+                {type === 'delivery' && (
+                  <>
                     <div className="form-group">
                       <label>Bairro para Entrega</label>
                       <select 
+
                         value={selectedNeighborhood?.neighborhood || ''} 
                         onChange={(e) => {
                           const found = neighborhoods.find(n => n.neighborhood === e.target.value);
