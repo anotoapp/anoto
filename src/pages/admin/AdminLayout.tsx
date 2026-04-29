@@ -1,5 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Settings, LogOut, Store, Home, Shield, MapPin, Menu } from 'lucide-react';
+import { 
+  LayoutDashboard, ShoppingBag, Package, Store, Truck, Settings, LogOut, Shield, Menu 
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { User } from '@supabase/supabase-js';
@@ -25,30 +27,18 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   const loadAllData = async (userId: string) => {
-    console.log('AdminLayout: Centralized data fetch for', userId);
     try {
-      // 1. Fetch Profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      setUserProfile(profile);
+      // Busca Perfil e Loja em paralelo para ser mais rápido
+      const [profileRes, storeRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', userId).single(),
+        supabase.from('stores').select('*').eq('owner_id', userId).single()
+      ]);
 
-      // 2. Fetch Store
-      const { data: storeData, error: storeError } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('owner_id', userId)
-        .single();
+      if (profileRes.data) setUserProfile(profileRes.data);
+      if (storeRes.data) setStore(storeRes.data);
       
-      if (storeError) {
-        console.warn('AdminLayout: Store query error', storeError);
-      }
-      
-      setStore(storeData);
     } catch (error) {
-      console.error('AdminLayout: Critical fetch error', error);
+      console.error('Erro ao carregar dados:', error);
     } finally {
       setLoading(false);
     }
@@ -57,54 +47,30 @@ export default function AdminLayout() {
   useEffect(() => {
     let mounted = true;
 
-    async function initAuth() {
-      // Fail-safe: Forçar saída do loading após 5 segundos se nada acontecer
-      const timeout = setTimeout(() => {
-        if (mounted && loading) {
-          console.warn('AdminLayout: GLOBAL TIMEOUT');
-          setLoading(false);
-        }
-      }, 5000);
+    async function checkUser() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        if (mounted) navigate('/admin/login');
+        setLoading(false);
+        return;
+      }
 
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          if (mounted) {
-            navigate('/admin/login');
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (mounted) {
-          setUser(session.user);
-          await loadAllData(session.user.id);
-        }
-      } catch (err) {
-        console.error('Init auth error:', err);
-        if (mounted) setLoading(false);
-      } finally {
-        clearTimeout(timeout);
+      if (mounted) {
+        setUser(session.user);
+        await loadAllData(session.user.id);
       }
     }
 
-    initAuth();
+    checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
-        if (mounted) {
-          setUser(null);
-          setUserProfile(null);
-          setStore(null);
-          navigate('/admin/login');
-        }
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (mounted) {
-          setUser(session.user);
-          // Só carrega se ainda não tivermos a loja
-          if (!store) await loadAllData(session.user.id);
-        }
+        setUser(null);
+        setStore(null);
+        navigate('/admin/login');
+      } else if (session) {
+        setUser(session.user);
+        if (!store) loadAllData(session.user.id);
       }
     });
 
@@ -112,30 +78,24 @@ export default function AdminLayout() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/admin/login');
-  };
-
-  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   if (loading) {
     return (
       <div className="loading-screen">
         <div className="loading-content">
-          <img src="/LOGO NOVA SEM FUNDO.png" alt="Anotô Logo" className="loading-logo" />
+          <img src="/LOGO NOVA SEM FUNDO.png" alt="Anotô" className="loading-logo" />
           <div className="loading-bar-container">
             <div className="loading-bar-progress"></div>
           </div>
-          <span className="loading-text">Preparando seu painel</span>
+          <span className="loading-text">Carregando painel...</span>
         </div>
       </div>
     );
   }
+
   if (!user) return null;
 
   const isSuperAdmin = userProfile?.role === 'superadmin';
@@ -150,64 +110,49 @@ export default function AdminLayout() {
         </button>
       </div>
 
-      {/* Sidebar Overlay */}
-      <div 
-        className={`sidebar-overlay ${mobileMenuOpen ? 'active' : ''}`} 
-        onClick={closeMobileMenu}
-      />
+      <div className={`sidebar-overlay ${mobileMenuOpen ? 'active' : ''}`} onClick={() => setMobileMenuOpen(false)} />
 
       <aside className={`admin-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="admin-brand">
-          <img src="/assets/LOGO NOVA SEM FUNDO.png" alt="Anotô" style={{ height: '140px', width: 'auto', marginBottom: '10px' }} />
+          <img src="/LOGO NOVA SEM FUNDO.png" alt="Anotô" style={{ height: 'auto', width: '180px' }} />
         </div>
-        
         <nav className="admin-nav">
-          <NavLink to="/admin" end className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
-            <Home size={20} />
-            <span>Dashboard</span>
+          <NavLink to="/admin" end className="nav-item" onClick={() => setMobileMenuOpen(false)}>
+            <LayoutDashboard size={20} /> Dashboard
           </NavLink>
-          <NavLink to="/admin/orders" className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
-            <ShoppingBag size={20} />
-            <span>Pedidos</span>
+          <NavLink to="/admin/orders" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
+            <ShoppingBag size={20} /> Pedidos
           </NavLink>
-          <NavLink to="/admin/products" className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
-            <LayoutDashboard size={20} />
-            <span>Produtos</span>
+          <NavLink to="/admin/products" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
+            <Package size={20} /> Produtos
           </NavLink>
-          <NavLink to="/admin/my-store" className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
-            <Store size={20} />
-            <span>Minha Loja</span>
+          <NavLink to="/admin/my-store" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
+            <Store size={20} /> Minha Loja
           </NavLink>
-          <NavLink to="/admin/delivery-fees" className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
-            <MapPin size={20} />
-            <span>Taxas de Entrega</span>
+          <NavLink to="/admin/delivery-fees" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
+            <Truck size={20} /> Taxas
           </NavLink>
-          <NavLink to="/admin/settings" className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
-            <Settings size={20} />
-            <span>Configurações</span>
+          <NavLink to="/admin/settings" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
+            <Settings size={20} /> Ajustes
           </NavLink>
 
           {isSuperAdmin && (
             <>
-              <div className="nav-divider" style={{ margin: '16px 0', borderTop: '1px solid rgba(255,255,255,0.1)' }}></div>
-              <NavLink to="/admin/master" className={({isActive}) => isActive ? "nav-item active superadmin" : "nav-item superadmin"} onClick={closeMobileMenu}>
-                <Shield size={20} />
-                <span>Gestão Geral</span>
+              <div className="nav-divider" />
+              <NavLink to="/admin/master" className="nav-item superadmin" onClick={() => setMobileMenuOpen(false)}>
+                <Shield size={20} /> Master
               </NavLink>
             </>
           )}
         </nav>
-
         <div className="admin-footer">
-          <button className="nav-item logout" onClick={handleLogout}>
-            <LogOut size={20} />
-            <span>Sair</span>
+          <button onClick={() => supabase.auth.signOut()} className="nav-item logout">
+            <LogOut size={20} /> Sair
           </button>
         </div>
       </aside>
-
       <main className="admin-main">
-        <Outlet context={{ user, userProfile, store } as AdminContextType} />
+        <Outlet context={{ store, userProfile, user }} />
       </main>
     </div>
   );
