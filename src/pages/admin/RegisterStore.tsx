@@ -60,7 +60,7 @@ export default function RegisterStore() {
         name: storeName,
         slug: slug,
         whatsapp_number: whatsapp,
-        logo: '/assets/LOGO NOVA SEM FUNDO.png', // default
+        logo: '/assets/logo-anoto.png', // default
         banner: '/assets/banner.png', // default
         address: address || 'Endereço da loja',
         delivery_fee: 5.00,
@@ -82,6 +82,9 @@ export default function RegisterStore() {
   return (
     <div className="admin-auth-container fade-in">
       <form onSubmit={handleRegister} className="admin-auth-form">
+        <div className="auth-logo-wrapper">
+          <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" />
+        </div>
         <div className="auth-header">
           <h2>Crie sua Loja Virtual</h2>
           <p>Comece a receber pedidos agora mesmo</p>

@@ -27,7 +27,7 @@ export default function LoginAdmin() {
     <div className="admin-auth-container fade-in">
       <form onSubmit={handleLogin} className="admin-auth-form">
         <div className="auth-logo-wrapper">
-          <img src="/assets/LOGO NOVA SEM FUNDO.png" alt="ANOTÔ Logo" />
+          <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" />
         </div>
         <div className="auth-header">
           <h2>Painel do Lojista</h2>

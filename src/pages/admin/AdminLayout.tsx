@@ -86,7 +86,7 @@ export default function AdminLayout() {
     return (
       <div className="loading-screen">
         <div className="loading-content">
-          <img src="/LOGO NOVA SEM FUNDO.png" alt="Anotô" className="loading-logo" />
+          <img src="/assets/logo-anoto.png" alt="Anotô" className="loading-logo" />
           <div className="loading-bar-container">
             <div className="loading-bar-progress"></div>
           </div>
@@ -104,7 +104,7 @@ export default function AdminLayout() {
     <div className="admin-layout">
       {/* Mobile Header */}
       <div className="admin-mobile-header">
-        <img src="/LOGO NOVA SEM FUNDO.png" alt="Anotô" className="mobile-logo" />
+        <img src="/assets/logo-anoto.png" alt="Anotô" className="mobile-logo" />
         <button className="hamburger-btn" onClick={() => setMobileMenuOpen(true)}>
           <Menu size={24} />
         </button>
@@ -114,7 +114,7 @@ export default function AdminLayout() {
 
       <aside className={`admin-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="admin-brand">
-          <img src="/LOGO NOVA SEM FUNDO.png" alt="Anotô" style={{ height: 'auto', width: '180px' }} />
+          <img src="/assets/logo-anoto.png" alt="Anotô" style={{ height: 'auto', width: '180px' }} />
         </div>
         <nav className="admin-nav">
           <NavLink to="/admin" end className="nav-item" onClick={() => setMobileMenuOpen(false)}>
