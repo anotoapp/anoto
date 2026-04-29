@@ -1,15 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 
 :root {
-  --primary: #FFC107;
-  --secondary: #212121;
-  --accent: #F44336;
-  --bg: #FAFAFA;
-  --text: #212121;
-  --text-muted: #757575;
-  --radius: 12px;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --glass: rgba(255, 255, 255, 0.8);
+  --primary: #FFB800; /* Ouro da Logo */
+  --secondary: #C81D25; /* Vermelho da Logo */
+  --accent: #C81D25;
+  --bg: #FFFBF2; /* Creme suave de fundo */
+  --text: #2D0A0A; /* Marrom escuro quase preto para leitura */
+  --text-muted: #6B5D5D;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(200, 29, 37, 0.1);
+  --glass: rgba(255, 255, 255, 0.7);
+  --brand-red: #C81D25;
+  --brand-gold: #FFB800;
+  --brand-cream: #FFFBF2;
 }
 
 * {
