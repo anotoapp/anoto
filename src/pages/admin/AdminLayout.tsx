@@ -25,58 +25,79 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   const loadAllData = async (userId: string) => {
+    console.log('AdminLayout: Loading data for user', userId);
     try {
       // 1. Fetch Profile
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
+      
+      if (profileError) console.warn('Profile not found or error:', profileError);
       setUserProfile(profile);
 
       // 2. Fetch Store
-      const { data: storeData } = await supabase
+      const { data: storeData, error: storeError } = await supabase
         .from('stores')
         .select('*')
         .eq('owner_id', userId)
         .single();
+      
+      if (storeError) console.warn('Store not found or error:', storeError);
       setStore(storeData);
     } catch (error) {
-      console.error('Error loading admin data:', error);
+      console.error('Critical error in AdminLayout loadAllData:', error);
     } finally {
+      console.log('AdminLayout: Loading finished');
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    let mounted = true;
+
     async function initAuth() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        navigate('/admin/login');
-        setLoading(false);
+        if (mounted) {
+          navigate('/admin/login');
+          setLoading(false);
+        }
         return;
       }
 
-      setUser(session.user);
-      await loadAllData(session.user.id);
+      if (mounted) {
+        setUser(session.user);
+        await loadAllData(session.user.id);
+      }
     }
 
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth event:', event);
       if (event === 'SIGNED_OUT' || !session) {
-        setUser(null);
-        setUserProfile(null);
-        setStore(null);
-        navigate('/admin/login');
+        if (mounted) {
+          setUser(null);
+          setUserProfile(null);
+          setStore(null);
+          navigate('/admin/login');
+          setLoading(false);
+        }
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setUser(session.user);
-        if (!userProfile) await loadAllData(session.user.id);
+        if (mounted) {
+          setUser(session.user);
+          if (!store) await loadAllData(session.user.id);
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleLogout = async () => {

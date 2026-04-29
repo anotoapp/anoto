@@ -14,6 +14,7 @@ export default function ProductsAdmin() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const { store } = useOutletContext<AdminContextType>();
 
