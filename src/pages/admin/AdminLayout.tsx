@@ -11,14 +11,45 @@ interface UserProfile {
   full_name?: string;
 }
 
+export interface AdminContextType {
+  user: User | null;
+  userProfile: UserProfile | null;
+  store: any | null;
+}
+
 export default function AdminLayout() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [store, setStore] = useState<any | null>(null);
   const navigate = useNavigate();
 
+  const loadAllData = async (userId: string) => {
+    try {
+      // 1. Fetch Profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      setUserProfile(profile);
+
+      // 2. Fetch Store
+      const { data: storeData } = await supabase
+        .from('stores')
+        .select('*')
+        .eq('owner_id', userId)
+        .single();
+      setStore(storeData);
+    } catch (error) {
+      console.error('Error loading admin data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    async function getSessionAndProfile() {
+    async function initAuth() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -28,31 +59,20 @@ export default function AdminLayout() {
       }
 
       setUser(session.user);
-
-      // Fetch profile to check role
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-
-      setUserProfile(profile);
-      setLoading(false);
+      await loadAllData(session.user.id);
     }
 
-    getSessionAndProfile();
+    initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        setUser(null);
+        setUserProfile(null);
+        setStore(null);
         navigate('/admin/login');
-      } else {
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setUser(session.user);
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        setUserProfile(profile);
+        if (!userProfile) await loadAllData(session.user.id);
       }
     });
 
@@ -122,7 +142,7 @@ export default function AdminLayout() {
       </aside>
 
       <main className="admin-main">
-        <Outlet />
+        <Outlet context={{ user, userProfile, store } as AdminContextType} />
       </main>
     </div>
   );

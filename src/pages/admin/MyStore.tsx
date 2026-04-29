@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Save, Upload } from 'lucide-react';
 import { optimizeImage } from '../../lib/image-optimizer';
+import type { AdminContextType } from './AdminLayout';
 
 const defaultOpeningHours = {
   monday: { isOpen: true, open: '18:00', close: '23:00' },
@@ -44,19 +46,11 @@ export default function MyStore() {
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [store, setStore] = useState<StoreData | null>(null);
 
-  async function loadStoreData() {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+  const { store: contextStore } = useOutletContext<AdminContextType>();
 
-      const { data, error } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('owner_id', session.user.id)
-        .single();
-
-      if (error) throw error;
-      
+  useEffect(() => {
+    if (contextStore) {
+      const data = { ...contextStore };
       let parsedHours = defaultOpeningHours;
       if (data.opening_hours) {
         try {
@@ -72,19 +66,10 @@ export default function MyStore() {
         }
       }
       data.opening_hours = parsedHours;
-      
       setStore(data as StoreData);
-    } catch (error) {
-      console.error('Error loading store:', error);
-    } finally {
       setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadStoreData();
-  }, []);
+  }, [contextStore]);
 
 
   const uploadImage = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {

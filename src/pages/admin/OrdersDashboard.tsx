@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { AdminContextType } from './AdminLayout';
 import { Clock, CheckCircle, Package, XCircle, Printer, DollarSign, ShoppingBag, TrendingUp } from 'lucide-react';
 import './Admin.css';
 
@@ -58,47 +60,38 @@ export default function OrdersDashboard() {
     }
   }
 
+  const { store } = useOutletContext<AdminContextType>();
+
   useEffect(() => {
     let channel: RealtimeChannel | undefined;
 
     async function initialize() {
+      if (!store) return;
+      
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
+        setStoreId(store.id);
+        setStoreName(store.name);
+        await fetchOrders(store.id);
 
-        const { data: storeData, error: storeError } = await supabase
-          .from('stores')
-          .select('id, name')
-          .eq('owner_id', session.user.id)
-          .single();
-
-        if (storeError) throw storeError;
-
-        if (storeData) {
-          setStoreId(storeData.id);
-          setStoreName(storeData.name);
-          await fetchOrders(storeData.id);
-
-          channel = supabase
-            .channel('public:orders')
-            .on(
-              'postgres_changes',
-              { event: '*', schema: 'public', table: 'orders', filter: `store_id=eq.${storeData.id}` },
-              (payload) => {
-                if (payload.eventType === 'INSERT') {
-                  setOrders(current => [payload.new as Order, ...current]);
-                  playNotificationSound();
-                } else if (payload.eventType === 'UPDATE') {
-                  setOrders(current =>
-                    current.map(order =>
-                      order.id === payload.new.id ? (payload.new as Order) : order
-                    )
-                  );
-                }
+        channel = supabase
+          .channel(`public:orders:${store.id}`)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'orders', filter: `store_id=eq.${store.id}` },
+            (payload) => {
+              if (payload.eventType === 'INSERT') {
+                setOrders(current => [payload.new as Order, ...current]);
+                playNotificationSound();
+              } else if (payload.eventType === 'UPDATE') {
+                setOrders(current =>
+                  current.map(order =>
+                    order.id === payload.new.id ? (payload.new as Order) : order
+                  )
+                );
               }
-            )
-            .subscribe();
-        }
+            }
+          )
+          .subscribe();
       } catch (error) {
         console.error('Error initializing orders dashboard:', error);
       } finally {
@@ -111,7 +104,7 @@ export default function OrdersDashboard() {
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
-  }, [playNotificationSound]);
+  }, [store, playNotificationSound]);
 
 
   const handlePrint = (order: Order) => {

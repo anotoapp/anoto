@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
+import type { AdminContextType } from './AdminLayout';
 import './Admin.css';
 
 interface Order {
@@ -35,35 +37,26 @@ export default function Dashboard() {
     }
   }
 
+  const { store } = useOutletContext<AdminContextType>();
+
   useEffect(() => {
     async function initialize() {
+      if (!store) return;
+      
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-
-        const { data: storeData, error: storeError } = await supabase
-          .from('stores')
-          .select('*')
-          .eq('owner_id', session.user.id)
-          .single();
-
-        if (storeError) throw storeError;
-
-        if (storeData) {
-          setStoreId(storeData.id);
-          await fetchOrders(storeData.id);
-          
-          // Fetch checklist data
-          const { count: catCount } = await supabase.from('categories').select('*', { count: 'exact', head: true }).eq('store_id', storeData.id);
-          const { count: prodCount } = await supabase.from('products').select('*', { count: 'exact', head: true }).eq('store_id', storeData.id);
-          
-          setChecklist({
-            categories: (catCount || 0) > 0,
-            products: (prodCount || 0) > 0,
-            openingHours: !!storeData.opening_hours,
-            logo: storeData.logo !== '/assets/logo.png' && !!storeData.logo
-          });
-        }
+        setStoreId(store.id);
+        await fetchOrders(store.id);
+        
+        // Fetch checklist data
+        const { count: catCount } = await supabase.from('categories').select('*', { count: 'exact', head: true }).eq('store_id', store.id);
+        const { count: prodCount } = await supabase.from('products').select('*', { count: 'exact', head: true }).eq('store_id', store.id);
+        
+        setChecklist({
+          categories: (catCount || 0) > 0,
+          products: (prodCount || 0) > 0,
+          openingHours: !!store.opening_hours,
+          logo: store.logo !== '/assets/logo.png' && !!store.logo
+        });
       } catch (error) {
         console.error('Error initializing dashboard metrics:', error);
       } finally {
@@ -72,7 +65,7 @@ export default function Dashboard() {
     }
 
     initialize();
-  }, []);
+  }, [store]);
 
 
   if (loading) return <div className="p-4">Carregando métricas...</div>;

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Trash2, MapPin } from 'lucide-react';
+import type { AdminContextType } from './AdminLayout';
 import './Admin.css';
 
 interface DeliveryFee {
@@ -16,32 +18,26 @@ export default function DeliveryFeesAdmin() {
   const [newNeighborhood, setNewNeighborhood] = useState('');
   const [newFee, setNewFee] = useState('');
 
+  const { store } = useOutletContext<AdminContextType>();
+
   useEffect(() => {
-    loadData();
-  }, []);
+    if (store) loadData();
+  }, [store]);
 
   async function loadData() {
+    if (!store) return;
+    
     try {
       setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data: storeData } = await supabase
-        .from('stores')
-        .select('id')
-        .eq('owner_id', session.user.id)
-        .single();
-
-      if (storeData) {
-        setStoreId(storeData.id);
-        const { data } = await supabase
-          .from('delivery_fees')
-          .select('*')
-          .eq('store_id', storeData.id)
-          .order('neighborhood');
-        
-        setFees(data || []);
-      }
+      setStoreId(store.id);
+      
+      const { data } = await supabase
+        .from('delivery_fees')
+        .select('*')
+        .eq('store_id', store.id)
+        .order('neighborhood');
+      
+      setFees(data || []);
     } catch (error) {
       console.error('Error loading delivery fees:', error);
     } finally {
