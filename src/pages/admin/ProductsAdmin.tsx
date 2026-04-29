@@ -189,69 +189,124 @@ export default function ProductsAdmin() {
         </div>
       )}
 
-      <div className="orders-grid">
-            {products.length === 0 ? (
-              <div className="no-orders" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', background: '#fff', borderRadius: '16px', color: '#666' }}>
-                {!storeId ? 'Erro ao carregar dados da loja. Tente atualizar a página.' : 'Nenhum produto cadastrado.'}
-              </div>
-            ) : (
-          products.map(product => {
-            const category = categories.find(c => c.id === product.category_id);
-            return (
-              <div key={product.id} className="order-card" style={{ padding: '0', overflow: 'hidden' }}>
-                <div style={{ height: '160px', width: '100%', backgroundColor: '#eee', backgroundImage: `url(${product.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                
-                <div style={{ padding: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: product.is_available ? 'inherit' : '#888' }}>
-                      {product.name} {!product.is_available && <span style={{ fontSize: '0.75rem', background: '#eee', padding: '2px 6px', borderRadius: '4px', verticalAlign: 'middle' }}>ESGOTADO</span>}
-                    </h3>
-                    <span style={{ fontWeight: 'bold', color: product.is_available ? '#2962ff' : '#888' }}>R$ {product.price.toFixed(2)}</span>
-                  </div>
-                  
-                  <p style={{ color: '#666', fontSize: '0.9rem', margin: '0 0 12px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {product.description}
-                  </p>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', color: '#888', marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Tag size={14} /> {category?.name || 'Sem categoria'}
-                    </div>
-                    
-                    <div 
-                      onClick={() => toggleAvailability(product.id, product.is_available ?? true)}
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px', 
-                        cursor: 'pointer',
-                        padding: '4px 8px',
-                        borderRadius: '20px',
-                        background: product.is_available ? '#e8f5e9' : '#fafafa',
-                        color: product.is_available ? '#2e7d32' : '#999',
-                        fontWeight: '600',
-                        fontSize: '0.75rem',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      {product.is_available ? '🟢 Disponível' : '🔴 Esgotado'}
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #eee', paddingTop: '16px' }}>
-                    <button onClick={() => openEditModal(product)} style={{ flex: 1, padding: '8px', background: '#f0f4ff', color: '#2962ff', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                      <Edit2 size={16} /> Editar
-                    </button>
-                    <button onClick={() => handleDelete(product.id)} style={{ padding: '8px', background: '#ffebee', color: '#d32f2f', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+        <div style={{ background: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', borderLeft: '4px solid #C81D25' }}>
+          <span style={{ color: '#666', fontSize: '0.9rem', fontWeight: '500' }}>Total de Produtos</span>
+          <h2 style={{ margin: '8px 0 0 0', fontSize: '1.8rem' }}>{products.length}</h2>
+        </div>
+        <div style={{ background: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', borderLeft: '4px solid #4caf50' }}>
+          <span style={{ color: '#666', fontSize: '0.9rem', fontWeight: '500' }}>Disponíveis</span>
+          <h2 style={{ margin: '8px 0 0 0', fontSize: '1.8rem' }}>{products.filter(p => p.is_available).length}</h2>
+        </div>
+        <div style={{ background: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', borderLeft: '4px solid #ff9800' }}>
+          <span style={{ color: '#666', fontSize: '0.9rem', fontWeight: '500' }}>Categorias</span>
+          <h2 style={{ margin: '8px 0 0 0', fontSize: '1.8rem' }}>{categories.length}</h2>
+        </div>
       </div>
+
+      {categories.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <Tag size={48} color="#ccc" style={{ marginBottom: '16px' }} />
+          <h2>Comece criando uma categoria</h2>
+          <p style={{ color: '#666', marginBottom: '24px' }}>Para organizar seu cardápio, você precisa de categorias (ex: Lanches, Bebidas).</p>
+          <button onClick={() => setIsCategoryModalOpen(true)} className="primary-action" style={{ padding: '12px 32px', borderRadius: '12px' }}>Criar Minha Primeira Categoria</button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+          {categories.map(category => {
+            const categoryProducts = products.filter(p => p.category_id === category.id);
+            
+            return (
+              <section key={category.id}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', borderBottom: '2px solid #f0f0f0', paddingBottom: '12px' }}>
+                  <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--lp-text-dark)' }}>{category.name}</h2>
+                  <span style={{ background: '#eee', padding: '2px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600', color: '#666' }}>
+                    {categoryProducts.length} {categoryProducts.length === 1 ? 'item' : 'itens'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                  {categoryProducts.length === 0 ? (
+                    <div style={{ gridColumn: '1 / -1', padding: '32px', background: '#f9f9f9', borderRadius: '16px', textAlign: 'center', border: '2px dashed #eee', color: '#888' }}>
+                      Nenhum produto nesta categoria. <button onClick={() => { setProductToEdit(null); setIsModalOpen(true); }} style={{ background: 'none', border: 'none', color: 'var(--brand-red)', fontWeight: '600', cursor: 'pointer', textDecoration: 'underline' }}>Adicionar item</button>
+                    </div>
+                  ) : (
+                    categoryProducts.map(product => (
+                      <div key={product.id} className="order-card" style={{ padding: '0', overflow: 'hidden', position: 'relative', border: product.is_available ? 'none' : '1px solid #eee' }}>
+                        {!product.is_available && (
+                          <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 5, background: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold', backdropFilter: 'blur(4px)' }}>
+                            ESGOTADO
+                          </div>
+                        )}
+                        
+                        <div style={{ height: '160px', width: '100%', backgroundColor: '#f0f0f0', backgroundImage: `url(${product.image})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: product.is_available ? 'none' : 'grayscale(100%)' }} />
+                        
+                        <div style={{ padding: '20px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: product.is_available ? 'var(--lp-text-dark)' : '#999' }}>
+                              {product.name}
+                            </h3>
+                            <span style={{ fontWeight: '800', color: 'var(--brand-red)', fontSize: '1.1rem' }}>R$ {product.price.toFixed(2)}</span>
+                          </div>
+                          
+                          <p style={{ color: '#666', fontSize: '0.9rem', margin: '0 0 16px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '2.8rem' }}>
+                            {product.description || 'Sem descrição cadastrada.'}
+                          </p>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                            <div 
+                              onClick={() => toggleAvailability(product.id, product.is_available ?? true)}
+                              style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '8px', 
+                                cursor: 'pointer',
+                                padding: '6px 12px',
+                                borderRadius: '12px',
+                                background: product.is_available ? '#e8f5e9' : '#f5f5f5',
+                                color: product.is_available ? '#2e7d32' : '#999',
+                                fontWeight: '700',
+                                fontSize: '0.75rem',
+                                transition: 'all 0.2s',
+                                border: '1px solid transparent'
+                              }}
+                            >
+                              {product.is_available ? '🟢 Disponível' : '🔴 Esgotado'}
+                            </div>
+                            
+                            <button 
+                              onClick={async () => {
+                                if (window.confirm('Deseja duplicar este produto?')) {
+                                  const { id, created_at, ...cloneData } = product;
+                                  const { error } = await supabase.from('products').insert({ ...cloneData, name: `${product.name} (Cópia)` });
+                                  if (!error) loadData();
+                                }
+                              }}
+                              style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: '600' }}
+                              title="Duplicar Produto"
+                            >
+                              <Plus size={14} /> Duplicar
+                            </button>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button onClick={() => openEditModal(product)} style={{ flex: 1, padding: '10px', background: '#f5f5f5', color: '#333', border: 'none', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600', transition: 'all 0.2s' }}>
+                              <Edit2 size={16} /> Editar
+                            </button>
+                            <button onClick={() => handleDelete(product.id)} style={{ padding: '10px', background: 'rgba(200, 29, 37, 0.05)', color: '#C81D25', border: 'none', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
 
       <ProductFormModal 
         isOpen={isModalOpen}
