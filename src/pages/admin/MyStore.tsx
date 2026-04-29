@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Save, Upload } from 'lucide-react';
 import { optimizeImage } from '../../lib/image-optimizer';
+import type { AdminContextType } from './AdminLayout';
 
 const defaultOpeningHours = {
   monday: { isOpen: true, open: '18:00', close: '23:00' },
@@ -43,21 +45,12 @@ export default function MyStore() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [store, setStore] = useState<StoreData | null>(null);
-
-  async function loadStoreData() {
-    try {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data, error } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('owner_id', session.user.id)
-        .single();
-
-      if (error) throw error;
-      
+ 
+  const { store: contextStore } = useOutletContext<AdminContextType>();
+ 
+  useEffect(() => {
+    if (contextStore) {
+      const data = { ...contextStore };
       let parsedHours = defaultOpeningHours;
       if (data.opening_hours) {
         try {
@@ -69,28 +62,16 @@ export default function MyStore() {
             parsedHours = parsed;
           }
         } catch {
-          // usa defaultOpeningHours se o parse falhar
+          // fallback
         }
       }
       data.opening_hours = parsedHours;
-      
       setStore(data as StoreData);
-    } catch (error) {
-      console.error('Error loading store:', error);
-    } finally {
+      setLoading(false);
+    } else if (contextStore === null) {
       setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    loadStoreData();
-
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  }, [contextStore]);
 
   const uploadImage = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {
     if (!store) return;

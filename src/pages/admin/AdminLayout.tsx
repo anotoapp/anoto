@@ -25,16 +25,14 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   const loadAllData = async (userId: string) => {
-    console.log('AdminLayout: Loading data for user', userId);
+    console.log('AdminLayout: Centralized data fetch for', userId);
     try {
       // 1. Fetch Profile
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
-      
-      if (profileError) console.warn('Profile not found or error:', profileError);
       setUserProfile(profile);
 
       // 2. Fetch Store
@@ -44,12 +42,14 @@ export default function AdminLayout() {
         .eq('owner_id', userId)
         .single();
       
-      if (storeError) console.warn('Store not found or error:', storeError);
+      if (storeError) {
+        console.warn('AdminLayout: Store query error', storeError);
+      }
+      
       setStore(storeData);
     } catch (error) {
-      console.error('Critical error in AdminLayout loadAllData:', error);
+      console.error('AdminLayout: Critical fetch error', error);
     } finally {
-      console.log('AdminLayout: Loading finished');
       setLoading(false);
     }
   };
@@ -58,13 +58,13 @@ export default function AdminLayout() {
     let mounted = true;
 
     async function initAuth() {
-      // Fail-safe: Forçar saída do loading após 3 segundos
+      // Fail-safe: Forçar saída do loading após 5 segundos se nada acontecer
       const timeout = setTimeout(() => {
         if (mounted && loading) {
-          console.warn('AdminLayout: Load timeout reached, forcing display');
+          console.warn('AdminLayout: GLOBAL TIMEOUT');
           setLoading(false);
         }
-      }, 3000);
+      }, 5000);
 
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -74,7 +74,6 @@ export default function AdminLayout() {
             navigate('/admin/login');
             setLoading(false);
           }
-          clearTimeout(timeout);
           return;
         }
 
@@ -93,18 +92,17 @@ export default function AdminLayout() {
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event);
       if (event === 'SIGNED_OUT' || !session) {
         if (mounted) {
           setUser(null);
           setUserProfile(null);
           setStore(null);
           navigate('/admin/login');
-          setLoading(false);
         }
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (mounted) {
           setUser(session.user);
+          // Só carrega se ainda não tivermos a loja
           if (!store) await loadAllData(session.user.id);
         }
       }

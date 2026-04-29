@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Plus, Edit2, Trash2, Tag } from 'lucide-react';
 import type { Product, Category } from '../../types';
 import { ProductFormModal } from '../../components/admin/ProductFormModal';
+import type { AdminContextType } from './AdminLayout';
 
 export default function ProductsAdmin() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -14,36 +16,26 @@ export default function ProductsAdmin() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const { store } = useOutletContext<AdminContextType>();
+
   useEffect(() => {
     loadData();
-    
-    // Fail-safe definitivo: se não carregar em 2s, abre no grito
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  }, [store]);
 
   async function loadData() {
+    if (!store) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data: storeData, error: storeError } = await supabase
-        .from('stores')
-        .select('id')
-        .eq('owner_id', session.user.id)
-        .single();
-
-      if (storeError) throw storeError;
-      setStoreId(storeData.id);
+      setStoreId(store.id);
 
       const { data: catData, error: catError } = await supabase
         .from('categories')
         .select('*')
-        .eq('store_id', storeData.id);
+        .eq('store_id', store.id);
 
       if (catError) throw catError;
       setCategories(catData || []);
