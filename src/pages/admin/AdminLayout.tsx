@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Settings, LogOut, Store, Home, Shield, MapPin } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Settings, LogOut, Store, Home, Shield, MapPin, Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { User } from '@supabase/supabase-js';
@@ -114,10 +114,14 @@ export default function AdminLayout() {
     };
   }, [navigate]);
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/admin/login');
   };
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   if (loading) {
     return (
@@ -138,33 +142,47 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar">
+      {/* Mobile Header */}
+      <div className="admin-mobile-header">
+        <img src="/LOGO NOVA SEM FUNDO.png" alt="Anotô" className="mobile-logo" />
+        <button className="hamburger-btn" onClick={() => setMobileMenuOpen(true)}>
+          <Menu size={24} />
+        </button>
+      </div>
+
+      {/* Sidebar Overlay */}
+      <div 
+        className={`sidebar-overlay ${mobileMenuOpen ? 'active' : ''}`} 
+        onClick={closeMobileMenu}
+      />
+
+      <aside className={`admin-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="admin-brand">
           <img src="/assets/LOGO NOVA SEM FUNDO.png" alt="Anotô" style={{ height: '140px', width: 'auto', marginBottom: '10px' }} />
         </div>
         
         <nav className="admin-nav">
-          <NavLink to="/admin" end className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/admin" end className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
             <Home size={20} />
             <span>Dashboard</span>
           </NavLink>
-          <NavLink to="/admin/orders" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/admin/orders" className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
             <ShoppingBag size={20} />
             <span>Pedidos</span>
           </NavLink>
-          <NavLink to="/admin/products" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/admin/products" className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
             <LayoutDashboard size={20} />
             <span>Produtos</span>
           </NavLink>
-          <NavLink to="/admin/my-store" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/admin/my-store" className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
             <Store size={20} />
             <span>Minha Loja</span>
           </NavLink>
-          <NavLink to="/admin/delivery-fees" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/admin/delivery-fees" className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
             <MapPin size={20} />
             <span>Taxas de Entrega</span>
           </NavLink>
-          <NavLink to="/admin/settings" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/admin/settings" className={({isActive}) => isActive ? "nav-item active" : "nav-item"} onClick={closeMobileMenu}>
             <Settings size={20} />
             <span>Configurações</span>
           </NavLink>
@@ -172,7 +190,7 @@ export default function AdminLayout() {
           {isSuperAdmin && (
             <>
               <div className="nav-divider" style={{ margin: '16px 0', borderTop: '1px solid rgba(255,255,255,0.1)' }}></div>
-              <NavLink to="/admin/master" className={({isActive}) => isActive ? "nav-item active superadmin" : "nav-item superadmin"}>
+              <NavLink to="/admin/master" className={({isActive}) => isActive ? "nav-item active superadmin" : "nav-item superadmin"} onClick={closeMobileMenu}>
                 <Shield size={20} />
                 <span>Gestão Geral</span>
               </NavLink>

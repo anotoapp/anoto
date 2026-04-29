@@ -267,3 +267,94 @@
   from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
 }
+/* Responsive Design */
+.admin-mobile-header {
+  display: none;
+  background: white;
+  padding: 12px 20px;
+  border-bottom: 1px solid #eee;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.mobile-logo {
+  height: 32px;
+  width: auto;
+}
+
+.hamburger-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .admin-mobile-header {
+    display: flex;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    transition: left 0.3s ease;
+    box-shadow: 20px 0 50px rgba(0,0,0,0.1);
+  }
+
+  .admin-sidebar.mobile-open {
+    left: 0;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    display: none;
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+  }
+
+  .admin-main {
+    padding: 16px;
+  }
+
+  .admin-brand img {
+    height: 120px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .dashboard-header .primary-action,
+  .dashboard-header .secondary-action {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .orders-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Ajustes para o modal de categoria */
+  .category-modal-content {
+    width: 95% !important;
+    padding: 20px !important;
+  }
+}
