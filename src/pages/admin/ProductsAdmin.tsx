@@ -10,9 +10,10 @@ export default function ProductsAdmin() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [storeId, setStoreId] = useState('');
-  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const { store } = useOutletContext<AdminContextType>();
 
@@ -100,16 +101,88 @@ export default function ProductsAdmin() {
   if (loading) return <div className="p-4">Carregando cardápio...</div>;
 
   return (
-    <div className="orders-dashboard">
-      <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="orders-dashboard fade-in">
+      <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1>Seu Cardápio</h1>
-          <p>Gerencie seus produtos e preços</p>
+          <p>Gerencie seus produtos e categorias</p>
         </div>
-        <button onClick={openNewModal} className="primary-action" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', color: 'white', background: '#2962ff', fontWeight: '500' }}>
-          <Plus size={18} /> Novo Produto
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            onClick={() => setIsCategoryModalOpen(true)} 
+            className="secondary-action" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: '600' }}
+          >
+            Categorias
+          </button>
+          <button 
+            onClick={openNewModal} 
+            className="primary-action" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', border: 'none', borderRadius: '12px', cursor: 'pointer', color: 'white', background: 'var(--brand-red)', fontWeight: '600' }}
+          >
+            <Plus size={18} /> Novo Produto
+          </button>
+        </div>
       </header>
+
+      {/* Modal de Categorias Simplificado */}
+      {isCategoryModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
+          <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '100%', maxWidth: '450px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ marginBottom: '8px', color: 'var(--lp-text-dark)' }}>Categorias</h2>
+            <p style={{ marginBottom: '24px', color: '#666' }}>Crie grupos para seus produtos (ex: Bebidas, Pizzas)</p>
+            
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+              <input 
+                type="text" 
+                placeholder="Nome da categoria" 
+                value={newCategoryName}
+                onChange={e => setNewCategoryName(e.target.value)}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd' }}
+              />
+              <button 
+                onClick={async () => {
+                  if (!newCategoryName) return;
+                  const { error } = await supabase.from('categories').insert({ name: newCategoryName, store_id: storeId });
+                  if (!error) {
+                    setNewCategoryName('');
+                    loadData();
+                  }
+                }}
+                style={{ padding: '0 20px', background: 'var(--brand-red)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: '600' }}
+              >
+                +
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto' }}>
+              {categories.map(cat => (
+                <div key={cat.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f9f9f9', borderRadius: '12px' }}>
+                  <span>{cat.name}</span>
+                  <button 
+                    onClick={async () => {
+                      if (window.confirm('Excluir esta categoria? Produtos nela podem ficar órfãos.')) {
+                        await supabase.from('categories').delete().eq('id', cat.id);
+                        loadData();
+                      }
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer' }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button 
+              onClick={() => setIsCategoryModalOpen(false)} 
+              style={{ width: '100%', marginTop: '32px', padding: '14px', borderRadius: '12px', border: '1px solid #ddd', cursor: 'pointer', fontWeight: '600' }}
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="orders-grid">
         {products.length === 0 ? (
