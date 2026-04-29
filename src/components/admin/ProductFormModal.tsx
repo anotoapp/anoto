@@ -198,14 +198,14 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
   };
 
   return (
-    <div className="drawer-overlay" onClick={onClose} style={{ zIndex: 1100 }}>
-      <div className="drawer-content open" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', margin: 'auto', borderRadius: '16px', height: 'auto', maxHeight: '95vh', overflowY: 'auto' }}>
-        <div className="drawer-header" style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 10 }}>
-          <h2>{productToEdit ? 'Editar Produto' : 'Novo Produto'}</h2>
-          <button onClick={onClose}><X size={24} /></button>
+    <div className="drawer-overlay" onClick={onClose} style={{ zIndex: 1100, background: 'rgba(45, 10, 10, 0.4)', backdropFilter: 'blur(4px)' }}>
+      <div className="drawer-content open" onClick={e => e.stopPropagation()} style={{ maxWidth: '650px', margin: 'auto', borderRadius: '32px', height: 'auto', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(200, 29, 37, 0.1)', boxShadow: '0 25px 50px rgba(0,0,0,0.15)' }}>
+        <div className="drawer-header" style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 10, padding: '32px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--lp-text-dark)', margin: 0 }}>{productToEdit ? 'Editar Produto' : 'Novo Produto'}</h2>
+          <button onClick={onClose} style={{ background: '#f5f5f5', border: 'none', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}><X size={20} /></button>
         </div>
 
-        <form onSubmit={handleSubmit} className="drawer-body" style={{ padding: '24px' }}>
+        <form onSubmit={handleSubmit} className="drawer-body" style={{ padding: '32px' }}>
           
           {/* Basic Info */}
           <div className="form-group" style={{ marginBottom: '20px' }}>
@@ -239,45 +239,55 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
             </div>
           </div>
 
-          {/* Modifiers Section */}
           <div style={{ marginTop: '32px', borderTop: '2px solid #f0f0f0', paddingTop: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0 }}>Grupos de Opcionais</h3>
-              <button type="button" onClick={addGroup} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#e63946', background: 'none', border: 'none', fontWeight: '600', cursor: 'pointer' }}>
+              <h3 style={{ margin: 0, fontWeight: '800', color: 'var(--lp-text-dark)' }}>Grupos de Opcionais</h3>
+              <button type="button" onClick={addGroup} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--brand-red)', background: 'none', border: 'none', fontWeight: '700', cursor: 'pointer' }}>
                 <Plus size={18} /> Adicionar Grupo
               </button>
             </div>
 
             {optionGroups.map((group, gIndex) => (
-              <div key={gIndex} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-                  <input placeholder="Ex: Escolha o Molho" value={group.name} onChange={e => updateGroup(gIndex, { name: e.target.value })} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
-                  <button type="button" onClick={() => removeGroup(gIndex)} style={{ color: '#ef4444', background: 'none', border: 'none' }}><Trash2 size={18} /></button>
+              <div key={gIndex} style={{ backgroundColor: '#FFFBF2', padding: '20px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(200, 29, 37, 0.1)' }}>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '15px' }}>
+                  <input placeholder="Ex: Escolha o Molho" value={group.name} onChange={e => updateGroup(gIndex, { name: e.target.value })} style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', border: '1px solid #ddd', fontWeight: '600' }} />
+                  <button type="button" onClick={() => removeGroup(gIndex)} style={{ color: '#ff4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={20} /></button>
                 </div>
                 
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', fontSize: '0.85rem' }}>
-                  <label><input type="checkbox" checked={group.required} onChange={e => updateGroup(gIndex, { required: e.target.checked, min_options: e.target.checked ? 1 : 0 })} /> Obrigatório</label>
-                  <div>Máx. Opções: <input type="number" value={group.max_options} onChange={e => updateGroup(gIndex, { max_options: parseInt(e.target.value) })} style={{ width: '40px', padding: '2px' }} /></div>
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', fontSize: '0.9rem', fontWeight: '500' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={group.required} onChange={e => updateGroup(gIndex, { required: e.target.checked, min_options: e.target.checked ? 1 : 0 })} /> 
+                    Obrigatório
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    Máx. Opções: 
+                    <input type="number" value={group.max_options} onChange={e => updateGroup(gIndex, { max_options: parseInt(e.target.value) })} style={{ width: '50px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #ddd' }} />
+                  </div>
                 </div>
 
-                <div style={{ paddingLeft: '16px', borderLeft: '2px solid #e2e8f0' }}>
+                <div style={{ paddingLeft: '20px', borderLeft: '3px solid rgba(200, 29, 37, 0.1)' }}>
                   {group.options?.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                      <input placeholder="Nome" value={opt.name} onChange={e => updateOption(gIndex, oIndex, { name: e.target.value })} style={{ flex: 2, padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
-                      <input type="number" placeholder="Preço" value={opt.price} onChange={e => updateOption(gIndex, oIndex, { price: parseFloat(e.target.value) })} style={{ flex: 1, padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
-                      <button type="button" onClick={() => removeOption(gIndex, oIndex)} style={{ color: '#94a3b8', background: 'none', border: 'none' }}><X size={16} /></button>
+                    <div key={oIndex} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                      <input placeholder="Nome (Ex: Maionese)" value={opt.name} onChange={e => updateOption(gIndex, oIndex, { name: e.target.value })} style={{ flex: 2, padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd' }} />
+                      <input type="number" placeholder="Preço" value={opt.price} onChange={e => updateOption(gIndex, oIndex, { price: parseFloat(e.target.value) })} style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd' }} />
+                      <button type="button" onClick={() => removeOption(gIndex, oIndex)} style={{ color: '#999', background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
                     </div>
                   ))}
-                  <button type="button" onClick={() => addOption(gIndex)} style={{ fontSize: '0.8rem', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Adicionar Item</button>
+                  <button type="button" onClick={() => addOption(gIndex)} style={{ fontSize: '0.9rem', color: 'var(--brand-red)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', fontWeight: '700' }}>+ Adicionar Item</button>
                 </div>
               </div>
             ))}
           </div>
 
-          <div style={{ marginTop: '32px', display: 'flex', gap: '12px' }}>
-            <button type="button" onClick={onClose} className="secondary-action" style={{ flex: 1 }}>Cancelar</button>
-            <button type="submit" disabled={loading || uploading} className="primary-action" style={{ flex: 1 }}>
-              {loading ? 'Salvando...' : 'Salvar Tudo'}
+          <div style={{ marginTop: '32px', display: 'flex', gap: '15px', position: 'sticky', bottom: '-24px', background: 'white', padding: '20px 0' }}>
+            <button type="button" onClick={onClose} className="secondary-action" style={{ flex: 1, padding: '14px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid #ddd' }}>Cancelar</button>
+            <button 
+              type="submit" 
+              disabled={loading || uploading} 
+              className="primary-action" 
+              style={{ flex: 1, padding: '14px', borderRadius: '12px', fontWeight: '700', cursor: 'pointer', background: 'var(--brand-red)', color: 'white', border: 'none', boxShadow: '0 8px 20px rgba(200, 29, 37, 0.2)' }}
+            >
+              {loading ? 'Salvando...' : 'Salvar Produto'}
             </button>
           </div>
         </form>
