@@ -84,6 +84,12 @@ export default function MyStore() {
 
   useEffect(() => {
     loadStoreData();
+
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const uploadImage = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {

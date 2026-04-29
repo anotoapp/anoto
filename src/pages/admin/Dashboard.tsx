@@ -73,6 +73,12 @@ export default function Dashboard() {
     }
 
     initialize();
+
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
 

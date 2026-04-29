@@ -16,6 +16,13 @@ export default function ProductsAdmin() {
 
   useEffect(() => {
     loadData();
+    
+    // Fail-safe definitivo: se não carregar em 2s, abre no grito
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   async function loadData() {

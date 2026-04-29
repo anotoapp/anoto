@@ -109,8 +109,13 @@ export default function OrdersDashboard() {
 
     initialize();
     
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+    
     return () => {
       if (channel) supabase.removeChannel(channel);
+      clearTimeout(timer);
     };
   }, [playNotificationSound]);
 
