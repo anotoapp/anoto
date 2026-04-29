@@ -33,40 +33,46 @@ export default function OrdersDashboard() {
     let channel: any;
 
     async function initialize() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
 
-      const { data: storeData } = await supabase
-        .from('stores')
-        .select('id, name')
-        .eq('owner_id', session.user.id)
-        .single();
+        const { data: storeData, error: storeError } = await supabase
+          .from('stores')
+          .select('id, name')
+          .eq('owner_id', session.user.id)
+          .single();
 
-      if (storeData) {
-        setStoreId(storeData.id);
-        setStoreName(storeData.name);
-        fetchOrders(storeData.id);
+        if (storeError) throw storeError;
 
-        channel = supabase
-          .channel('public:orders')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'orders', filter: `store_id=eq.${storeData.id}` },
-            (payload) => {
-              if (payload.eventType === 'INSERT') {
-                setOrders(current => [payload.new as Order, ...current]);
-                playNotificationSound();
-              } else if (payload.eventType === 'UPDATE') {
-                setOrders(current =>
-                  current.map(order =>
-                    order.id === payload.new.id ? (payload.new as Order) : order
-                  )
-                );
+        if (storeData) {
+          setStoreId(storeData.id);
+          setStoreName(storeData.name);
+          await fetchOrders(storeData.id);
+
+          channel = supabase
+            .channel('public:orders')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'orders', filter: `store_id=eq.${storeData.id}` },
+              (payload) => {
+                if (payload.eventType === 'INSERT') {
+                  setOrders(current => [payload.new as Order, ...current]);
+                  playNotificationSound();
+                } else if (payload.eventType === 'UPDATE') {
+                  setOrders(current =>
+                    current.map(order =>
+                      order.id === payload.new.id ? (payload.new as Order) : order
+                    )
+                  );
+                }
               }
-            }
-          )
-          .subscribe();
-      } else {
+            )
+            .subscribe();
+        }
+      } catch (error) {
+        console.error('Error initializing orders dashboard:', error);
+      } finally {
         setLoading(false);
       }
     }
@@ -96,8 +102,6 @@ export default function OrdersDashboard() {
       setOrders(data || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
     }
   }
 

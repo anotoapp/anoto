@@ -23,30 +23,36 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function initialize() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
 
-      const { data: storeData } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('owner_id', session.user.id)
-        .single();
+        const { data: storeData, error: storeError } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('owner_id', session.user.id)
+          .single();
 
-      if (storeData) {
-        setStoreId(storeData.id);
-        fetchOrders(storeData.id);
-        
-        // Fetch checklist data
-        const { count: catCount } = await supabase.from('categories').select('*', { count: 'exact', head: true }).eq('store_id', storeData.id);
-        const { count: prodCount } = await supabase.from('products').select('*', { count: 'exact', head: true }).eq('store_id', storeData.id);
-        
-        setChecklist({
-          categories: (catCount || 0) > 0,
-          products: (prodCount || 0) > 0,
-          openingHours: !!storeData.opening_hours,
-          logo: storeData.logo !== '/assets/logo.png' && !!storeData.logo
-        });
-      } else {
+        if (storeError) throw storeError;
+
+        if (storeData) {
+          setStoreId(storeData.id);
+          await fetchOrders(storeData.id);
+          
+          // Fetch checklist data
+          const { count: catCount } = await supabase.from('categories').select('*', { count: 'exact', head: true }).eq('store_id', storeData.id);
+          const { count: prodCount } = await supabase.from('products').select('*', { count: 'exact', head: true }).eq('store_id', storeData.id);
+          
+          setChecklist({
+            categories: (catCount || 0) > 0,
+            products: (prodCount || 0) > 0,
+            openingHours: !!storeData.opening_hours,
+            logo: storeData.logo !== '/assets/logo.png' && !!storeData.logo
+          });
+        }
+      } catch (error) {
+        console.error('Error initializing dashboard metrics:', error);
+      } finally {
         setLoading(false);
       }
     }
@@ -65,8 +71,6 @@ export default function Dashboard() {
       setOrders(data || []);
     } catch (error) {
       console.error('Error fetching orders for metrics:', error);
-    } finally {
-      setLoading(false);
     }
   }
 
