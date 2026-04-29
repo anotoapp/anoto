@@ -5,6 +5,12 @@ import type { CartItem, RestaurantConfig } from '../types';
 import { CustomerAuth } from './CustomerAuth';
 import './CartDrawer.css';
 
+interface CustomerProfile {
+  full_name?: string;
+  address?: string;
+  phone?: string;
+}
+
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,7 +18,7 @@ interface CartDrawerProps {
   onRemoveItem: (index: number) => void;
   config: RestaurantConfig;
   onCheckout: (customerInfo: { name: string; address: string; payment: string; type: string }) => void;
-  customer?: any;
+  customer?: CustomerProfile | null;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -37,12 +43,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [neighborhoods, setNeighborhoods] = useState<{ id: string; neighborhood: string; fee: number }[]>([]);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<{ neighborhood: string; fee: number } | null>(null);
 
-  useEffect(() => {
-    if (isOpen && config.id) {
-      loadNeighborhoods();
-    }
-  }, [isOpen, config.id]);
-
   async function loadNeighborhoods() {
     try {
       const { data } = await supabase
@@ -65,15 +65,24 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   }
 
   useEffect(() => {
+    if (isOpen && config.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadNeighborhoods();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, config.id]);
+
+  useEffect(() => {
     if (customer) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(customer.full_name || '');
       setAddress(customer.address || '');
     } else {
       // Try loading from localStorage for non-logged in users or quick fill
       const savedName = localStorage.getItem('anoto_customer_name');
       const savedAddress = localStorage.getItem('anoto_customer_address');
-      if (savedName) setName(savedName);
-      if (savedAddress) setAddress(savedAddress);
+      if (savedName) setName(savedName || '');
+      if (savedAddress) setAddress(savedAddress || '');
     }
   }, [customer]);
 
@@ -110,7 +119,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
       setCouponDiscount({ type: data.discount_type, value: data.discount_value });
       setCouponError('');
-    } catch (err) {
+    } catch {
       setCouponError('Erro ao aplicar cupom');
     } finally {
       setApplyingCoupon(false);
@@ -135,7 +144,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     }
   };
 
-  const handleAuthSuccess = (profile: any) => {
+  const handleAuthSuccess = (profile: CustomerProfile) => {
     setShowAuth(false);
     setName(profile.full_name || '');
     setAddress(profile.address || '');

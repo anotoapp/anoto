@@ -2,8 +2,14 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import './CustomerAuth.css';
 
+interface CustomerProfile {
+  full_name?: string;
+  address?: string;
+  phone?: string;
+}
+
 interface CustomerAuthProps {
-  onSuccess: (profile: any) => void;
+  onSuccess: (profile: CustomerProfile) => void;
   onCancel: () => void;
 }
 
@@ -54,8 +60,9 @@ export function CustomerAuth({ onSuccess, onCancel }: CustomerAuthProps) {
         localStorage.setItem('anoto_customer', JSON.stringify(data));
         onSuccess(data);
       }
-    } catch (error: any) {
-      alert(error.message || 'Erro ao autenticar. Verifique seus dados.');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erro ao autenticar. Verifique seus dados.';
+      alert(msg);
     } finally {
       setLoading(false);
     }

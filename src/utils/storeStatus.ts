@@ -1,4 +1,11 @@
-export function isStoreOpen(config: any): { isOpen: boolean; message?: string } {
+import type { OpeningHours } from '../types';
+
+interface StoreConfig {
+  is_open_manual?: boolean;
+  opening_hours?: OpeningHours;
+}
+
+export function isStoreOpen(config: StoreConfig): { isOpen: boolean; message?: string } {
   // 1. Check manual status
   if (config.is_open_manual === false) {
     return { isOpen: false, message: 'Fechado manualmente pelo lojista' };
@@ -9,7 +16,7 @@ export function isStoreOpen(config: any): { isOpen: boolean; message?: string } 
 
   const now = new Date();
   // Adjust for local time if necessary, but Date() usually works for local browser time
-  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
   const today = days[now.getDay()];
   const hoursConfig = config.opening_hours[today];
 
@@ -37,7 +44,7 @@ export function isStoreOpen(config: any): { isOpen: boolean; message?: string } 
     const [yOpenH, yOpenM] = yesterdayConfig.open.split(':').map(Number);
     const [yCloseH, yCloseM] = yesterdayConfig.close.split(':').map(Number);
     const yOpenTime = yOpenH * 60 + yOpenM;
-    let yCloseTime = yCloseH * 60 + yCloseM;
+    const yCloseTime = yCloseH * 60 + yCloseM;
     
     if (yCloseTime <= yOpenTime) {
       const currentTimePlus24 = currentTime + 24 * 60;

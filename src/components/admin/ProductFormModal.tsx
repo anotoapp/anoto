@@ -25,8 +25,18 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
   // Modifiers State
   const [optionGroups, setOptionGroups] = useState<Partial<ProductOptionGroup>[]>([]);
 
+  const loadOptionGroups = async (productId: string) => {
+    const { data } = await supabase
+      .from('product_option_groups')
+      .select('*, options:product_options(*)')
+      .eq('product_id', productId);
+    
+    if (data) setOptionGroups(data);
+  };
+
   useEffect(() => {
     if (productToEdit) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(productToEdit.name);
       setDescription(productToEdit.description);
       setPrice(productToEdit.price);
@@ -42,15 +52,6 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
       setOptionGroups([]);
     }
   }, [productToEdit, categories]);
-
-  const loadOptionGroups = async (productId: string) => {
-    const { data } = await supabase
-      .from('product_option_groups')
-      .select('*, options:product_options(*)')
-      .eq('product_id', productId);
-    
-    if (data) setOptionGroups(data);
-  };
 
   if (!isOpen) return null;
 
@@ -78,7 +79,13 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
     const newGroups = [...optionGroups];
     const group = newGroups[groupIndex];
     if (!group.options) group.options = [];
-    group.options.push({ name: '', price: 0, available: true } as any);
+    group.options.push({ 
+      id: Math.random().toString(),
+      group_id: group.id || '',
+      name: '', 
+      price: 0, 
+      available: true 
+    });
     setOptionGroups(newGroups);
   };
 
@@ -125,8 +132,9 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
 
       const { data } = supabase.storage.from('store-assets').getPublicUrl(filePath);
       setImage(data.publicUrl);
-    } catch (error: any) {
-      alert(error.message || 'Erro no upload.');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erro no upload.';
+      alert(msg);
     } finally {
       setUploading(false);
     }
@@ -181,8 +189,9 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
 
       onSuccess();
       onClose();
-    } catch (error: any) {
-      alert(error.message || 'Erro ao salvar.');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erro ao salvar.';
+      alert(msg);
     } finally {
       setLoading(false);
     }

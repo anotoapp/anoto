@@ -2,12 +2,19 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ShoppingBag, Settings, LogOut, Store, Home, Shield, MapPin } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import type { User } from '@supabase/supabase-js';
 import './Admin.css';
+
+interface UserProfile {
+  id: string;
+  role: string;
+  full_name?: string;
+}
 
 export default function AdminLayout() {
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {

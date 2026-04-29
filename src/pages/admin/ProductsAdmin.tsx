@@ -63,7 +63,7 @@ export default function ProductsAdmin() {
       const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
       loadData();
-    } catch (error) {
+    } catch {
       alert('Erro ao excluir produto.');
     }
   };

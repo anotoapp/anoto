@@ -71,8 +71,9 @@ export default function RegisterStore() {
 
       alert('Sua loja foi criada com sucesso! Faça login para continuar.');
       navigate('/admin/login');
-    } catch (error: any) {
-      alert(error.message || 'Erro ao criar loja. Tente novamente.');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erro ao criar loja. Tente novamente.';
+      alert(msg);
     } finally {
       setLoading(false);
     }

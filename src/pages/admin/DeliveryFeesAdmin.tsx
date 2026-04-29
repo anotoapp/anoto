@@ -66,7 +66,7 @@ export default function DeliveryFeesAdmin() {
       setNewNeighborhood('');
       setNewFee('');
       loadData();
-    } catch (error) {
+    } catch {
       alert('Erro ao adicionar taxa.');
     }
   }
@@ -77,7 +77,7 @@ export default function DeliveryFeesAdmin() {
       const { error } = await supabase.from('delivery_fees').delete().eq('id', id);
       if (error) throw error;
       loadData();
-    } catch (error) {
+    } catch {
       alert('Erro ao excluir taxa.');
     }
   }

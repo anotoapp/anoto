@@ -24,15 +24,16 @@ function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [customer, setCustomer] = useState<any>(null);
+  const [customer, setCustomer] = useState<{ name: string; phone: string } | null>(null);
 
   useEffect(() => {
     // Carregar cliente do localStorage (Login via WhatsApp)
     const savedCustomer = localStorage.getItem('anoto_customer');
     if (savedCustomer) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCustomer(JSON.parse(savedCustomer));
-      } catch (e) {
+      } catch {
         console.error('Error parsing customer from local storage');
       }
     }
@@ -79,7 +80,9 @@ function App() {
             if (typeof parsed === 'object' && parsed.monday) {
               parsedHours = parsed;
             }
-          } catch(e) {}
+          } catch {
+            // mantém parsedHours como null se o parse falhar
+          }
         }
 
         // Map data to RestaurantConfig
@@ -135,7 +138,7 @@ function App() {
     }
 
     loadData();
-  }, []);
+  }, [storeSlug]);
 
   const handleAddToCart = (quantity: number, selectedOptions: ProductOption[], notes: string) => {
     if (selectedProduct) {

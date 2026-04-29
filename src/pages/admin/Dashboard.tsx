@@ -21,6 +21,20 @@ export default function Dashboard() {
     logo: false
   });
 
+  async function fetchOrders(sid: string) {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('id, total, status, created_at')
+        .eq('store_id', sid);
+
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error) {
+      console.error('Error fetching orders for metrics:', error);
+    }
+  }
+
   useEffect(() => {
     async function initialize() {
       try {
@@ -60,19 +74,6 @@ export default function Dashboard() {
     initialize();
   }, []);
 
-  async function fetchOrders(storeId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('id, total, status, created_at')
-        .eq('store_id', storeId);
-
-      if (error) throw error;
-      setOrders(data || []);
-    } catch (error) {
-      console.error('Error fetching orders for metrics:', error);
-    }
-  }
 
   if (loading) return <div className="p-4">Carregando métricas...</div>;
   if (!storeId) return <div className="p-4">Por favor, configure sua loja antes de ver as métricas.</div>;

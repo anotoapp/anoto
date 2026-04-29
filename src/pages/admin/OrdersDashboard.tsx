@@ -1,7 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { Clock, CheckCircle, Package, XCircle, Printer, DollarSign, ShoppingBag, TrendingUp } from 'lucide-react';
 import './Admin.css';
+
+interface OrderItem {
+  quantity: number;
+  price: number;
+  notes?: string;
+  product?: { name: string };
+}
 
 interface Order {
   id: string;
@@ -13,7 +21,7 @@ interface Order {
   total: number;
   status: string;
   created_at: string;
-  items?: any[];
+  items?: OrderItem[];
 }
 
 export default function OrdersDashboard() {
@@ -23,14 +31,35 @@ export default function OrdersDashboard() {
   const [storeName, setStoreName] = useState('ANOTÔ');
   const [soundEnabled, setSoundEnabled] = useState(false);
 
-  const playNotificationSound = () => {
+  const playNotificationSound = useCallback(() => {
     if (!soundEnabled) return;
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     audio.play().catch(e => console.error("Erro ao tocar som:", e));
-  };
+  }, [soundEnabled]);
+
+  async function fetchOrders(sid: string) {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          items:order_items(
+            *,
+            product:products(name)
+          )
+        `)
+        .eq('store_id', sid)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  }
 
   useEffect(() => {
-    let channel: any;
+    let channel: RealtimeChannel | undefined;
 
     async function initialize() {
       try {
@@ -78,32 +107,12 @@ export default function OrdersDashboard() {
     }
 
     initialize();
-
+    
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
-  }, []);
+  }, [playNotificationSound]);
 
-  async function fetchOrders(storeId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          items:order_items(
-            *,
-            product:products(name)
-          )
-        `)
-        .eq('store_id', storeId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setOrders(data || []);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    }
-  }
 
   const handlePrint = (order: Order) => {
     const printWindow = window.open('', '_blank');

@@ -23,16 +23,26 @@ const daysOfWeek = [
   { id: 'sunday', label: 'Domingo' }
 ];
 
+interface StoreData {
+  id: string;
+  name: string;
+  slug: string;
+  whatsapp_number: string;
+  address: string;
+  logo: string;
+  banner: string;
+  delivery_fee: number;
+  min_order: number;
+  is_open_manual: boolean;
+  opening_hours: typeof defaultOpeningHours;
+}
+
 export default function MyStore() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
-  const [store, setStore] = useState<any>(null);
-
-  useEffect(() => {
-    loadStoreData();
-  }, []);
+  const [store, setStore] = useState<StoreData | null>(null);
 
   async function loadStoreData() {
     try {
@@ -57,11 +67,13 @@ export default function MyStore() {
           if (typeof parsed === 'object' && parsed.monday) {
             parsedHours = parsed;
           }
-        } catch(e) {}
+        } catch {
+          // usa defaultOpeningHours se o parse falhar
+        }
       }
       data.opening_hours = parsedHours;
       
-      setStore(data);
+      setStore(data as StoreData);
     } catch (error) {
       console.error('Error loading store:', error);
     } finally {
@@ -69,7 +81,14 @@ export default function MyStore() {
     }
   }
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadStoreData();
+  }, []);
+
+
   const uploadImage = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {
+    if (!store) return;
     try {
       if (field === 'logo') setUploadingLogo(true);
       else setUploadingBanner(true);
@@ -100,9 +119,10 @@ export default function MyStore() {
         .getPublicUrl(filePath);
 
       setStore({ ...store, [field]: data.publicUrl });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Verifique se o bucket "store-assets" existe no Supabase.';
       console.error('Upload error:', error);
-      alert('Erro ao subir imagem: ' + (error.message || 'Verifique se o bucket "store-assets" existe no Supabase.'));
+      alert('Erro ao subir imagem: ' + msg);
     } finally {
       if (field === 'logo') setUploadingLogo(false);
       else setUploadingBanner(false);
@@ -111,6 +131,7 @@ export default function MyStore() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!store) return;
     setSaving(true);
     try {
       const { error } = await supabase
@@ -276,40 +297,42 @@ export default function MyStore() {
           <div className="form-group" style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Horário de Funcionamento</label>
             <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fff', overflow: 'hidden' }}>
-              {daysOfWeek.map((day, index) => (
+              {daysOfWeek.map((day, index) => {
+                const dayKey = day.id as keyof typeof defaultOpeningHours;
+                return (
                 <div key={day.id} style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderBottom: index < daysOfWeek.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '160px', cursor: 'pointer', margin: 0 }}>
                     <input 
                       type="checkbox" 
-                      checked={store.opening_hours?.[day.id]?.isOpen ?? true} 
+                      checked={store.opening_hours?.[dayKey]?.isOpen ?? true} 
                       onChange={e => {
                          const current = store.opening_hours || defaultOpeningHours;
-                         setStore({...store, opening_hours: { ...current, [day.id]: { ...current[day.id], isOpen: e.target.checked } }})
+                         setStore({...store, opening_hours: { ...current, [dayKey]: { ...current[dayKey], isOpen: e.target.checked } }})
                       }}
                       style={{ margin: 0, width: '16px', height: '16px', cursor: 'pointer' }}
                     />
-                    <span style={{ fontSize: '0.95rem', color: store.opening_hours?.[day.id]?.isOpen ? '#333' : '#999' }}>{day.label}</span>
+                    <span style={{ fontSize: '0.95rem', color: store.opening_hours?.[dayKey]?.isOpen ? '#333' : '#999' }}>{day.label}</span>
                   </label>
                   
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', height: '36px' }}>
-                    {store.opening_hours?.[day.id]?.isOpen ? (
+                    {store.opening_hours?.[dayKey]?.isOpen ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <input 
                           type="time" 
-                          value={store.opening_hours?.[day.id]?.open || '18:00'}
+                          value={store.opening_hours?.[dayKey]?.open || '18:00'}
                           onChange={e => {
                              const current = store.opening_hours || defaultOpeningHours;
-                             setStore({...store, opening_hours: { ...current, [day.id]: { ...current[day.id], open: e.target.value } }})
+                             setStore({...store, opening_hours: { ...current, [dayKey]: { ...current[dayKey], open: e.target.value } }})
                           }}
                           style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #ccc', fontFamily: 'inherit' }}
                         />
                         <span style={{ color: '#666', fontSize: '0.9rem' }}>até</span>
                         <input 
                           type="time" 
-                          value={store.opening_hours?.[day.id]?.close || '23:00'}
+                          value={store.opening_hours?.[dayKey]?.close || '23:00'}
                           onChange={e => {
                              const current = store.opening_hours || defaultOpeningHours;
-                             setStore({...store, opening_hours: { ...current, [day.id]: { ...current[day.id], close: e.target.value } }})
+                             setStore({...store, opening_hours: { ...current, [dayKey]: { ...current[dayKey], close: e.target.value } }})
                           }}
                           style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #ccc', fontFamily: 'inherit' }}
                         />
@@ -319,7 +342,8 @@ export default function MyStore() {
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

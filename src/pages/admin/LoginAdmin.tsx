@@ -16,7 +16,7 @@ export default function LoginAdmin() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       navigate('/admin');
-    } catch (error: any) {
+    } catch {
       alert('Erro ao fazer login. Verifique se o e-mail e senha estão corretos.');
     } finally {
       setLoading(false);

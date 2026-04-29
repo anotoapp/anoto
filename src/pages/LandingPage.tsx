@@ -9,8 +9,8 @@ import './LandingPage.css';
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState<'burger' | 'pizza' | 'acai'>('burger');
   const [isVisible, setIsVisible] = useState(false);
-
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsVisible(true);
   }, []);
 
