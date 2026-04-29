@@ -16,27 +16,29 @@ export default function ProductsAdmin() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const { store } = useOutletContext<AdminContextType>();
-
   useEffect(() => {
-    if (store) loadData();
-    else if (store === null) setLoading(false);
-    
-    const timeout = setTimeout(() => setLoading(false), 3000);
-    return () => clearTimeout(timeout);
-  }, [store]);
+    loadData();
+  }, []);
 
   async function loadData() {
-    if (!store) return;
-    
     try {
       setLoading(true);
-      setStoreId(store.id);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('owner_id', session.user.id)
+        .single();
+
+      if (storeError) throw storeError;
+      setStoreId(storeData.id);
 
       const { data: catData, error: catError } = await supabase
         .from('categories')
         .select('*')
-        .eq('store_id', store.id);
+        .eq('store_id', storeData.id);
 
       if (catError) throw catError;
       setCategories(catData || []);

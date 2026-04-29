@@ -46,11 +46,20 @@ export default function MyStore() {
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [store, setStore] = useState<StoreData | null>(null);
 
-  const { store: contextStore } = useOutletContext<AdminContextType>();
+  async function loadStoreData() {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-  useEffect(() => {
-    if (contextStore) {
-      const data = { ...contextStore };
+      const { data, error } = await supabase
+        .from('stores')
+        .select('*')
+        .eq('owner_id', session.user.id)
+        .single();
+
+      if (error) throw error;
+      
       let parsedHours = defaultOpeningHours;
       if (data.opening_hours) {
         try {
@@ -66,16 +75,18 @@ export default function MyStore() {
         }
       }
       data.opening_hours = parsedHours;
+      
       setStore(data as StoreData);
-      setLoading(false);
-    } else if (contextStore === null) {
+    } catch (error) {
+      console.error('Error loading store:', error);
+    } finally {
       setLoading(false);
     }
+  }
 
-    const timeout = setTimeout(() => setLoading(false), 3000);
-    return () => clearTimeout(timeout);
-  }, [contextStore]);
-
+  useEffect(() => {
+    loadStoreData();
+  }, []);
 
   const uploadImage = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {
     if (!store) return;

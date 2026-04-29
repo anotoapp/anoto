@@ -18,30 +18,32 @@ export default function DeliveryFeesAdmin() {
   const [newNeighborhood, setNewNeighborhood] = useState('');
   const [newFee, setNewFee] = useState('');
 
-  const { store } = useOutletContext<AdminContextType>();
-
   useEffect(() => {
-    if (store) loadData();
-    else if (store === null) setLoading(false);
-
-    const timeout = setTimeout(() => setLoading(false), 3000);
-    return () => clearTimeout(timeout);
-  }, [store]);
+    loadData();
+  }, []);
 
   async function loadData() {
-    if (!store) return;
-    
     try {
       setLoading(true);
-      setStoreId(store.id);
-      
-      const { data } = await supabase
-        .from('delivery_fees')
-        .select('*')
-        .eq('store_id', store.id)
-        .order('neighborhood');
-      
-      setFees(data || []);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data: storeData } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('owner_id', session.user.id)
+        .single();
+
+      if (storeData) {
+        setStoreId(storeData.id);
+        const { data } = await supabase
+          .from('delivery_fees')
+          .select('*')
+          .eq('store_id', storeData.id)
+          .order('neighborhood');
+        
+        setFees(data || []);
+      }
     } catch (error) {
       console.error('Error loading delivery fees:', error);
     } finally {

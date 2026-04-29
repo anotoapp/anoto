@@ -60,38 +60,48 @@ export default function OrdersDashboard() {
     }
   }
 
-  const { store } = useOutletContext<AdminContextType>();
-
   useEffect(() => {
     let channel: RealtimeChannel | undefined;
 
     async function initialize() {
-      if (!store) return;
-      
       try {
-        setStoreId(store.id);
-        setStoreName(store.name);
-        await fetchOrders(store.id);
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
 
-        channel = supabase
-          .channel(`public:orders:${store.id}`)
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'orders', filter: `store_id=eq.${store.id}` },
-            (payload) => {
-              if (payload.eventType === 'INSERT') {
-                setOrders(current => [payload.new as Order, ...current]);
-                playNotificationSound();
-              } else if (payload.eventType === 'UPDATE') {
-                setOrders(current =>
-                  current.map(order =>
-                    order.id === payload.new.id ? (payload.new as Order) : order
-                  )
-                );
+        const { data: storeData, error: storeError } = await supabase
+          .from('stores')
+          .select('id, name')
+          .eq('owner_id', session.user.id)
+          .single();
+
+        if (storeError) throw storeError;
+
+        if (storeData) {
+          setStoreId(storeData.id);
+          setStoreName(storeData.name);
+          await fetchOrders(storeData.id);
+
+          channel = supabase
+            .channel(`public:orders:${storeData.id}`)
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'orders', filter: `store_id=eq.${storeData.id}` },
+              (payload) => {
+                if (payload.eventType === 'INSERT') {
+                  setOrders(current => [payload.new as Order, ...current]);
+                  playNotificationSound();
+                } else if (payload.eventType === 'UPDATE') {
+                  setOrders(current =>
+                    current.map(order =>
+                      order.id === payload.new.id ? (payload.new as Order) : order
+                    )
+                  );
+                }
               }
-            }
-          )
-          .subscribe();
+            )
+            .subscribe();
+        }
       } catch (error) {
         console.error('Error initializing orders dashboard:', error);
       } finally {
@@ -101,13 +111,10 @@ export default function OrdersDashboard() {
 
     initialize();
     
-    const timeout = setTimeout(() => setLoading(false), 3000);
-    
     return () => {
       if (channel) supabase.removeChannel(channel);
-      clearTimeout(timeout);
     };
-  }, [store, playNotificationSound]);
+  }, [playNotificationSound]);
 
 
   const handlePrint = (order: Order) => {
