@@ -19,7 +19,9 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="lp-nav">
         <div className="landing-container" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-          <Link to="/" className="lp-logo">ANOTÔ</Link>
+          <Link to="/" className="lp-logo">
+            <img src="/assets/LOGO NOVA SEM FUNDO.png" alt="ANOTÔ Logo" style={{ height: '60px', width: 'auto' }} />
+          </Link>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <Link to="/admin" className="btn-lp btn-lp-secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.9rem' }}>
               Login do Lojista
@@ -354,7 +356,9 @@ export default function LandingPage() {
 
       <footer className="landing-footer">
         <div className="landing-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div className="lp-logo" style={{ fontSize: '1.2rem' }}>ANOTÔ</div>
+          <div className="lp-logo" style={{ fontSize: '1.2rem' }}>
+            <img src="/assets/LOGO NOVA SEM FUNDO.png" alt="ANOTÔ Logo" style={{ height: '50px', width: 'auto' }} />
+          </div>
           <div className="footer-copy">© 2024 Anotô Platform. Todos os direitos reservados. Feito para escalar o seu delivery.</div>
         </div>
       </footer>

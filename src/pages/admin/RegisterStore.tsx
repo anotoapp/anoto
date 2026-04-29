@@ -60,7 +60,7 @@ export default function RegisterStore() {
         name: storeName,
         slug: slug,
         whatsapp_number: whatsapp,
-        logo: '/assets/logo.png', // default
+        logo: '/assets/LOGO NOVA SEM FUNDO.png', // default
         banner: '/assets/banner.png', // default
         address: address || 'Endereço da loja',
         delivery_fee: 5.00,

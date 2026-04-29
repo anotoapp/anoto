@@ -73,7 +73,7 @@ export default function AdminLayout() {
     <div className="admin-layout">
       <aside className="admin-sidebar">
         <div className="admin-brand">
-          <img src="/assets/LOGO2.webp" alt="Anotô" style={{ height: '160px', width: 'auto' }} />
+          <img src="/assets/LOGO NOVA SEM FUNDO.png" alt="Anotô" style={{ height: '140px', width: 'auto', marginBottom: '10px' }} />
         </div>
         
         <nav className="admin-nav">

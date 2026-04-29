@@ -2,7 +2,7 @@ import type { RestaurantConfig } from './types';
 
 export const config: RestaurantConfig = {
   name: "ANOTÔ",
-  logo: "/assets/logo.png",
+  logo: "/assets/LOGO NOVA SEM FUNDO.png",
   banner: "/assets/banner.png",
   whatsappNumber: "5511999999999", // Exemplo: 55 + DDD + Número
   address: "Rua Gourmet, 123 - Centro",
