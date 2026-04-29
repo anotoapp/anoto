@@ -24,6 +24,7 @@ export interface Product {
   category?: string;
   is_available?: boolean;
   option_groups?: ProductOptionGroup[];
+  created_at?: string;
 }
 
 export interface ProductOptionGroup {
