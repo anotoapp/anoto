@@ -1,16 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, Check, MapPin, Phone, User, Lock, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Check, Phone, User, Lock, ArrowRight } from 'lucide-react';
+import type { CustomerProfile } from '../types';
 import './CustomerAuth.css';
-
-interface CustomerProfile {
-  id?: string;
-  full_name?: string;
-  address?: string;
-  phone?: string;
-  neighborhood?: string;
-  cep?: string;
-}
 
 interface CustomerAuthProps {
   onSuccess: (profile: CustomerProfile) => void;
@@ -39,7 +31,7 @@ export function CustomerAuth({ onSuccess, onCancel }: CustomerAuthProps) {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('customers')
         .select('id')
         .eq('phone', phone)

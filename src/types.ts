@@ -85,3 +85,12 @@ export interface RestaurantConfig {
   categories: Category[];
   products: Product[];
 }
+
+export interface CustomerProfile {
+  id?: string;
+  full_name?: string;
+  address?: string;
+  phone?: string;
+  neighborhood?: string;
+  cep?: string;
+}

@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, MapPin, ShoppingBag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import type { CartItem, RestaurantConfig, Product } from '../types';
+import type { CartItem, RestaurantConfig, Product, CustomerProfile } from '../types';
 import { CustomerAuth } from './CustomerAuth';
 import './CartDrawer.css';
-
-interface CustomerProfile {
-  full_name?: string;
-  address?: string;
-  phone?: string;
-  neighborhood?: string;
-  cep?: string;
-}
 
 interface CartDrawerProps {
   isOpen: boolean;

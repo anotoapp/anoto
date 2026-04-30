@@ -7,7 +7,7 @@ import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
 import { CartDrawer } from '../components/CartDrawer';
 import { supabase } from '../lib/supabase';
-import type { Product, CartItem, ProductOption, RestaurantConfig } from '../types';
+import type { Product, CartItem, ProductOption, RestaurantConfig, CustomerProfile } from '../types';
 import { formatWhatsAppMessage } from '../utils/whatsapp';
 import { isStoreOpen } from '../utils/storeStatus';
 
@@ -25,7 +25,7 @@ function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [customer, setCustomer] = useState<{ name: string; phone: string } | null>(null);
+  const [customer, setCustomer] = useState<CustomerProfile | null>(null);
 
   useEffect(() => {
     // Carregar cliente do localStorage (Login via WhatsApp)
