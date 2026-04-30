@@ -169,7 +169,7 @@ function App() {
     setCart(newCart);
   };
 
-  const handleCheckout = async (customerInfo: { name: string; phone: string; address: string; payment: string; type: string }) => {
+  const handleCheckout = async (customerInfo: { name: string; phone: string; address: string; payment: string; type: string; neighborhood?: string; cep?: string }) => {
     if (!config || !config.id) return;
 
     try {
@@ -186,7 +186,7 @@ function App() {
           store_id: config.id,
           customer_name: customerInfo.name,
           customer_phone: customerInfo.phone,
-          customer_address: customerInfo.address,
+          customer_address: `${customerInfo.address}${customerInfo.neighborhood ? ` - Bairro: ${customerInfo.neighborhood}` : ''}${customerInfo.cep ? ` - CEP: ${customerInfo.cep}` : ''}`,
           payment_method: customerInfo.payment,
           order_type: customerInfo.type,
           total: total,
@@ -333,6 +333,7 @@ function App() {
         config={config} 
         onCheckout={handleCheckout} 
         customer={customer}
+        onCustomerUpdate={setCustomer}
         onSelectUpsell={(product) => setSelectedProduct(product)}
       />
     </div>

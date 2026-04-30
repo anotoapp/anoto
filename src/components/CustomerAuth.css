@@ -4,55 +4,210 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  padding: 20px;
+  z-index: 2000;
+  padding: 16px;
+  backdrop-filter: blur(4px);
 }
 
 .customer-auth-content {
   background: white;
   padding: 32px;
-  border-radius: 16px;
+  border-radius: 24px;
   width: 100%;
-  max-width: 400px;
-  max-height: 90vh;
+  max-width: 420px;
+  max-height: 95vh;
   overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  position: relative;
 }
 
-.customer-auth-content h2 {
-  margin: 0 0 8px 0;
-  color: #212121;
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.step-dot {
+  width: 30px;
+  height: 4px;
+  background: #f1f5f9;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.step-dot.active {
+  background: var(--primary);
+  width: 45px;
+}
+
+.step-dot.completed {
+  background: #10b981;
+}
+
+.auth-step-form h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
 }
 
 .auth-subtitle {
-  color: #666;
-  margin-bottom: 24px;
-  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 32px;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
-.auth-buttons {
+.form-group {
+  margin-bottom: 20px;
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.icon-input {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.icon-input input {
+  padding-left: 48px !important;
+}
+
+.auth-step-form input {
+  width: 100%;
+  height: 54px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.auth-step-form input:focus {
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb, 0, 0, 0), 0.1);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
   gap: 12px;
-  margin-top: 24px;
 }
 
-.auth-buttons button {
-  flex: 1;
-}
-
-.toggle-auth {
-  text-align: center;
-  margin-top: 20px;
-  color: #2962ff;
-  font-weight: 500;
-  cursor: pointer;
+.back-btn {
+  background: none;
+  border: none;
+  color: #64748b;
   font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  padding: 0;
 }
 
-.toggle-auth:hover {
+.customer-auth-content .primary-action {
+  width: 100%;
+  height: 56px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 12px;
+}
+
+.customer-auth-content .primary-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.customer-auth-content .primary-action:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.customer-auth-content .secondary-action {
+  background: #f8f8f8;
+  padding: 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancel-auth {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 16px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.forgot-password {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 20px;
+}
+
+/* LGPD Consent */
+.lgpd-consent {
+  margin: 20px 0;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.checkbox-container input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.consent-text a {
+  color: var(--primary);
   text-decoration: underline;
+  font-weight: 600;
 }

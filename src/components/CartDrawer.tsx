@@ -9,6 +9,8 @@ interface CustomerProfile {
   full_name?: string;
   address?: string;
   phone?: string;
+  neighborhood?: string;
+  cep?: string;
 }
 
 interface CartDrawerProps {
@@ -17,8 +19,9 @@ interface CartDrawerProps {
   cart: CartItem[];
   onRemoveItem: (index: number) => void;
   config: RestaurantConfig;
-  onCheckout: (customerInfo: { name: string; address: string; phone: string; payment: string; type: string }) => void;
+  onCheckout: (customerInfo: { name: string; address: string; phone: string; payment: string; type: string; neighborhood?: string; cep?: string }) => void;
   customer?: CustomerProfile | null;
+  onCustomerUpdate?: (profile: CustomerProfile) => void;
   onSelectUpsell?: (product: Product) => void;
 }
 
@@ -77,11 +80,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   useEffect(() => {
     if (customer) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(customer.full_name || '');
       setAddress(customer.address || '');
+      
+      // Auto-select neighborhood from customer profile
+      if (customer.neighborhood && neighborhoods.length > 0) {
+        const found = neighborhoods.find(n => n.neighborhood === customer.neighborhood);
+        if (found) {
+          setSelectedNeighborhood({ neighborhood: found.neighborhood, fee: found.fee });
+        }
+      }
     } else {
-      // Try loading from localStorage for non-logged in users or quick fill
       const savedName = localStorage.getItem('anoto_customer_name');
       const savedPhone = localStorage.getItem('anoto_customer_phone');
       const savedAddress = localStorage.getItem('anoto_customer_address');
@@ -89,7 +98,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       if (savedPhone) setPhone(savedPhone || '');
       if (savedAddress) setAddress(savedAddress || '');
     }
-  }, [customer]);
+  }, [customer, neighborhoods]);
 
   const subtotal = cart.reduce((acc, item) => {
     const optionsPrice = item.selectedOptions.reduce((sum, o) => sum + o.price, 0);
@@ -382,9 +391,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   onClick={() => onCheckout({ 
                     name, 
                     phone,
-                    address: type === 'pickup' ? 'Retirada no local' : `${address} - ${selectedNeighborhood?.neighborhood}`, 
+                    address: type === 'pickup' ? 'Retirada no local' : address, 
                     payment, 
-                    type 
+                    type,
+                    neighborhood: type === 'delivery' ? selectedNeighborhood?.neighborhood : undefined,
+                    cep: customer?.cep
                   })}
                 >
                   Enviar Pedido
