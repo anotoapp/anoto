@@ -25,6 +25,7 @@ export interface Product {
   is_available?: boolean;
   option_groups?: ProductOptionGroup[];
   created_at?: string;
+  upsell_product_id?: string;
 }
 
 export interface ProductOptionGroup {

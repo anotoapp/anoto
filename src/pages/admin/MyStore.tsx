@@ -37,6 +37,10 @@ interface StoreData {
   min_order: number;
   is_open_manual: boolean;
   opening_hours: typeof defaultOpeningHours;
+  theme?: { primaryColor: string };
+  whatsapp_api_url?: string;
+  whatsapp_api_instance?: string;
+  whatsapp_api_token?: string;
 }
 
 export default function MyStore() {
@@ -136,7 +140,11 @@ export default function MyStore() {
           min_order: store.min_order,
           logo: store.logo,
           banner: store.banner,
-          is_open_manual: store.is_open_manual
+          is_open_manual: store.is_open_manual,
+          theme: store.theme ? JSON.stringify(store.theme) : null,
+          whatsapp_api_url: store.whatsapp_api_url,
+          whatsapp_api_instance: store.whatsapp_api_instance,
+          whatsapp_api_token: store.whatsapp_api_token
         })
         .eq('id', store.id);
 
@@ -357,6 +365,67 @@ export default function MyStore() {
                 onChange={e => setStore({...store, min_order: parseFloat(e.target.value)})} 
                 style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }}
               />
+            </div>
+          </div>
+
+          <div style={{ padding: '24px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🎨 Identidade Visual (White Label)
+            </h3>
+            <div className="form-group">
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#475569' }}>Cor Principal da Loja</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input 
+                  type="color" 
+                  value={store.theme?.primaryColor || '#FFB800'} 
+                  onChange={e => setStore({...store, theme: { primaryColor: e.target.value }})} 
+                  style={{ width: '50px', height: '50px', padding: '0', border: 'none', borderRadius: '8px', cursor: 'pointer', background: 'transparent' }}
+                />
+                <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Essa cor será usada nos botões, ícones e destaques do app do seu cliente.</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ padding: '24px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #bbf7d0', marginBottom: '32px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: '#166534', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              💬 Notificações Automáticas no WhatsApp
+            </h3>
+            <p style={{ margin: '0 0 20px 0', fontSize: '0.9rem', color: '#15803d' }}>
+              Configure a API (Evolution API / Z-API) para enviar mensagens automáticas ao cliente quando o status do pedido mudar.
+            </p>
+            
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#166534' }}>URL da API</label>
+              <input 
+                type="text" 
+                placeholder="Ex: https://api.sua-evolution.com"
+                value={store.whatsapp_api_url || ''} 
+                onChange={e => setStore({...store, whatsapp_api_url: e.target.value})} 
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0', background: 'white' }}
+              />
+            </div>
+            
+            <div className="form-row" style={{ display: 'flex', gap: '16px' }}>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#166534' }}>Nome da Instância</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: MinhaLoja"
+                  value={store.whatsapp_api_instance || ''} 
+                  onChange={e => setStore({...store, whatsapp_api_instance: e.target.value})} 
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0', background: 'white' }}
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#166534' }}>Global API Key / Token</label>
+                <input 
+                  type="password" 
+                  placeholder="Seu token de segurança"
+                  value={store.whatsapp_api_token || ''} 
+                  onChange={e => setStore({...store, whatsapp_api_token: e.target.value})} 
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0', background: 'white' }}
+                />
+              </div>
             </div>
           </div>
 

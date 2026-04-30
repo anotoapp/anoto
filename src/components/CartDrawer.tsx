@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, MapPin, ShoppingBag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import type { CartItem, RestaurantConfig } from '../types';
+import type { CartItem, RestaurantConfig, Product } from '../types';
 import { CustomerAuth } from './CustomerAuth';
 import './CartDrawer.css';
 
@@ -17,8 +17,9 @@ interface CartDrawerProps {
   cart: CartItem[];
   onRemoveItem: (index: number) => void;
   config: RestaurantConfig;
-  onCheckout: (customerInfo: { name: string; address: string; payment: string; type: string }) => void;
+  onCheckout: (customerInfo: { name: string; address: string; phone: string; payment: string; type: string }) => void;
   customer?: CustomerProfile | null;
+  onSelectUpsell?: (product: Product) => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -28,11 +29,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onRemoveItem,
   config,
   onCheckout,
-  customer
+  customer,
+  onSelectUpsell
 }) => {
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
   const [showAuth, setShowAuth] = useState(false);
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [payment, setPayment] = useState('Cartão de Crédito/Débito (Máquina)');
   const [type, setType] = useState('delivery');
@@ -80,8 +83,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     } else {
       // Try loading from localStorage for non-logged in users or quick fill
       const savedName = localStorage.getItem('anoto_customer_name');
+      const savedPhone = localStorage.getItem('anoto_customer_phone');
       const savedAddress = localStorage.getItem('anoto_customer_address');
       if (savedName) setName(savedName || '');
+      if (savedPhone) setPhone(savedPhone || '');
       if (savedAddress) setAddress(savedAddress || '');
     }
   }, [customer]);
@@ -90,6 +95,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     const optionsPrice = item.selectedOptions.reduce((sum, o) => sum + o.price, 0);
     return acc + (item.product.price + optionsPrice) * item.quantity;
   }, 0);
+
+  const suggestedUpsellId = cart.find(item => 
+    item.product.upsell_product_id && 
+    !cart.some(c => c.product.id === item.product.upsell_product_id)
+  )?.product.upsell_product_id;
+
+  const upsellProduct = suggestedUpsellId 
+    ? config.products.find(p => p.id === suggestedUpsellId) 
+    : null;
 
   const handleApplyCoupon = async () => {
     if (!couponCode) return;
@@ -102,7 +116,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         .select('*')
         .eq('store_id', config.id)
         .eq('code', couponCode.toUpperCase())
-        .eq('active', true)
+        .eq('is_active', true)
         .single();
 
       if (error || !data) {
@@ -111,8 +125,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         return;
       }
 
-      if (subtotal < data.min_purchase) {
-        setCouponError(`Pedido mínimo: R$ ${data.min_purchase.toFixed(2)}`);
+      if (subtotal < data.min_order_value) {
+        setCouponError(`Pedido mínimo: R$ ${data.min_order_value.toFixed(2)}`);
         setCouponDiscount(null);
         return;
       }
@@ -147,6 +161,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const handleAuthSuccess = (profile: CustomerProfile) => {
     setShowAuth(false);
     setName(profile.full_name || '');
+    setPhone(profile.phone || '');
     setAddress(profile.address || '');
     setStep('checkout');
   };
@@ -191,6 +206,27 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
                   ))}
                   
+                  {upsellProduct && (
+                    <div style={{ background: 'var(--bg)', border: '1px dashed var(--primary)', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <p style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '700' }}>⭐ Que tal adicionar?</p>
+                        <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text)' }}>{upsellProduct.name}</h4>
+                        <p style={{ margin: 0, fontWeight: '600' }}>+ R$ {upsellProduct.price.toFixed(2)}</p>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          if (onSelectUpsell) {
+                            onClose();
+                            onSelectUpsell(upsellProduct);
+                          }
+                        }}
+                        style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                      >
+                        Adicionar
+                      </button>
+                    </div>
+                  )}
+
                   <div className="cart-summary">
                     <div className="summary-line">
                       <span>Subtotal</span>
@@ -247,6 +283,19 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     onChange={(e) => {
                       setName(e.target.value);
                       localStorage.setItem('anoto_customer_name', e.target.value);
+                    }} 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Seu WhatsApp</label>
+                  <input 
+                    type="tel" 
+                    placeholder="(11) 99999-9999" 
+                    value={phone} 
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      localStorage.setItem('anoto_customer_phone', e.target.value);
                     }} 
                   />
                 </div>
@@ -332,6 +381,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   disabled={!name || (type === 'delivery' && (!address || !selectedNeighborhood))}
                   onClick={() => onCheckout({ 
                     name, 
+                    phone,
                     address: type === 'pickup' ? 'Retirada no local' : `${address} - ${selectedNeighborhood?.neighborhood}`, 
                     payment, 
                     type 

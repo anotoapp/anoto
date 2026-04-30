@@ -11,6 +11,7 @@ import RegisterStore from './pages/admin/RegisterStore';
 import ProductsAdmin from './pages/admin/ProductsAdmin';
 import SuperAdmin from './pages/admin/SuperAdmin';
 import DeliveryFeesAdmin from './pages/admin/DeliveryFeesAdmin';
+import CouponsAdmin from './pages/admin/CouponsAdmin';
 
 import OrderTracking from './pages/OrderTracking';
 
@@ -35,6 +36,7 @@ function App() {
         <Route path="products" element={<ProductsAdmin />} />
         <Route path="my-store" element={<MyStore />} />
         <Route path="delivery-fees" element={<DeliveryFeesAdmin />} />
+        <Route path="coupons" element={<CouponsAdmin />} />
         <Route path="settings" element={<StoreSettings />} />
         <Route path="master" element={<SuperAdmin />} />
       </Route>

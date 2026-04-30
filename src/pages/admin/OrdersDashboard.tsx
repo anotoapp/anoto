@@ -18,6 +18,7 @@ interface Order {
   store_id: string;
   customer_name: string;
   customer_address: string;
+  customer_phone?: string;
   payment_method: string;
   order_type: string;
   total: number;
@@ -185,6 +186,47 @@ export default function OrdersDashboard() {
       setOrders(current => current.map(o => o.id === id ? { ...o, status: newStatus } : o));
       const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
+
+      // WhatsApp Notification (Evolution API)
+      if (store?.whatsapp_api_url && store?.whatsapp_api_instance && store?.whatsapp_api_token) {
+        const order = orders.find(o => o.id === id);
+        // Assumes we have a customer_phone field or it is extracted from customer_name if combined
+        const phone = order?.customer_phone; 
+        if (phone) {
+          const statusText = {
+            'preparing': 'Sendo Preparado 🍳',
+            'delivering': order.order_type === 'delivery' ? 'Saiu para Entrega 🏍️' : 'Pronto para Retirada 🥡',
+            'delivered': 'Entregue / Finalizado ✅',
+            'cancelled': 'Cancelado ❌'
+          }[newStatus];
+
+          if (statusText) {
+            const msg = `Olá ${order.customer_name}! O seu pedido #${order.id.slice(0,5).toUpperCase()} foi atualizado para: *${statusText}*.\n\nAcompanhe aqui: ${window.location.origin}/${store.slug}/order/${order.id}`;
+            const cleanPhone = phone.replace(/\D/g, '');
+            const number = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+            
+            // Format URL to remove trailing slash
+            const apiUrl = store.whatsapp_api_url.endsWith('/') ? store.whatsapp_api_url.slice(0, -1) : store.whatsapp_api_url;
+            
+            try {
+              await fetch(`${apiUrl}/message/sendText/${store.whatsapp_api_instance}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'apikey': store.whatsapp_api_token
+                },
+                body: JSON.stringify({
+                  number: number,
+                  options: { delay: 1200 },
+                  textMessage: { text: msg }
+                })
+              });
+            } catch (err) {
+              console.error('Falha ao enviar WhatsApp:', err);
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Erro ao atualizar status do pedido');

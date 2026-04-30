@@ -315,6 +315,7 @@ export default function ProductsAdmin() {
         onSuccess={loadData}
         productToEdit={productToEdit}
         categories={categories}
+        products={products}
         storeId={storeId}
       />
     </div>

@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, ShoppingBag, Package, Store, Truck, Settings, LogOut, Shield, Menu 
+  LayoutDashboard, ShoppingBag, Package, Store, Truck, Settings, LogOut, Shield, Menu, Ticket
 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
@@ -15,6 +15,7 @@ interface UserProfile {
 
 export interface StoreRow {
   id: string;
+  owner_id?: string;
   name: string;
   slug?: string;
   whatsapp_number?: string;
@@ -25,6 +26,10 @@ export interface StoreRow {
   min_order?: number;
   is_open_manual?: boolean;
   opening_hours?: unknown;
+  theme?: unknown;
+  whatsapp_api_url?: string;
+  whatsapp_api_instance?: string;
+  whatsapp_api_token?: string;
 }
 
 export interface AdminContextType {
@@ -84,7 +89,10 @@ export default function AdminLayout() {
         navigate('/admin/login');
       } else if (session) {
         setUser(session.user);
-        if (!store) loadAllData(session.user.id);
+        // Só carrega se não tiver loja ou se o usuário mudou
+        if (!store || store.owner_id !== session.user.id) {
+          loadAllData(session.user.id);
+        }
       }
     });
 
@@ -92,7 +100,8 @@ export default function AdminLayout() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, loadAllData, store]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, loadAllData]);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -145,6 +154,9 @@ export default function AdminLayout() {
           </NavLink>
           <NavLink to="/admin/delivery-fees" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
             <Truck size={20} /> Taxas
+          </NavLink>
+          <NavLink to="/admin/coupons" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
+            <Ticket size={20} /> Cupons
           </NavLink>
           <NavLink to="/admin/settings" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
             <Settings size={20} /> Ajustes

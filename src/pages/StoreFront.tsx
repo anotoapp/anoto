@@ -99,13 +99,13 @@ function App() {
           is_open_manual: storeData.is_open_manual,
           opening_hours: parsedHours,
           theme: {
-            primaryColor: storeData.primary_color,
-            secondaryColor: storeData.secondary_color,
-            accentColor: storeData.accent_color,
-            backgroundColor: storeData.background_color,
-            textColor: storeData.text_color,
-            borderRadius: storeData.border_radius,
-            fontFamily: storeData.font_family,
+            primaryColor: storeData.theme?.primaryColor || '#FFB800',
+            secondaryColor: storeData.theme?.secondaryColor || '#C81D25',
+            accentColor: storeData.theme?.accentColor || '#C81D25',
+            backgroundColor: storeData.theme?.backgroundColor || '#FFFBF2',
+            textColor: storeData.theme?.textColor || '#2D0A0A',
+            borderRadius: storeData.theme?.borderRadius || '16px',
+            fontFamily: storeData.theme?.fontFamily || 'Outfit',
           },
           categories: categoriesData,
           products: productsData.map(p => ({
@@ -160,7 +160,7 @@ function App() {
     setCart(newCart);
   };
 
-  const handleCheckout = async (customerInfo: { name: string; address: string; payment: string; type: string }) => {
+  const handleCheckout = async (customerInfo: { name: string; phone: string; address: string; payment: string; type: string }) => {
     if (!config || !config.id) return;
 
     try {
@@ -176,6 +176,7 @@ function App() {
         .insert({
           store_id: config.id,
           customer_name: customerInfo.name,
+          customer_phone: customerInfo.phone,
           customer_address: customerInfo.address,
           payment_method: customerInfo.payment,
           order_type: customerInfo.type,
@@ -317,6 +318,7 @@ function App() {
         config={config} 
         onCheckout={handleCheckout} 
         customer={customer}
+        onSelectUpsell={(product) => setSelectedProduct(product)}
       />
     </div>
   );

@@ -10,15 +10,17 @@ interface ProductFormModalProps {
   onSuccess: () => void;
   productToEdit?: Product | null;
   categories: Category[];
+  products?: Product[];
   storeId: string;
 }
 
-export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, categories, storeId }: ProductFormModalProps) {
+export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, categories, products = [], storeId }: ProductFormModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState(0);
   const [categoryId, setCategoryId] = useState('');
   const [image, setImage] = useState('');
+  const [upsellProductId, setUpsellProductId] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   
@@ -42,6 +44,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
       setPrice(productToEdit.price);
       setCategoryId(productToEdit.category_id);
       setImage(productToEdit.image);
+      setUpsellProductId(productToEdit.upsell_product_id || '');
       loadOptionGroups(productToEdit.id);
     } else {
       setName('');
@@ -49,6 +52,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
       setPrice(0);
       setCategoryId(categories.length > 0 ? categories[0].id : '');
       setImage('');
+      setUpsellProductId('');
       setOptionGroups([]);
     }
   }, [productToEdit, categories]);
@@ -145,7 +149,14 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
     setLoading(true);
 
     try {
-      const productData = { name, description, price, category_id: categoryId, image };
+      const productData = { 
+        name, 
+        description, 
+        price, 
+        category_id: categoryId, 
+        image,
+        upsell_product_id: upsellProductId || null
+      };
       let productId = productToEdit?.id;
 
       if (productToEdit) {
@@ -237,6 +248,19 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
                 {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
               </select>
             </div>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '16px', background: '#eef2ff', padding: '16px', borderRadius: '12px', border: '1px solid #c7d2fe' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#3730a3' }}>🎁 Upsell ("Compre Junto")</label>
+            <p style={{ fontSize: '0.85rem', color: '#4f46e5', marginBottom: '12px' }}>
+              Sugira um produto complementar para o cliente levar junto antes de fechar o pedido.
+            </p>
+            <select value={upsellProductId} onChange={e => setUpsellProductId(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #a5b4fc', backgroundColor: 'white', color: '#312e81', fontWeight: '500' }}>
+              <option value="">Nenhuma sugestão</option>
+              {products.filter(p => p.id !== productToEdit?.id).map(p => (
+                <option key={p.id} value={p.id}>Sugira: {p.name} (+R$ {p.price.toFixed(2)})</option>
+              ))}
+            </select>
           </div>
 
           <div style={{ marginTop: '32px', borderTop: '2px solid #f0f0f0', paddingTop: '24px' }}>
