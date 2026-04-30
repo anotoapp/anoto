@@ -141,7 +141,7 @@ export default function MyStore() {
           logo: store.logo,
           banner: store.banner,
           is_open_manual: store.is_open_manual,
-          theme: store.theme ? JSON.stringify(store.theme) : null,
+          theme: store.theme || null,
           whatsapp_api_url: store.whatsapp_api_url,
           whatsapp_api_instance: store.whatsapp_api_instance,
           whatsapp_api_token: store.whatsapp_api_token
@@ -342,7 +342,7 @@ export default function MyStore() {
                 <input 
                   type="color" 
                   value={store.theme?.primaryColor || '#FFB800'} 
-                  onChange={e => setStore({...store, theme: { primaryColor: e.target.value }})} 
+                  onChange={e => setStore({...store, theme: { ...store.theme, primaryColor: e.target.value }})} 
                   style={{ width: '60px', height: '60px', padding: '0', border: '4px solid #fff', borderRadius: '12px', cursor: 'pointer', background: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
                 />
                 
@@ -351,7 +351,7 @@ export default function MyStore() {
                     <button 
                       key={color}
                       type="button"
-                      onClick={() => setStore({...store, theme: { primaryColor: color }})}
+                      onClick={() => setStore({...store, theme: { ...store.theme, primaryColor: color }})}
                       style={{ 
                         width: '32px', 
                         height: '32px', 

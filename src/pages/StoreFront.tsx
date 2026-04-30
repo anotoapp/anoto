@@ -86,6 +86,15 @@ function App() {
           }
         }
 
+        let parsedTheme = storeData.theme;
+        if (typeof storeData.theme === 'string' && storeData.theme.startsWith('{')) {
+          try {
+            parsedTheme = JSON.parse(storeData.theme);
+          } catch (e) {
+            console.error('Error parsing theme:', e);
+          }
+        }
+
         // Map data to RestaurantConfig
         const loadedConfig: RestaurantConfig = {
           id: storeData.id,
@@ -99,13 +108,13 @@ function App() {
           is_open_manual: storeData.is_open_manual,
           opening_hours: parsedHours,
           theme: {
-            primaryColor: storeData.theme?.primaryColor || '#FFB800',
-            secondaryColor: storeData.theme?.secondaryColor || '#C81D25',
-            accentColor: storeData.theme?.accentColor || '#C81D25',
-            backgroundColor: storeData.theme?.backgroundColor || '#FFFBF2',
-            textColor: storeData.theme?.textColor || '#2D0A0A',
-            borderRadius: storeData.theme?.borderRadius || '16px',
-            fontFamily: storeData.theme?.fontFamily || 'Outfit',
+            primaryColor: parsedTheme?.primaryColor || '#FFB800',
+            secondaryColor: parsedTheme?.secondaryColor || '#C81D25',
+            accentColor: parsedTheme?.accentColor || '#C81D25',
+            backgroundColor: parsedTheme?.backgroundColor || '#FFFBF2',
+            textColor: parsedTheme?.textColor || '#2D0A0A',
+            borderRadius: parsedTheme?.borderRadius || '16px',
+            fontFamily: parsedTheme?.fontFamily || 'Outfit',
           },
           categories: categoriesData,
           products: productsData.map(p => ({
