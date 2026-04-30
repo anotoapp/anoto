@@ -303,7 +303,13 @@ function App() {
               <ProductCard 
                 key={product.id} 
                 product={product} 
-                onAdd={() => isOpen && setSelectedProduct(product)} 
+                onAdd={() => {
+                  if (isOpen) {
+                    setSelectedProduct(product);
+                  } else {
+                    alert('Nossa loja está fechada no momento. Abriremos em breve!');
+                  }
+                }} 
                 disabled={!isOpen}
               />
             ))}
