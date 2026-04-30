@@ -49,28 +49,31 @@ export default function MyStore() {
   const { store: contextStore } = useOutletContext<AdminContextType>();
  
   useEffect(() => {
-    if (contextStore) {
-      const data = { ...contextStore };
-      let parsedHours = defaultOpeningHours;
-      if (data.opening_hours) {
-        try {
-          const parsed = typeof data.opening_hours === 'string' && data.opening_hours.startsWith('{') 
-            ? JSON.parse(data.opening_hours) 
-            : data.opening_hours;
-          
-          if (typeof parsed === 'object' && parsed.monday) {
-            parsedHours = parsed;
+    const timer = setTimeout(() => {
+      if (contextStore) {
+        const data = { ...contextStore };
+        let parsedHours = defaultOpeningHours;
+        if (data.opening_hours) {
+          try {
+            const parsed = typeof data.opening_hours === 'string' && data.opening_hours.startsWith('{') 
+              ? JSON.parse(data.opening_hours) 
+              : data.opening_hours;
+            
+            if (typeof parsed === 'object' && parsed.monday) {
+              parsedHours = parsed;
+            }
+          } catch {
+            // fallback
           }
-        } catch {
-          // fallback
         }
+        data.opening_hours = parsedHours;
+        setStore(data as StoreData);
+        setLoading(false);
+      } else if (contextStore === null) {
+        setLoading(false);
       }
-      data.opening_hours = parsedHours;
-      setStore(data as StoreData);
-      setLoading(false);
-    } else if (contextStore === null) {
-      setLoading(false);
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [contextStore]);
 
   const uploadImage = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {
@@ -105,8 +108,9 @@ export default function MyStore() {
         .getPublicUrl(filePath);
 
       setStore({ ...store, [field]: data.publicUrl });
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Verifique se o bucket "store-assets" existe no Supabase.';
+    } catch (err) {
+      const error = err as Error;
+      const msg = error.message ? error.message : 'Verifique se o bucket "store-assets" existe no Supabase.';
       console.error('Upload error:', error);
       alert('Erro ao subir imagem: ' + msg);
     } finally {

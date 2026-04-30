@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, ShoppingBag, Package, Store, Truck, Settings, LogOut, Shield, Menu 
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import './Admin.css';
@@ -13,20 +13,34 @@ interface UserProfile {
   full_name?: string;
 }
 
+export interface StoreRow {
+  id: string;
+  name: string;
+  slug?: string;
+  whatsapp_number?: string;
+  address?: string;
+  logo?: string;
+  banner?: string;
+  delivery_fee?: number;
+  min_order?: number;
+  is_open_manual?: boolean;
+  opening_hours?: unknown;
+}
+
 export interface AdminContextType {
   user: User | null;
   userProfile: UserProfile | null;
-  store: any | null;
+  store: StoreRow | null;
 }
 
 export default function AdminLayout() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [store, setStore] = useState<any | null>(null);
+  const [store, setStore] = useState<StoreRow | null>(null);
   const navigate = useNavigate();
 
-  const loadAllData = async (userId: string) => {
+  const loadAllData = useCallback(async (userId: string) => {
     try {
       // Busca Perfil e Loja em paralelo para ser mais rápido
       const [profileRes, storeRes] = await Promise.all([
@@ -42,7 +56,7 @@ export default function AdminLayout() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -78,7 +92,7 @@ export default function AdminLayout() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate, loadAllData, store]);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

@@ -72,13 +72,14 @@ export default function OrdersDashboard() {
       }
       
       try {
-        setStoreId(store.id);
+        setStoreId(store.id || null);
         setStoreName(store.name);
-        await fetchOrders(store.id);
+        if (store.id) await fetchOrders(store.id);
 
-        channel = supabase
-          .channel(`public:orders:${store.id}`)
-          .on(
+        if (store.id) {
+          channel = supabase
+            .channel(`public:orders:${store.id}`)
+            .on(
             'postgres_changes',
             { event: '*', schema: 'public', table: 'orders', filter: `store_id=eq.${store.id}` },
             (payload) => {
@@ -95,6 +96,7 @@ export default function OrdersDashboard() {
             }
           )
           .subscribe();
+        }
       } catch (error) {
         console.error('Error initializing orders dashboard:', error);
       } finally {

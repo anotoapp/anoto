@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Trash2, MapPin } from 'lucide-react';
@@ -20,12 +20,7 @@ export default function DeliveryFeesAdmin() {
 
   const { store } = useOutletContext<AdminContextType>();
 
-  useEffect(() => {
-    if (store) loadData();
-    else if (store === null) setLoading(false);
-  }, [store]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!store) return;
     
     try {
@@ -44,7 +39,19 @@ export default function DeliveryFeesAdmin() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [store]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (store) {
+      timer = setTimeout(() => loadData(), 0);
+    } else if (store === null) {
+      timer = setTimeout(() => setLoading(false), 0);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [store, loadData]);
 
   async function handleAdd() {
     if (!newNeighborhood || !newFee) return;

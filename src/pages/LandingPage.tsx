@@ -19,8 +19,11 @@ export default function LandingPage() {
       }
     };
     window.addEventListener('scroll', handleScroll);
-    setIsVisible(true);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
   }, []);
 
   return (

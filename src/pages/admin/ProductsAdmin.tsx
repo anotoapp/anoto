@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Plus, Edit2, Trash2, Tag } from 'lucide-react';
@@ -18,11 +18,7 @@ export default function ProductsAdmin() {
 
   const { store } = useOutletContext<AdminContextType>();
 
-  useEffect(() => {
-    loadData();
-  }, [store]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!store) {
       setLoading(false);
       return;
@@ -30,7 +26,7 @@ export default function ProductsAdmin() {
     
     try {
       setLoading(true);
-      setStoreId(store.id);
+      setStoreId(store.id || '');
 
       const { data: catData, error: catError } = await supabase
         .from('categories')
@@ -55,7 +51,12 @@ export default function ProductsAdmin() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [store]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => loadData(), 0);
+    return () => clearTimeout(timer);
+  }, [store, loadData]);
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir este produto?')) return;
@@ -276,6 +277,7 @@ export default function ProductsAdmin() {
                             <button 
                               onClick={async () => {
                                 if (window.confirm('Deseja duplicar este produto?')) {
+                                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                                   const { id, created_at, ...cloneData } = product;
                                   const { error } = await supabase.from('products').insert({ ...cloneData, name: `${product.name} (Cópia)` });
                                   if (!error) loadData();
