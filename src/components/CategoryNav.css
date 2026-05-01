@@ -1,22 +1,31 @@
 .category-nav {
-  padding: 1.25rem 0;
-  background: var(--bg);
+  padding: 1rem 0;
+  background: transparent;
   position: sticky;
-  top: 60px; /* Adjust based on header height */
+  top: 60px;
   z-index: 90;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 251, 242, 0.8); /* Semi-transparent */
+  transition: all 0.3s ease;
+}
+
+/* Glassmorphism effect when scrolling */
+.category-nav.scrolled,
+.category-nav {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .category-list {
   display: flex;
   gap: 0.75rem;
   overflow-x: auto;
-  padding: 0 1.5rem;
+  padding: 0.5rem 1.5rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
+  scroll-behavior: smooth;
 }
 
 .category-list::-webkit-scrollbar {
@@ -27,30 +36,62 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.7rem 1.2rem;
+  padding: 0.75rem 1.25rem;
   background: white;
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid #f1f5f9;
   white-space: nowrap;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   cursor: pointer;
   color: #64748b;
+  position: relative;
+}
+
+.category-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.06);
+  border-color: rgba(var(--primary-rgb), 0.2);
+  color: #1e293b;
 }
 
 .category-item.active {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
+  box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.25);
   transform: scale(1.05);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 .category-icon {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  line-height: 1;
 }
 
 .category-name {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 700;
+  letter-spacing: -0.2px;
 }
+
+@media (max-width: 480px) {
+  .category-nav {
+    padding: 0.75rem 0;
+    top: 56px;
+  }
+  
+  .category-list {
+    padding: 0.25rem 1rem;
+    gap: 0.6rem;
+  }
+
+  .category-item {
+    padding: 0.65rem 1.1rem;
+    border-radius: 14px;
+  }
+  
+  .category-name {
+    font-size: 0.9rem;
+  }
+}
+

@@ -40,6 +40,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [neighborhoods, setNeighborhoods] = useState<{ id: string; neighborhood: string; fee: number }[]>([]);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<{ neighborhood: string; fee: number } | null>(null);
+  const [cep, setCep] = useState('');
+  const [cepLoading, setCepLoading] = useState(false);
+
 
   async function loadNeighborhoods() {
     try {
@@ -91,6 +94,46 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       if (savedAddress) setAddress(savedAddress || '');
     }
   }, [customer, neighborhoods]);
+
+  const handleCepLookup = async (value: string) => {
+    const cleanCep = value.replace(/\D/g, '');
+    setCep(cleanCep);
+    
+    if (cleanCep.length === 8) {
+      setCepLoading(true);
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+        const data = await response.json();
+        
+        if (!data.erro) {
+          // Fill address (Rua + Número placeholder)
+          setAddress(`${data.logradouro}, `);
+          
+          // Try to match neighborhood for delivery fee
+          const neighborhoodName = data.bairro;
+          const matchedNeighborhood = neighborhoods.find(n => 
+            n.neighborhood.toLowerCase().trim() === neighborhoodName.toLowerCase().trim()
+          );
+          
+          if (matchedNeighborhood) {
+            setSelectedNeighborhood({ 
+              neighborhood: matchedNeighborhood.neighborhood, 
+              fee: matchedNeighborhood.fee 
+            });
+            localStorage.setItem(`anoto_neighborhood_${config.id}`, matchedNeighborhood.neighborhood);
+          } else {
+            // Even if no fee match, we update the address state
+            // But we might want to alert if the store doesn't deliver there
+          }
+        }
+      } catch (error) {
+        console.error('CEP lookup error:', error);
+      } finally {
+        setCepLoading(false);
+      }
+    }
+  };
+
 
   const subtotal = cart.reduce((acc, item) => {
     const optionsPrice = item.selectedOptions.reduce((sum, o) => sum + o.price, 0);
@@ -175,8 +218,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         <div className={`drawer-content ${isOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
           <div className="drawer-header">
             <h2>{step === 'cart' ? 'Seu Pedido' : 'Finalizar Pedido'}</h2>
-            <button onClick={onClose}><X size={24} /></button>
+            <button className="drawer-close" onClick={onClose} aria-label="Fechar">
+              <X size={24} />
+            </button>
           </div>
+
 
           <div className="drawer-body">
             {step === 'cart' ? (
@@ -312,9 +358,23 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 {type === 'delivery' && (
                   <>
                     <div className="form-group">
+                      <label>CEP</label>
+                      <div className="input-with-icon">
+                        <MapPin size={18} />
+                        <input 
+                          type="tel" 
+                          placeholder="00000-000" 
+                          value={cep} 
+                          onChange={(e) => handleCepLookup(e.target.value)} 
+                          maxLength={9}
+                        />
+                        {cepLoading && <div className="loading-spinner-small"></div>}
+                      </div>
+                    </div>
+
+                    <div className="form-group">
                       <label>Bairro para Entrega</label>
                       <select 
-
                         value={selectedNeighborhood?.neighborhood || ''} 
                         onChange={(e) => {
                           const found = neighborhoods.find(n => n.neighborhood === e.target.value);
@@ -353,6 +413,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </>
                 )}
 
+
                 <div className="form-group">
                   <label>Forma de Pagamento</label>
                   <select value={payment} onChange={(e) => setPayment(e.target.value)}>
@@ -365,15 +426,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             )}
           </div>
 
-          <div className="drawer-footer">
+          <div className="drawer-footer glass">
             {step === 'cart' ? (
-              <button 
-                className="primary-action" 
-                disabled={cart.length === 0}
-                onClick={handleContinue}
-              >
-                Continuar
-              </button>
+              <div className="cart-actions">
+                <div className="total-display">
+                  <span>Total</span>
+                  <strong>R$ {total.toFixed(2)}</strong>
+                </div>
+                <button 
+                  className="primary-action" 
+                  disabled={cart.length === 0}
+                  onClick={handleContinue}
+                >
+                  Continuar <ShoppingBag size={20} style={{ marginLeft: '8px' }} />
+                </button>
+              </div>
             ) : (
               <div className="checkout-actions">
                 <button className="secondary-action" onClick={() => setStep('cart')}>Voltar</button>
@@ -390,11 +457,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     cep: customer?.cep
                   })}
                 >
-                  Enviar Pedido
+                  Confirmar Pedido
                 </button>
               </div>
             )}
           </div>
+
         </div>
       </div>
 

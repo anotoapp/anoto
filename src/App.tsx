@@ -12,8 +12,9 @@ import ProductsAdmin from './pages/admin/ProductsAdmin';
 import SuperAdmin from './pages/admin/SuperAdmin';
 import DeliveryFeesAdmin from './pages/admin/DeliveryFeesAdmin';
 import CouponsAdmin from './pages/admin/CouponsAdmin';
-
+import CustomersAdmin from './pages/admin/CustomersAdmin';
 import OrderTracking from './pages/OrderTracking';
+
 
 function App() {
   return (
@@ -37,7 +38,9 @@ function App() {
         <Route path="my-store" element={<MyStore />} />
         <Route path="delivery-fees" element={<DeliveryFeesAdmin />} />
         <Route path="coupons" element={<CouponsAdmin />} />
+        <Route path="customers" element={<CustomersAdmin />} />
         <Route path="settings" element={<StoreSettings />} />
+
         <Route path="master" element={<SuperAdmin />} />
       </Route>
     </Routes>

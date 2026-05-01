@@ -268,7 +268,9 @@ function App() {
         config={config} 
         cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)} 
         onCartClick={() => setIsCartOpen(true)} 
+        isOpen={isOpen}
       />
+
 
       <main className="container">
         <div className="search-container fade-in">

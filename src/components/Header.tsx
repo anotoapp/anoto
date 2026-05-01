@@ -8,9 +8,11 @@ interface HeaderProps {
   config: RestaurantConfig;
   cartCount: number;
   onCartClick: () => void;
+  isOpen: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ config, cartCount, onCartClick }) => {
+export const Header: React.FC<HeaderProps> = ({ config, cartCount, onCartClick, isOpen }) => {
+
   return (
     <header className="store-header">
       <div className="store-banner-wrapper">
@@ -36,12 +38,15 @@ export const Header: React.FC<HeaderProps> = ({ config, cartCount, onCartClick }
           </p>
 
           <div className="store-meta-badges">
-            <span className="meta-badge status-open">Aberto agora</span>
+            <span className={`meta-badge ${isOpen ? 'status-open' : 'status-closed'}`}>
+              {isOpen ? 'Aberto agora' : 'Fechado agora'}
+            </span>
             <span className="meta-badge status-time">
               <Clock size={14} style={{ marginRight: '4px' }} />
               30-45 min
             </span>
           </div>
+
         </div>
       </div>
     </header>

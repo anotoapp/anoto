@@ -3,7 +3,9 @@ import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Save, Upload, Store as StoreIcon, Phone, Palette, Clock, Settings, Eye } from 'lucide-react';
 import { optimizeImage } from '../../lib/image-optimizer';
+import { isStoreOpen } from '../../utils/storeStatus';
 import type { AdminContextType } from './AdminLayout';
+
 
 const defaultOpeningHours = {
   monday: { isOpen: true, open: '18:00', close: '23:00' },
@@ -573,9 +575,24 @@ export default function MyStore() {
                 <p style={{ fontSize: '0.7rem', color: '#64748b', margin: 0 }}>{store.address || 'Seu endereço aqui'}</p>
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
-                  <div style={{ padding: '6px 12px', background: '#f0fdf4', color: '#16a34a', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '700' }}>Aberto agora</div>
+                  {(() => {
+                    const status = isStoreOpen(store as any);
+                    return (
+                      <div style={{ 
+                        padding: '6px 12px', 
+                        background: status.isOpen ? '#f0fdf4' : '#fef2f2', 
+                        color: status.isOpen ? '#16a34a' : '#ef4444', 
+                        borderRadius: '20px', 
+                        fontSize: '0.65rem', 
+                        fontWeight: '700' 
+                      }}>
+                        {status.isOpen ? 'Aberto agora' : 'Fechado agora'}
+                      </div>
+                    );
+                  })()}
                   <div style={{ padding: '6px 12px', background: '#fff', color: '#64748b', borderRadius: '20px', fontSize: '0.65rem', border: '1px solid #e2e8f0' }}>30-45 min</div>
                 </div>
+
 
                 {/* Categories Mockup */}
                 <div style={{ display: 'flex', gap: '8px', marginTop: '24px', overflow: 'hidden' }}>

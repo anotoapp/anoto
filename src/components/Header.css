@@ -130,6 +130,12 @@
   color: #16a34a;
 }
 
+.status-closed {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+
 .status-time {
   background: #f8fafc;
   color: #64748b;

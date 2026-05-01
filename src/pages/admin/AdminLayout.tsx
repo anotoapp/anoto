@@ -1,7 +1,8 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, ShoppingBag, Package, Store, Truck, Settings, LogOut, Shield, Menu, Ticket
+  LayoutDashboard, ShoppingBag, Package, Store, Truck, Settings, LogOut, Shield, Menu, Ticket, Users
 } from 'lucide-react';
+
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { User } from '@supabase/supabase-js';
@@ -158,9 +159,13 @@ export default function AdminLayout() {
           <NavLink to="/admin/coupons" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
             <Ticket size={20} /> Cupons
           </NavLink>
+          <NavLink to="/admin/customers" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
+            <Users size={20} /> Clientes
+          </NavLink>
           <NavLink to="/admin/settings" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
             <Settings size={20} /> Ajustes
           </NavLink>
+
 
           {isSuperAdmin && (
             <>
