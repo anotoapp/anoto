@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { ShoppingBag, DollarSign, TrendingUp, Package, Calendar, Award, Download, ChevronDown } from 'lucide-react';
+import { ShoppingBag, DollarSign, TrendingUp, Package, Award, Download } from 'lucide-react';
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, Cell, AreaChart, Area
 } from 'recharts';
 import type { AdminContextType } from './AdminLayout';
@@ -55,7 +55,7 @@ export default function Dashboard() {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setOrders(data || []);
+      setOrders((data as any) || []);
     } catch (error) {
       console.error('Error fetching orders for metrics:', error);
     }
@@ -355,7 +355,7 @@ export default function Dashboard() {
                 />
                 <Tooltip 
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', padding: '12px' }}
-                  formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Faturamento']}
+                  formatter={(value: any) => [`R$ ${Number(value).toFixed(2)}`, 'Faturamento']}
                   labelStyle={{ fontWeight: '700', marginBottom: '4px', color: '#1e293b' }}
                 />
                 <Area 

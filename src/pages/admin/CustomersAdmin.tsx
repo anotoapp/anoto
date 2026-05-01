@@ -36,7 +36,9 @@ export default function CustomersAdmin() {
   }, [store?.id]);
 
   async function fetchCustomers() {
+    if (!store?.id) return;
     try {
+
       setLoading(true);
       
       // 1. Fetch all orders from this store to identify customers
