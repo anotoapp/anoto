@@ -19,23 +19,32 @@ export default function LandingPage() {
       } else {
         nav?.classList.remove('scrolled');
       }
-
-      // Intersection Observer for reveal animations
-      const reveals = document.querySelectorAll('.reveal');
-      reveals.forEach(el => {
-        const windowHeight = window.innerHeight;
-        const revealTop = el.getBoundingClientRect().top;
-        const revealPoint = 150;
-        if (revealTop < windowHeight - revealPoint) {
-          el.classList.add('active');
-        }
-      });
     };
 
-    window.addEventListener('scroll', handleScroll);
+    // Performance-optimized Intersection Observer for reveal animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          observer.unobserve(entry.target); // Stop observing once revealed
+        }
+      });
+    }, observerOptions);
+
+    const reveals = document.querySelectorAll('.reveal');
+    reveals.forEach(el => observer.observe(el));
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     const timer = setTimeout(() => setIsVisible(true), 50);
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
       clearTimeout(timer);
     };
   }, []);
@@ -431,11 +440,34 @@ export default function LandingPage() {
       </section>
 
       <footer className="landing-footer">
-        <div className="landing-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div className="lp-logo" style={{ fontSize: '1.2rem' }}>
-            <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" style={{ height: '50px', width: 'auto' }} />
+        <div className="landing-container footer-grid">
+          <div className="footer-brand">
+            <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" className="footer-logo" />
+            <p className="footer-tagline">A plataforma definitiva para escalar o seu delivery sem depender de taxas abusivas.</p>
+            <div className="social-links">
+              <a href="#" className="social-icon">Instagram</a>
+              <a href="#" className="social-icon">YouTube</a>
+            </div>
           </div>
-          <div className="footer-copy">© 2024 Anotô Platform. Todos os direitos reservados. Feito para escalar o seu delivery.</div>
+          
+          <div className="footer-links">
+            <h4>Plataforma</h4>
+            <Link to="/admin">Login Lojista</Link>
+            <Link to="/admin/register">Criar Loja</Link>
+            <a href="#pricing">Planos</a>
+          </div>
+
+          <div className="footer-links">
+            <h4>Suporte</h4>
+            <a href="https://wa.me/5511999999999">WhatsApp</a>
+            <a href="#">Central de Ajuda</a>
+            <a href="#">Termos de Uso</a>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <div className="landing-container">
+            <p>© 2024 Anotô Platform. Todos os direitos reservados. Feito com ❤️ para empreendedores.</p>
+          </div>
         </div>
       </footer>
 
