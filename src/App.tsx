@@ -14,15 +14,23 @@ import DeliveryFeesAdmin from './pages/admin/DeliveryFeesAdmin';
 import CouponsAdmin from './pages/admin/CouponsAdmin';
 import CustomersAdmin from './pages/admin/CustomersAdmin';
 import OrderTracking from './pages/OrderTracking';
-
+import { getStoreSlug, isLandingPage } from './utils/multitenancy';
 
 function App() {
+  const storeSlug = getStoreSlug();
+  const showLanding = isLandingPage();
+
   return (
     <Routes>
-      {/* Landing Page de Vendas */}
-      <Route path="/" element={<LandingPage />} />
+      {/* Lógica de Roteamento por Subdomínio ou Caminho */}
+      {showLanding ? (
+        <Route path="/" element={<LandingPage />} />
+      ) : (
+        // Se houver um slug no subdomínio, a raiz "/" mostra a StoreFront desse slug
+        <Route path="/" element={<StoreFront customSlug={storeSlug || undefined} />} />
+      )}
       
-      {/* Rota do Cliente (Vitrine) */}
+      {/* Rota do Cliente (Vitrine via Path - Legado/Backup) */}
       <Route path="/:storeSlug" element={<StoreFront />} />
       <Route path="/:storeSlug/order/:orderId" element={<OrderTracking />} />
 

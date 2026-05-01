@@ -14,8 +14,14 @@ import { isStoreOpen } from '../utils/storeStatus';
 import '../App.css';
 
 
-function App() {
-  const { storeSlug } = useParams<{ storeSlug?: string }>();
+interface StoreFrontProps {
+  customSlug?: string;
+}
+
+function StoreFront({ customSlug }: StoreFrontProps) {
+  const { storeSlug: paramSlug } = useParams<{ storeSlug?: string }>();
+  const storeSlug = customSlug || paramSlug;
+
   const navigate = useNavigate();
   const [config, setConfig] = useState<RestaurantConfig | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('');
@@ -342,4 +348,5 @@ function App() {
   );
 }
 
-export default App;
+export default StoreFront;
+
