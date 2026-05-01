@@ -284,9 +284,12 @@ export default function LandingPage() {
               <div className="plan-name">Plano Único</div>
               <div className="plan-price">
                 <span className="currency">R$</span>
-                <span className="amount">{billingCycle === 'monthly' ? '97' : '67'}</span>
+                <span className="amount">{billingCycle === 'monthly' ? '39,90' : '24,75'}</span>
                 <span className="period">/mês</span>
               </div>
+              {billingCycle === 'annual' && (
+                <p className="annual-total">Total de R$ 297,00 no ano</p>
+              )}
               <p className="plan-desc">Tudo o que você precisa para dominar o seu bairro.</p>
               
               <ul className="plan-features">

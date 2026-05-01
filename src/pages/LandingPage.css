@@ -227,6 +227,14 @@ section { padding: 5rem 0; }
 
 .pricing-grid-lp { max-width: 400px; margin: 3rem auto 0; }
 .pricing-card-lp { padding: 3rem 2rem; background: white; border-radius: 24px; border: 1px solid var(--lp-border-light); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+.annual-total {
+  font-size: 0.9rem;
+  color: #16a34a;
+  font-weight: 700;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+}
+
 .plan-price { font-size: 3.5rem; font-weight: 800; margin: 1rem 0; }
 .plan-price .currency { font-size: 1.2rem; vertical-align: top; }
 .plan-price .period { font-size: 1rem; color: var(--lp-text-muted-dark); }
