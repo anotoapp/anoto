@@ -31,7 +31,11 @@ export interface StoreRow {
   whatsapp_api_url?: string;
   whatsapp_api_instance?: string;
   whatsapp_api_token?: string;
+  subscription_status?: 'trial' | 'active' | 'expired' | 'canceled';
+  plan_type?: string;
+  last_payment_at?: string;
 }
+
 
 export interface AdminContextType {
   user: User | null;
@@ -177,14 +181,31 @@ export default function AdminLayout() {
           )}
         </nav>
         <div className="admin-footer">
+          {store?.plan_type && (
+            <div className="plan-badge">
+              <span className="plan-label">Plano:</span>
+              <span className={`plan-name ${store.plan_type.toLowerCase()}`}>{store.plan_type}</span>
+            </div>
+          )}
           <button onClick={() => supabase.auth.signOut()} className="nav-item logout">
             <LogOut size={20} /> Sair
           </button>
         </div>
+
       </aside>
       <main className="admin-main">
+        {store?.subscription_status === 'expired' && (
+          <div className="subscription-overlay">
+            <div className="subscription-content">
+              <h2>Sua assinatura expirou 💳</h2>
+              <p>O acesso ao seu painel foi pausado. Regularize seu pagamento para continuar vendendo.</p>
+              <a href="https://kiwify.com.br/..." className="lp-btn-primary">Renovar Agora</a>
+            </div>
+          </div>
+        )}
         <Outlet context={{ store, userProfile, user }} />
       </main>
+
     </div>
   );
 }
