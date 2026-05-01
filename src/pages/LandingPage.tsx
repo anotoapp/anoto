@@ -101,10 +101,6 @@ export default function LandingPage() {
                        <div className="laptop-skeleton-line" style={{width: '30%'}}></div>
                        <div className="laptop-skeleton-line" style={{width: '15%'}}></div>
                     </div>
-                    <div className="table-row-skeleton">
-                       <div className="laptop-skeleton-line" style={{width: '40%'}}></div>
-                       <div className="laptop-skeleton-line" style={{width: '10%'}}></div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -115,17 +111,10 @@ export default function LandingPage() {
                 <div className="phone-header-skeleton"></div>
                 <div className="phone-line-long"></div>
                 <div className="phone-line-short"></div>
-                
-                <div className="phone-tabs-skeleton">
-                   <div className="tab-skeleton active"></div>
-                   <div className="tab-skeleton"></div>
-                </div>
-
                 <div className="phone-item-card">
                    <div className="item-image-skeleton"></div>
                    <div className="item-details-skeleton">
                       <div className="line-long"></div>
-                      <div className="line-medium"></div>
                       <div className="line-price"></div>
                    </div>
                 </div>
@@ -147,25 +136,23 @@ export default function LandingPage() {
             <div className="split-side split-bad">
               <h3 className="split-title"><MessageSquare size={24} /> A Bagunça do WhatsApp</h3>
               <ul className="split-list">
-                <li><XCircle size={20} /> 38 mensagens acumuladas não respondidas</li>
+                <li><XCircle size={20} /> 38 mensagens acumuladas</li>
                 <li><XCircle size={20} /> Cliente perguntando "qual o cardápio?"</li>
-                <li><XCircle size={20} /> Áudios longos e confusos no pico</li>
+                <li><XCircle size={20} /> Áudios longos e confusos</li>
                 <li><XCircle size={20} /> Pedido anotado errado ou esquecido</li>
                 <li><XCircle size={20} /> Print de PIX falso ou perdido</li>
-                <li><XCircle size={20} /> Atendente sobrecarregado (e caro)</li>
-                <li><XCircle size={20} /> Cliente desiste pela demora</li>
+                <li><XCircle size={20} /> Atendente sobrecarregado</li>
               </ul>
             </div>
             <div className="split-side split-good">
               <h3 className="split-title"><Zap size={24} /> O Profissionalismo ANOTÔ</h3>
               <ul className="split-list">
-                <li><CheckCircle2 size={20} /> Pedido cai pronto e pago no painel</li>
+                <li><CheckCircle2 size={20} /> Pedido cai pronto e pago</li>
                 <li><CheckCircle2 size={20} /> Cliente escolhe sozinho em segundos</li>
                 <li><CheckCircle2 size={20} /> Cardápio sempre atualizado</li>
                 <li><CheckCircle2 size={20} /> Impressão direta para a cozinha</li>
                 <li><CheckCircle2 size={20} /> Histórico de clientes (Remarketing)</li>
                 <li><CheckCircle2 size={20} /> Atendimento instantâneo 24h</li>
-                <li><CheckCircle2 size={20} /> Operação flui, você foca no lucro</li>
               </ul>
             </div>
           </div>
@@ -177,7 +164,7 @@ export default function LandingPage() {
         <div className="landing-container">
           <header className="lp-section-header">
             <h2 className="lp-section-title text-light">Veja como seu delivery ficaria</h2>
-            <p className="subheadline center-text text-muted">Uma experiência de compra ultra-rápida.</p>
+            <p className="subheadline center-text" style={{ color: '#a1a1aa' }}>Uma experiência de compra ultra-rápida.</p>
           </header>
 
           <div className="demo-tabs">
@@ -212,7 +199,7 @@ export default function LandingPage() {
                           {activeTab === 'burger' ? 'Duplo Smash Bacon' : activeTab === 'pizza' ? 'Pizza Calabresa (G)' : 'Barca de Açaí 1L'}
                         </h4>
                         <p className="product-desc">
-                          {activeTab === 'burger' ? '2 blends de 90g, cheddar, bacon e molho.' : activeTab === 'pizza' ? 'Calabresa fatiada, cebola e mussarela.' : 'Açaí puro com acompanhamentos.'}
+                          {activeTab === 'burger' ? '2 blends de 90g, cheddar, bacon.' : activeTab === 'pizza' ? 'Calabresa fatiada e mussarela.' : 'Açaí puro com acompanhamentos.'}
                         </p>
                         <div className="product-price">
                           R$ {activeTab === 'burger' ? '34,90' : activeTab === 'pizza' ? '55,00' : '45,90'}
@@ -233,29 +220,29 @@ export default function LandingPage() {
       <section className="lp-benefits">
         <div className="landing-container">
           <header className="lp-section-header">
-            <h2 className="lp-section-title text-light">O que muda no seu negócio no primeiro mês</h2>
+            <h2 className="lp-section-title" style={{ color: 'white' }}>O que muda no seu negócio</h2>
           </header>
 
           <div className="benefits-grid">
             <div className="benefit-card">
               <div className="benefit-icon"><TrendingUp size={24} /></div>
-              <h3 className="text-light">Mais lucro, menos custo</h3>
-              <p>Receba pedidos simultâneos sem precisar de mais atendentes.</p>
+              <h3 style={{ color: 'white', marginBottom: '0.5rem' }}>Mais lucro</h3>
+              <p style={{ color: '#a1a1aa' }}>Receba pedidos simultâneos sem precisar de mais atendentes.</p>
             </div>
             <div className="benefit-card">
               <div className="benefit-icon"><Printer size={24} /></div>
-              <h3 className="text-light">Cozinha organizada</h3>
-              <p>Pedidos padronizados direto na impressora térmica.</p>
+              <h3 style={{ color: 'white', marginBottom: '0.5rem' }}>Organização</h3>
+              <p style={{ color: '#a1a1aa' }}>Pedidos padronizados direto na impressora térmica.</p>
             </div>
             <div className="benefit-card">
               <div className="benefit-icon"><Clock size={24} /></div>
-              <h3 className="text-light">Fim do estresse</h3>
-              <p>Sexta à noite sem caos. Pedidos organizados no painel.</p>
+              <h3 style={{ color: 'white', marginBottom: '0.5rem' }}>Fim do caos</h3>
+              <p style={{ color: '#a1a1aa' }}>Sexta à noite sem estresse. Pedidos organizados no painel.</p>
             </div>
             <div className="benefit-card">
               <div className="benefit-icon"><BarChart size={24} /></div>
-              <h3 className="text-light">Controle total</h3>
-              <p>Saiba quanto faturou e quem são seus melhores clientes.</p>
+              <h3 style={{ color: 'white', marginBottom: '0.5rem' }}>Controle</h3>
+              <p style={{ color: '#a1a1aa' }}>Saiba quanto faturou e quem são seus melhores clientes.</p>
             </div>
           </div>
         </div>
@@ -265,7 +252,7 @@ export default function LandingPage() {
       <section className="lp-pricing" id="pricing">
         <div className="landing-container">
           <header className="lp-section-header">
-            <h2 className="lp-section-title">O melhor investimento para o seu delivery</h2>
+            <h2 className="lp-section-title">O melhor investimento</h2>
             
             <div className="pricing-toggle-wrapper">
               <span className={billingCycle === 'monthly' ? 'active' : ''}>Mensal</span>
@@ -275,20 +262,20 @@ export default function LandingPage() {
               >
                 <div className="toggle-dot"></div>
               </button>
-              <span className={billingCycle === 'annual' ? 'active' : ''}>Anual <span className="discount-badge">30% OFF</span></span>
+              <span className={billingCycle === 'annual' ? 'active' : ''}>Anual <span className="discount-badge">ECONOMIZE</span></span>
             </div>
           </header>
 
           <div className="pricing-grid-lp">
             <div className="pricing-card-lp">
-              <div className="plan-name">Plano Único</div>
+              <div className="plan-name">Plano Único Profissional</div>
               <div className="plan-price">
                 <span className="currency">R$</span>
                 <span className="amount">{billingCycle === 'monthly' ? '39,90' : '24,75'}</span>
                 <span className="period">/mês</span>
               </div>
               {billingCycle === 'annual' && (
-                <p className="annual-total">Total de R$ 297,00 no ano</p>
+                <p className="annual-total">Apenas R$ 297,00 no ano</p>
               )}
               <p className="plan-desc">Tudo o que você precisa para dominar o seu bairro.</p>
               
@@ -298,7 +285,6 @@ export default function LandingPage() {
                 <li><CheckCircle2 size={18} /> Gestão de Bairros e CEP</li>
                 <li><CheckCircle2 size={18} /> Impressão Térmica Automática</li>
                 <li><CheckCircle2 size={18} /> CRM de Clientes e Remarketing</li>
-                <li><CheckCircle2 size={18} /> Dashboard de Vendas em Tempo Real</li>
               </ul>
 
               <Link to="/admin/register" className="btn-lp btn-lp-primary full-width">
@@ -313,7 +299,7 @@ export default function LandingPage() {
       <section className="lp-comparison">
         <div className="landing-container">
           <header className="lp-section-header">
-            <h2 className="lp-section-title text-dark">A Escolha é Simples</h2>
+            <h2 className="lp-section-title">A Escolha é Simples</h2>
           </header>
 
           <div className="comparison-table-wrapper">
@@ -328,8 +314,8 @@ export default function LandingPage() {
               <tbody>
                 <tr>
                   <td>Recepção de Pedidos</td>
-                  <td>Manual (Lento)</td>
-                  <td className="anoto-col">Automático (Instantâneo)</td>
+                  <td>Lenta e Manual</td>
+                  <td className="anoto-col">Automática e Instantânea</td>
                 </tr>
                 <tr>
                   <td>Apresentação do Cardápio</td>
@@ -339,12 +325,7 @@ export default function LandingPage() {
                 <tr>
                   <td>Erros de anotação</td>
                   <td>Frequentes</td>
-                  <td className="anoto-col">Zero (Cliente revisa)</td>
-                </tr>
-                <tr>
-                  <td>Capacidade de Crescimento</td>
-                  <td>Limitada</td>
-                  <td className="anoto-col">Escalável para milhares</td>
+                  <td className="anoto-col">Zero Erros</td>
                 </tr>
               </tbody>
             </table>
@@ -352,46 +333,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="lp-testimonials">
-        <div className="landing-container">
-          <header className="lp-section-header">
-            <h2 className="lp-section-title text-light">Negócios reais crescendo</h2>
-          </header>
-
-          <div className="testimonials-grid">
-            <div className="testim-card">
-              <p>"Antes eu enlouquecia no sábado à noite. Hoje os pedidos entram organizados sozinhos."</p>
-              <div className="testim-author">
-                <div className="testim-avatar">B</div>
-                <div>
-                  <strong className="author-name">Marcos - Burger House</strong>
-                  <span className="author-segment">Hamburgueria</span>
-                </div>
-              </div>
-            </div>
-            <div className="testim-card">
-              <p>"Parei de perder cliente por demora. Reduzi os erros de borda recheada a zero."</p>
-              <div className="testim-author">
-                <div className="testim-avatar">P</div>
-                <div>
-                  <strong className="author-name">Roberto - Pizzaria Napoli</strong>
-                  <span className="author-segment">Pizzaria</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Final */}
       <section className="lp-cta">
         <div className="landing-container">
-          <h2 className="headline white-text">Quantos pedidos você perdeu hoje?</h2>
-          <p className="subheadline white-text center-text margin-bottom-3rem">Pare de digitar preços e comece a receber pedidos automáticos.</p>
+          <h2 className="headline" style={{ color: 'white' }}>Quantos pedidos você perdeu hoje?</h2>
+          <p className="subheadline center-text" style={{ color: 'white', marginBottom: '3rem' }}>Pare de digitar preços e comece a receber pedidos automáticos.</p>
           <div className="center-content">
             <Link to="/admin/register" className="btn-lp btn-lp-white">
-              Pare de depender do WhatsApp
+              Quero Profissionalizar Meu Delivery
             </Link>
           </div>
         </div>
@@ -401,24 +350,26 @@ export default function LandingPage() {
         <div className="landing-container footer-grid">
           <div className="footer-brand">
             <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" className="footer-logo" />
-            <p className="footer-tagline">Escalando o seu delivery sem taxas abusivas.</p>
+            <p className="footer-tagline">Escalando o seu delivery sem depender de taxas abusivas.</p>
             <div className="social-links">
               <a href="#" className="social-icon">Instagram</a>
               <a href="#" className="social-icon">YouTube</a>
             </div>
           </div>
           
-          <div className="footer-links">
-            <h4>Plataforma</h4>
-            <Link to="/admin">Login Lojista</Link>
-            <Link to="/admin/register">Criar Loja</Link>
-            <a href="#pricing">Planos</a>
-          </div>
+          <div className="footer-links-group">
+            <div className="footer-links">
+              <h4>Plataforma</h4>
+              <Link to="/admin">Login Lojista</Link>
+              <Link to="/admin/register">Criar Loja</Link>
+              <a href="#pricing">Planos</a>
+            </div>
 
-          <div className="footer-links">
-            <h4>Suporte</h4>
-            <a href="https://wa.me/5511999999999">WhatsApp</a>
-            <a href="#">Central de Ajuda</a>
+            <div className="footer-links">
+              <h4>Suporte</h4>
+              <a href="https://wa.me/5511999999999">WhatsApp</a>
+              <a href="#">Termos de Uso</a>
+            </div>
           </div>
         </div>
         <div className="footer-bottom">
