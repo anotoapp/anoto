@@ -21,30 +21,11 @@ export default function LandingPage() {
       }
     };
 
-    // Performance-optimized Intersection Observer for reveal animations
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('active');
-          observer.unobserve(entry.target); // Stop observing once revealed
-        }
-      });
-    }, observerOptions);
-
-    const reveals = document.querySelectorAll('.reveal');
-    reveals.forEach(el => observer.observe(el));
-
     window.addEventListener('scroll', handleScroll, { passive: true });
     const timer = setTimeout(() => setIsVisible(true), 50);
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      observer.disconnect();
       clearTimeout(timer);
     };
   }, []);
@@ -53,12 +34,12 @@ export default function LandingPage() {
     <div className="landing-page">
       {/* Navigation */}
       <nav className="lp-nav">
-        <div className="landing-container" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+        <div className="landing-container nav-flex">
           <Link to="/" className="lp-logo">
-            <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" style={{ height: '60px', width: 'auto' }} />
+            <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" className="logo-img" />
           </Link>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <Link to="/admin" className="btn-lp btn-lp-secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.9rem' }}>
+          <div className="nav-actions">
+            <Link to="/admin" className="btn-lp btn-lp-secondary login-btn">
               Login do Lojista
             </Link>
           </div>
@@ -69,11 +50,7 @@ export default function LandingPage() {
       <section className="lp-hero">
         <div className="lp-hero-bg"></div>
         <div className="landing-container lp-hero-content">
-          <div className={`fade-up ${isVisible ? '' : 'hidden'}`} style={{ position: 'relative', zIndex: 2 }}>
-            <div className="floating-element" style={{ top: '-40px', left: '-60px', fontSize: '3rem' }}>🍔</div>
-            <div className="floating-element" style={{ bottom: '-20px', right: '-40px', fontSize: '2.5rem', animationDelay: '2s' }}>🍕</div>
-            <div className="floating-element" style={{ top: '20px', right: '100px', fontSize: '2rem', animationDelay: '4s' }}>🍧</div>
-            
+          <div className={`fade-up ${isVisible ? '' : 'hidden'}`}>
             <h1 className="headline">
               Seu WhatsApp está te fazendo <span className="text-primary">perder vendas</span> todos os dias.
             </h1>
@@ -85,17 +62,17 @@ export default function LandingPage() {
                 Começar a Vender Agora <ArrowRight size={18} style={{ marginLeft: '8px' }} />
               </Link>
             </div>
-            <p style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: 'var(--lp-text-muted-dark)' }}>
-              <CheckCircle2 size={14} style={{ display: 'inline', marginRight: '4px', color: '#16a34a' }}/> Setup em 5 minutos. Sem taxa sobre vendas.
+            <p className="hero-trust-tag">
+              <CheckCircle2 size={14} /> Setup em 5 minutos. Sem taxa sobre vendas.
             </p>
           </div>
 
           <div className={`mockup-composition fade-up delay-1 ${isVisible ? '' : 'hidden'}`}>
             <div className="laptop-mockup">
               <div className="laptop-header">
-                <div className="laptop-dot" style={{background: '#ef4444'}}></div>
-                <div className="laptop-dot" style={{background: '#f59e0b'}}></div>
-                <div className="laptop-dot" style={{background: '#22c55e'}}></div>
+                <div className="laptop-dot dot-red"></div>
+                <div className="laptop-dot dot-orange"></div>
+                <div className="laptop-dot dot-green"></div>
               </div>
               <div className="laptop-body">
                 <div className="laptop-sidebar">
@@ -104,27 +81,27 @@ export default function LandingPage() {
                   <div className="laptop-skeleton-line" style={{width: '80%'}}></div>
                   <div className="laptop-skeleton-line" style={{width: '90%'}}></div>
                 </div>
-                <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                  <div style={{display: 'flex', gap: '10px'}}>
-                    <div style={{flex: 1, height: '60px', background: '#18181b', borderRadius: '8px', border: '1px solid #27272a', padding: '10px'}}>
-                      <div className="laptop-skeleton-line" style={{width: '40%', marginBottom: '8px', background: '#3f3f46'}}></div>
-                      <div className="laptop-skeleton-line" style={{width: '70%', height: '12px', background: '#e63946'}}></div>
+                <div className="laptop-main-content">
+                  <div className="laptop-top-cards">
+                    <div className="laptop-mini-card">
+                      <div className="laptop-skeleton-line card-label"></div>
+                      <div className="laptop-skeleton-line card-value-red"></div>
                     </div>
-                    <div style={{flex: 1, height: '60px', background: '#18181b', borderRadius: '8px', border: '1px solid #27272a', padding: '10px'}}>
-                       <div className="laptop-skeleton-line" style={{width: '40%', marginBottom: '8px', background: '#3f3f46'}}></div>
-                       <div className="laptop-skeleton-line" style={{width: '50%', height: '12px', background: '#22c55e'}}></div>
+                    <div className="laptop-mini-card">
+                       <div className="laptop-skeleton-line card-label"></div>
+                       <div className="laptop-skeleton-line card-value-green"></div>
                     </div>
                   </div>
-                  <div style={{flex: 1, background: '#18181b', borderRadius: '8px', border: '1px solid #27272a', padding: '10px'}}>
-                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px', borderBottom: '1px solid #27272a', paddingBottom: '10px'}}>
-                       <div className="laptop-skeleton-line" style={{width: '20%', background: '#3f3f46'}}></div>
-                       <div className="laptop-skeleton-line" style={{width: '10%', background: '#3f3f46'}}></div>
+                  <div className="laptop-table-box">
+                    <div className="table-header-skeleton">
+                       <div className="laptop-skeleton-line" style={{width: '20%'}}></div>
+                       <div className="laptop-skeleton-line" style={{width: '10%'}}></div>
                     </div>
-                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                    <div className="table-row-skeleton">
                        <div className="laptop-skeleton-line" style={{width: '30%'}}></div>
                        <div className="laptop-skeleton-line" style={{width: '15%'}}></div>
                     </div>
-                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                    <div className="table-row-skeleton">
                        <div className="laptop-skeleton-line" style={{width: '40%'}}></div>
                        <div className="laptop-skeleton-line" style={{width: '10%'}}></div>
                     </div>
@@ -135,21 +112,21 @@ export default function LandingPage() {
             <div className="phone-mockup">
               <div className="phone-notch"></div>
               <div className="phone-body">
-                <div style={{width: '100%', height: '80px', background: '#e5e5e5', borderRadius: '12px', marginBottom: '15px'}}></div>
-                <div style={{width: '60%', height: '16px', background: '#d4d4d8', borderRadius: '8px', marginBottom: '8px'}}></div>
-                <div style={{width: '40%', height: '12px', background: '#e4e4e7', borderRadius: '6px', marginBottom: '20px'}}></div>
+                <div className="phone-header-skeleton"></div>
+                <div className="phone-line-long"></div>
+                <div className="phone-line-short"></div>
                 
-                <div style={{display: 'flex', gap: '10px', marginBottom: '15px'}}>
-                   <div style={{width: '60px', height: '24px', background: '#e63946', borderRadius: '12px'}}></div>
-                   <div style={{width: '60px', height: '24px', background: '#e4e4e7', borderRadius: '12px'}}></div>
+                <div className="phone-tabs-skeleton">
+                   <div className="tab-skeleton active"></div>
+                   <div className="tab-skeleton"></div>
                 </div>
 
-                <div style={{display: 'flex', gap: '10px', marginBottom: '10px', background: '#fff', padding: '10px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)'}}>
-                   <div style={{width: '60px', height: '60px', background: '#e5e5e5', borderRadius: '8px'}}></div>
-                   <div style={{flex: 1}}>
-                      <div style={{width: '80%', height: '12px', background: '#d4d4d8', borderRadius: '4px', marginBottom: '6px'}}></div>
-                      <div style={{width: '100%', height: '8px', background: '#e4e4e7', borderRadius: '4px', marginBottom: '4px'}}></div>
-                      <div style={{width: '40%', height: '12px', background: '#e63946', borderRadius: '4px', marginTop: '8px'}}></div>
+                <div className="phone-item-card">
+                   <div className="item-image-skeleton"></div>
+                   <div className="item-details-skeleton">
+                      <div className="line-long"></div>
+                      <div className="line-medium"></div>
+                      <div className="line-price"></div>
                    </div>
                 </div>
               </div>
@@ -159,11 +136,11 @@ export default function LandingPage() {
       </section>
 
       {/* Pain Section */}
-      <section className="lp-pain reveal">
+      <section className="lp-pain">
         <div className="landing-container">
           <header className="lp-section-header">
             <h2 className="lp-section-title">Ainda atende pedidos no WhatsApp?</h2>
-            <p className="subheadline" style={{ margin: '0 auto' }}>A cada minuto que seu cliente passa esperando uma resposta, é uma chance de ele ir para o concorrente.</p>
+            <p className="subheadline center-text">A cada minuto que seu cliente passa esperando uma resposta, é uma chance de ele ir para o concorrente.</p>
           </header>
 
           <div className="split-comparison">
@@ -171,24 +148,24 @@ export default function LandingPage() {
               <h3 className="split-title"><MessageSquare size={24} /> A Bagunça do WhatsApp</h3>
               <ul className="split-list">
                 <li><XCircle size={20} /> 38 mensagens acumuladas não respondidas</li>
-                <li><XCircle size={20} /> Cliente perguntando "qual o cardápio?" pela 10ª vez</li>
-                <li><XCircle size={20} /> Áudios longos e confusos no meio do pico</li>
+                <li><XCircle size={20} /> Cliente perguntando "qual o cardápio?"</li>
+                <li><XCircle size={20} /> Áudios longos e confusos no pico</li>
                 <li><XCircle size={20} /> Pedido anotado errado ou esquecido</li>
-                <li><XCircle size={20} /> Print de PIX falso ou perdido na galeria</li>
-                <li><XCircle size={20} /> Atendente sobrecarregado (e custando caro)</li>
-                <li><XCircle size={20} /> Cliente desiste pela demora e não volta mais</li>
+                <li><XCircle size={20} /> Print de PIX falso ou perdido</li>
+                <li><XCircle size={20} /> Atendente sobrecarregado (e caro)</li>
+                <li><XCircle size={20} /> Cliente desiste pela demora</li>
               </ul>
             </div>
             <div className="split-side split-good">
               <h3 className="split-title"><Zap size={24} /> O Profissionalismo ANOTÔ</h3>
               <ul className="split-list">
                 <li><CheckCircle2 size={20} /> Pedido cai pronto e pago no painel</li>
-                <li><CheckCircle2 size={20} /> Cliente escolhe tudo sozinho em segundos</li>
-                <li><CheckCircle2 size={20} /> Cardápio sempre atualizado (itens esgotados somem)</li>
-                <li><CheckCircle2 size={20} /> Impressão automática direto para a cozinha</li>
-                <li><CheckCircle2 size={20} /> Histórico de clientes para remarketing</li>
-                <li><CheckCircle2 size={20} /> Atendimento instantâneo 24h por dia</li>
-                <li><CheckCircle2 size={20} /> Operação flui, você foca em qualidade e lucro</li>
+                <li><CheckCircle2 size={20} /> Cliente escolhe sozinho em segundos</li>
+                <li><CheckCircle2 size={20} /> Cardápio sempre atualizado</li>
+                <li><CheckCircle2 size={20} /> Impressão direta para a cozinha</li>
+                <li><CheckCircle2 size={20} /> Histórico de clientes (Remarketing)</li>
+                <li><CheckCircle2 size={20} /> Atendimento instantâneo 24h</li>
+                <li><CheckCircle2 size={20} /> Operação flui, você foca no lucro</li>
               </ul>
             </div>
           </div>
@@ -196,11 +173,11 @@ export default function LandingPage() {
       </section>
 
       {/* Demo Section */}
-      <section className="lp-demo reveal">
+      <section className="lp-demo">
         <div className="landing-container">
           <header className="lp-section-header">
             <h2 className="lp-section-title text-light">Veja como seu delivery ficaria</h2>
-            <p className="subheadline" style={{ margin: '0 auto', color: '#a1a1aa' }}>Uma experiência de compra ultra-rápida que faz seu cliente sentir que está pedindo em uma rede de fast-food gigante.</p>
+            <p className="subheadline center-text text-muted">Uma experiência de compra ultra-rápida.</p>
           </header>
 
           <div className="demo-tabs">
@@ -210,38 +187,38 @@ export default function LandingPage() {
           </div>
 
           <div className="demo-content">
-            <div className="phone-mockup" style={{ position: 'relative', transform: 'none', left: 'auto', bottom: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', width: '300px', height: '600px' }}>
+            <div className="phone-demo-wrapper">
               <div className="phone-notch"></div>
-              <div className="phone-body" style={{ padding: '0', background: '#fff' }}>
-                <div style={{ height: '140px', background: activeTab === 'burger' ? '#18181b' : activeTab === 'pizza' ? '#7f1d1d' : '#4c1d95', position: 'relative' }}>
-                  <div style={{ position: 'absolute', bottom: '-30px', left: '20px', width: '60px', height: '60px', borderRadius: '50%', background: '#fff', border: '3px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+              <div className="phone-body-content">
+                <div className="demo-header" style={{ background: activeTab === 'burger' ? '#18181b' : activeTab === 'pizza' ? '#7f1d1d' : '#4c1d95' }}>
+                  <div className="demo-logo-circle">
                     {activeTab === 'burger' ? '🍔' : activeTab === 'pizza' ? '🍕' : '🍧'}
                   </div>
                 </div>
-                <div style={{ padding: '40px 20px 20px' }}>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem', color: '#09090b' }}>
+                <div className="demo-details">
+                  <h3 className="demo-title">
                     {activeTab === 'burger' ? 'Smash Premium' : activeTab === 'pizza' ? 'Pizzaria Napoli' : 'Açaí Tropical'}
                   </h3>
-                  <p style={{ margin: '0 0 20px 0', fontSize: '0.8rem', color: '#71717a' }}>Aberto agora • 30-40 min</p>
+                  <p className="demo-meta">Aberto agora • 30-40 min</p>
                   
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'hidden' }}>
-                    <div style={{ padding: '6px 12px', background: '#e63946', color: '#fff', borderRadius: '100px', fontSize: '0.8rem', fontWeight: '600' }}>Destaques</div>
-                    <div style={{ padding: '6px 12px', background: '#f4f4f5', color: '#71717a', borderRadius: '100px', fontSize: '0.8rem', fontWeight: '600' }}>Combos</div>
+                  <div className="demo-cats">
+                    <div className="cat-badge active">Destaques</div>
+                    <div className="cat-badge">Combos</div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '12px', marginBottom: '15px', padding: '12px', border: '1px solid #f4f4f5', borderRadius: '12px' }}>
-                     <div style={{ flex: 1 }}>
-                        <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', color: '#09090b' }}>
+                  <div className="demo-product-card">
+                     <div className="product-info">
+                        <h4 className="product-title">
                           {activeTab === 'burger' ? 'Duplo Smash Bacon' : activeTab === 'pizza' ? 'Pizza Calabresa (G)' : 'Barca de Açaí 1L'}
                         </h4>
-                        <p style={{ margin: '0 0 8px 0', fontSize: '0.75rem', color: '#71717a', lineHeight: '1.4' }}>
-                          {activeTab === 'burger' ? '2 blends de 90g, cheddar, bacon crocante e molho especial.' : activeTab === 'pizza' ? 'Calabresa fatiada, cebola, azeitonas e mussarela.' : 'Açaí puro com 4 acompanhamentos grátis.'}
+                        <p className="product-desc">
+                          {activeTab === 'burger' ? '2 blends de 90g, cheddar, bacon e molho.' : activeTab === 'pizza' ? 'Calabresa fatiada, cebola e mussarela.' : 'Açaí puro com acompanhamentos.'}
                         </p>
-                        <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#09090b' }}>
+                        <div className="product-price">
                           R$ {activeTab === 'burger' ? '34,90' : activeTab === 'pizza' ? '55,00' : '45,90'}
                         </div>
                      </div>
-                     <div style={{ width: '80px', height: '80px', background: '#f4f4f5', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>
+                     <div className="product-img-skeleton">
                         {activeTab === 'burger' ? '🍔' : activeTab === 'pizza' ? '🍕' : '🍧'}
                      </div>
                   </div>
@@ -252,8 +229,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Benefits */}
-      <section className="lp-benefits reveal">
+      {/* Benefits Grid */}
+      <section className="lp-benefits">
         <div className="landing-container">
           <header className="lp-section-header">
             <h2 className="lp-section-title text-light">O que muda no seu negócio no primeiro mês</h2>
@@ -263,33 +240,32 @@ export default function LandingPage() {
             <div className="benefit-card">
               <div className="benefit-icon"><TrendingUp size={24} /></div>
               <h3 className="text-light">Mais lucro, menos custo</h3>
-              <p>Receba dezenas de pedidos simultâneos sem precisar contratar mais atendentes. O sistema faz o trabalho por você.</p>
+              <p>Receba pedidos simultâneos sem precisar de mais atendentes.</p>
             </div>
             <div className="benefit-card">
               <div className="benefit-icon"><Printer size={24} /></div>
               <h3 className="text-light">Cozinha organizada</h3>
-              <p>Chega de garrancho no papel. Os pedidos saem padronizados na impressora térmica direto para o chapeiro ou pizzaiolo.</p>
+              <p>Pedidos padronizados direto na impressora térmica.</p>
             </div>
             <div className="benefit-card">
               <div className="benefit-icon"><Clock size={24} /></div>
-              <h3 className="text-light">Fim do estresse no pico</h3>
-              <p>Sexta à noite não precisa ser um caos. Os pedidos entram em fila perfeitamente organizada no seu painel.</p>
+              <h3 className="text-light">Fim do estresse</h3>
+              <p>Sexta à noite sem caos. Pedidos organizados no painel.</p>
             </div>
             <div className="benefit-card">
               <div className="benefit-icon"><BarChart size={24} /></div>
               <h3 className="text-light">Controle total</h3>
-              <p>Saiba exatamente quanto faturou, qual o produto mais vendido e quem são seus melhores clientes. Dados para crescer.</p>
+              <p>Saiba quanto faturou e quem são seus melhores clientes.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section className="lp-pricing reveal" id="pricing">
+      <section className="lp-pricing" id="pricing">
         <div className="landing-container">
           <header className="lp-section-header">
             <h2 className="lp-section-title">O melhor investimento para o seu delivery</h2>
-            <p className="subheadline" style={{ margin: '0 auto' }}>Escolha o plano que faz mais sentido para o seu momento atual.</p>
             
             <div className="pricing-toggle-wrapper">
               <span className={billingCycle === 'monthly' ? 'active' : ''}>Mensal</span>
@@ -311,7 +287,7 @@ export default function LandingPage() {
                 <span className="amount">{billingCycle === 'monthly' ? '97' : '67'}</span>
                 <span className="period">/mês</span>
               </div>
-              <p className="plan-desc">Tudo o que você precisa para dominar o seu bairro e escalar vendas.</p>
+              <p className="plan-desc">Tudo o que você precisa para dominar o seu bairro.</p>
               
               <ul className="plan-features">
                 <li><CheckCircle2 size={18} /> Cardápio Digital Ilimitado</li>
@@ -322,7 +298,7 @@ export default function LandingPage() {
                 <li><CheckCircle2 size={18} /> Dashboard de Vendas em Tempo Real</li>
               </ul>
 
-              <Link to="/admin/register" className="btn-lp btn-lp-primary" style={{ width: '100%', marginTop: '2rem' }}>
+              <Link to="/admin/register" className="btn-lp btn-lp-primary full-width">
                 Começar Agora
               </Link>
             </div>
@@ -330,12 +306,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Brutal Comparison */}
-      <section className="lp-comparison reveal">
+      {/* Comparison Table */}
+      <section className="lp-comparison">
         <div className="landing-container">
           <header className="lp-section-header">
             <h2 className="lp-section-title text-dark">A Escolha é Simples</h2>
-            <p className="subheadline" style={{ margin: '0 auto', color: '#71717a' }}>Negócios grandes não dependem de WhatsApp manual.</p>
           </header>
 
           <div className="comparison-table-wrapper">
@@ -343,40 +318,30 @@ export default function LandingPage() {
               <thead>
                 <tr>
                   <th>Recurso</th>
-                  <th>WhatsApp Tradicional</th>
+                  <th>WhatsApp manual</th>
                   <th className="anoto-col">ANOTÔ Premium</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>Recepção de Pedidos</td>
-                  <td>Manual (Um por um)</td>
-                  <td className="anoto-col">Automático (Infinitos ao mesmo tempo)</td>
+                  <td>Manual (Lento)</td>
+                  <td className="anoto-col">Automático (Instantâneo)</td>
                 </tr>
                 <tr>
                   <td>Apresentação do Cardápio</td>
-                  <td>PDF pesado ou texto confuso</td>
-                  <td className="anoto-col">App digital interativo e com fotos</td>
+                  <td>PDF ou texto</td>
+                  <td className="anoto-col">App digital interativo</td>
                 </tr>
                 <tr>
                   <td>Erros de anotação</td>
-                  <td>Frequentes (gera prejuízo)</td>
-                  <td className="anoto-col">Zero (cliente escolhe e revisa)</td>
-                </tr>
-                <tr>
-                  <td>Impressão na cozinha</td>
-                  <td>Não existe ou precisa copiar/colar</td>
-                  <td className="anoto-col">1 Clique direto na impressora</td>
-                </tr>
-                <tr>
-                  <td>Controle de Caixa e Vendas</td>
-                  <td>No caderno ou planilha</td>
-                  <td className="anoto-col">Painel de métricas em tempo real</td>
+                  <td>Frequentes</td>
+                  <td className="anoto-col">Zero (Cliente revisa)</td>
                 </tr>
                 <tr>
                   <td>Capacidade de Crescimento</td>
-                  <td>Limitada pela velocidade do atendente</td>
-                  <td className="anoto-col">Escalável. Pronto para 1.000 pedidos/dia</td>
+                  <td>Limitada</td>
+                  <td className="anoto-col">Escalável para milhares</td>
                 </tr>
               </tbody>
             </table>
@@ -385,7 +350,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="lp-testimonials reveal">
+      <section className="lp-testimonials">
         <div className="landing-container">
           <header className="lp-section-header">
             <h2 className="lp-section-title text-light">Negócios reais crescendo</h2>
@@ -393,32 +358,22 @@ export default function LandingPage() {
 
           <div className="testimonials-grid">
             <div className="testim-card">
-              <p>"Antes eu enlouquecia no sábado à noite. O WhatsApp travava, cliente xingava. Hoje os pedidos entram organizados sozinhos e eu só me preocupo em fritar hambúrguer."</p>
+              <p>"Antes eu enlouquecia no sábado à noite. Hoje os pedidos entram organizados sozinhos."</p>
               <div className="testim-author">
                 <div className="testim-avatar">B</div>
                 <div>
-                  <strong style={{ display: 'block', color: 'white' }}>Marcos - Burger House</strong>
-                  <span style={{ color: '#71717a', fontSize: '0.85rem' }}>Hamburgueria</span>
+                  <strong className="author-name">Marcos - Burger House</strong>
+                  <span className="author-segment">Hamburgueria</span>
                 </div>
               </div>
             </div>
             <div className="testim-card">
-              <p>"Parei de perder cliente por demora no atendimento. A pessoa clica no link do Insta, monta a pizza e me manda. Reduzi os erros de borda recheada a zero."</p>
+              <p>"Parei de perder cliente por demora. Reduzi os erros de borda recheada a zero."</p>
               <div className="testim-author">
                 <div className="testim-avatar">P</div>
                 <div>
-                  <strong style={{ display: 'block', color: 'white' }}>Roberto - Pizzaria Napoli</strong>
-                  <span style={{ color: '#71717a', fontSize: '0.85rem' }}>Pizzaria</span>
-                </div>
-              </div>
-            </div>
-            <div className="testim-card">
-              <p>"Açaiteria é complicado porque tem muito adicional. No WhatsApp o cliente mandava um áudio de 2 minutos. Com o ANOTÔ, ele marca as caixinhas e o pedido sai perfeito."</p>
-              <div className="testim-author">
-                <div className="testim-avatar">A</div>
-                <div>
-                  <strong style={{ display: 'block', color: 'white' }}>Juliana - Açaí Tropical</strong>
-                  <span style={{ color: '#71717a', fontSize: '0.85rem' }}>Açaiteria</span>
+                  <strong className="author-name">Roberto - Pizzaria Napoli</strong>
+                  <span className="author-segment">Pizzaria</span>
                 </div>
               </div>
             </div>
@@ -427,12 +382,12 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Final */}
-      <section className="lp-cta reveal">
+      <section className="lp-cta">
         <div className="landing-container">
-          <h2 className="headline" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: 'white' }}>Quantos pedidos você perdeu hoje?</h2>
-          <p className="subheadline" style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.9)', margin: '0 auto 3rem' }}>Enquanto você responde mensagem por mensagem digitando preço, seu concorrente recebe pedidos automáticos.</p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-            <Link to="/admin/register" className="btn-lp btn-lp-white" style={{ padding: '1.25rem 3rem', fontSize: '1.2rem' }}>
+          <h2 className="headline white-text">Quantos pedidos você perdeu hoje?</h2>
+          <p className="subheadline white-text center-text margin-bottom-3rem">Pare de digitar preços e comece a receber pedidos automáticos.</p>
+          <div className="center-content">
+            <Link to="/admin/register" className="btn-lp btn-lp-white">
               Pare de depender do WhatsApp
             </Link>
           </div>
@@ -443,7 +398,7 @@ export default function LandingPage() {
         <div className="landing-container footer-grid">
           <div className="footer-brand">
             <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" className="footer-logo" />
-            <p className="footer-tagline">A plataforma definitiva para escalar o seu delivery sem depender de taxas abusivas.</p>
+            <p className="footer-tagline">Escalando o seu delivery sem taxas abusivas.</p>
             <div className="social-links">
               <a href="#" className="social-icon">Instagram</a>
               <a href="#" className="social-icon">YouTube</a>
@@ -461,12 +416,11 @@ export default function LandingPage() {
             <h4>Suporte</h4>
             <a href="https://wa.me/5511999999999">WhatsApp</a>
             <a href="#">Central de Ajuda</a>
-            <a href="#">Termos de Uso</a>
           </div>
         </div>
         <div className="footer-bottom">
           <div className="landing-container">
-            <p>© 2024 Anotô Platform. Todos os direitos reservados. Feito com ❤️ para empreendedores.</p>
+            <p>© 2024 Anotô Platform. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
