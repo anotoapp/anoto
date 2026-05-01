@@ -1,277 +1,454 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  MapPin, 
-  Users, 
-  TrendingUp, 
-  Check, 
-  ChevronDown, 
-  Zap, 
-  ShieldCheck, 
-  ArrowRight,
-  Printer,
-  Globe
+  ArrowRight, CheckCircle2, XCircle, TrendingUp, 
+  Clock, Zap, MessageSquare, Printer, BarChart
 } from 'lucide-react';
-
 import './LandingPage.css';
 
 export default function LandingPage() {
-  const [scrolled, setScrolled] = useState(false);
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'burger' | 'pizza' | 'acai'>('burger');
+  const [isVisible, setIsVisible] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      const nav = document.querySelector('.lp-nav');
+      if (window.scrollY > 50) {
+        nav?.classList.add('scrolled');
+      } else {
+        nav?.classList.remove('scrolled');
+      }
+
+      // Intersection Observer for reveal animations
+      const reveals = document.querySelectorAll('.reveal');
+      reveals.forEach(el => {
+        const windowHeight = window.innerHeight;
+        const revealTop = el.getBoundingClientRect().top;
+        const revealPoint = 150;
+        if (revealTop < windowHeight - revealPoint) {
+          el.classList.add('active');
+        }
+      });
     };
+
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
   }, []);
 
-  const features = [
-    {
-      icon: <MapPin />,
-      title: "CEP Automático",
-      description: "Seu cliente digita o CEP e o endereço aparece na hora. Menos cliques, mais vendas."
-    },
-    {
-      icon: <Users />,
-      title: "CRM Inteligente",
-      description: "Saiba quem são seus melhores clientes, o que eles amam e quando foi a última compra."
-    },
-    {
-      icon: <Globe />,
-      title: "Subdomínios Próprios",
-      description: "Sua loja com link profissional: lojateste.anoto.app. Autoridade total para sua marca."
-    },
-    {
-      icon: <TrendingUp />,
-      title: "Relatórios de Vendas",
-      description: "Acompanhe faturamento, ticket médio e produtos mais vendidos em tempo real."
-    },
-    {
-      icon: <Printer />,
-      title: "Impressão Térmica",
-      description: "Envie pedidos direto para a cozinha com integração total a impressoras térmicas."
-    },
-    {
-      icon: <Zap />,
-      title: "Checkout em 30s",
-      description: "Processo de compra otimizado para mobile, sem logins complicados ou senhas chatas."
-    }
-  ];
-
-  const faqs = [
-    {
-      q: "Preciso de um computador para usar?",
-      a: "Não! O painel administrativo é 100% responsivo. Você pode gerenciar sua loja, cadastrar produtos e receber pedidos direto pelo seu celular."
-    },
-    {
-      q: "Como recebo o pagamento dos pedidos?",
-      a: "O ANOTÔ não retém seu dinheiro. Os pagamentos são feitos diretamente para você via Pix ou Cartão na entrega, conforme você configurar."
-    },
-    {
-      q: "Posso usar meu próprio domínio?",
-      a: "Sim! No plano Pro e Diamond, você pode conectar seu domínio .com ou .com.br para uma experiência 100% personalizada."
-    },
-    {
-      q: "Tem taxa sobre as vendas?",
-      a: "Zero! Nós cobramos apenas uma mensalidade fixa. Todo o lucro das suas vendas é 100% seu."
-    }
-  ];
-
   return (
-    <div className="lp-wrapper">
-      <header className={`lp-header ${scrolled ? 'scrolled' : ''}`}>
-        <div className="landing-container lp-nav">
-          <img src="/assets/logo-anoto.png" alt="ANOTÔ" className="lp-logo" />
-          <nav className="lp-nav-links">
-            <a href="#recursos">Recursos</a>
-            <a href="#precos">Preços</a>
-            <a href="#faq">FAQ</a>
-            <Link to="/admin/login" className="lp-btn-secondary">Login</Link>
-            <Link to="/admin/register" className="lp-btn-primary">Criar Minha Loja</Link>
-          </nav>
-        </div>
-      </header>
-
-      <main>
-        {/* HERO SECTION */}
-        <section className="lp-hero">
-          <div className="landing-container fade-in">
-            <div className="lp-badge">
-              <Zap size={16} /> O sistema de delivery mais rápido do Brasil
-            </div>
-            <h1>Seu restaurante pronto para o <br /> <span>Próximo Nível.</span></h1>
-            <p>
-              Abandone o papel e caneta. Tenha um sistema completo de pedidos online, 
-              gestão de clientes e inteligência de vendas. Tudo em um só lugar.
-            </p>
-            <div className="hero-actions">
-              <Link to="/admin/register" className="lp-btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
-                Começar Teste Grátis <ArrowRight size={18} style={{ marginLeft: '8px' }} />
-              </Link>
-              <a href="#recursos" className="lp-btn-secondary" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
-                Ver Funcionalidades
-              </a>
-            </div>
-            
-            <div className="hero-mockup">
-              <img src="/assets/anoto_dashboard_mockup_1777612676913.png" alt="Painel Administrativo ANOTÔ" />
-            </div>
-          </div>
-        </section>
-
-        {/* FEATURES SECTION */}
-        <section id="recursos" className="lp-section">
-          <div className="landing-container">
-            <div className="section-header fade-in">
-              <div className="lp-badge" style={{ color: 'var(--lp-primary)' }}>Recursos</div>
-              <h2>Feito por quem entende de Delivery</h2>
-              <p>Ferramentas pensadas para aumentar seu ticket médio e fidelizar seus clientes.</p>
-            </div>
-            
-            <div className="features-grid">
-              {features.map((f, i) => (
-                <div key={i} className="feature-card fade-in" style={{ animationDelay: `${i * 0.1}s` }}>
-                  <div className="feature-icon">{f.icon}</div>
-                  <h3>{f.title}</h3>
-                  <p>{f.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* PRICING SECTION */}
-        <section id="precos" className="lp-section" style={{ background: 'rgba(255,255,255,0.02)' }}>
-          <div className="landing-container">
-            <div className="section-header fade-in">
-              <div className="lp-badge">Planos</div>
-              <h2>O melhor custo-benefício</h2>
-              <p>Escolha o plano ideal para o tamanho da sua operação.</p>
-            </div>
-
-            <div className="pricing-grid">
-              {/* BASIC */}
-              <div className="pricing-card fade-in">
-                <h3>Starter</h3>
-                <div className="price">R$ 59<span>/mês</span></div>
-                <ul className="pricing-features">
-                  <li><Check size={18} /> Pedidos Ilimitados</li>
-                  <li><Check size={18} /> Cardápio Digital</li>
-                  <li><Check size={18} /> Gestão de Bairros</li>
-                  <li><Check size={18} /> Suporte via WhatsApp</li>
-                </ul>
-                <Link to="/admin/register" className="lp-btn-secondary">Assinar Starter</Link>
-              </div>
-
-              {/* PRO */}
-              <div className="pricing-card popular fade-in">
-                <div className="popular-badge">MAIS VENDIDO</div>
-                <h3>Growth</h3>
-                <div className="price">R$ 97<span>/mês</span></div>
-                <ul className="pricing-features">
-                  <li><Check size={18} /> <strong>Tudo do Starter</strong></li>
-                  <li><Check size={18} /> Busca por CEP Automática</li>
-                  <li><Check size={18} /> CRM de Clientes Completo</li>
-                  <li><Check size={18} /> Subdomínio Personalizado</li>
-                  <li><Check size={18} /> Cupons de Desconto</li>
-                </ul>
-                <Link to="/admin/register" className="lp-btn-primary">Assinar Growth</Link>
-              </div>
-
-              {/* ENTERPRISE */}
-              <div className="pricing-card fade-in">
-                <h3>Diamond</h3>
-                <div className="price">R$ 147<span>/mês</span></div>
-                <ul className="pricing-features">
-                  <li><Check size={18} /> <strong>Tudo do Growth</strong></li>
-                  <li><Check size={18} /> Domínio Próprio (.com.br)</li>
-                  <li><Check size={18} /> Relatórios de BI Avançados</li>
-                  <li><Check size={18} /> Gestor de Tráfego Dedicado</li>
-                  <li><Check size={18} /> Suporte VIP 24h</li>
-                </ul>
-                <Link to="/admin/register" className="lp-btn-secondary">Assinar Diamond</Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ SECTION */}
-        <section id="faq" className="lp-section">
-          <div className="landing-container">
-            <div className="section-header fade-in">
-              <h2>Dúvidas Frequentes</h2>
-              <p>Tudo o que você precisa saber para começar hoje mesmo.</p>
-            </div>
-
-            <div className="faq-list">
-              {faqs.map((f, i) => (
-                <div key={i} className={`faq-item ${activeFaq === i ? 'active' : ''} fade-in`}>
-                  <div className="faq-question" onClick={() => setActiveFaq(activeFaq === i ? null : i)}>
-                    {f.q}
-                    <ChevronDown size={20} style={{ transform: activeFaq === i ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
-                  </div>
-                  <div className="faq-answer">{f.a}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA FINAL */}
-        <section className="lp-section" style={{ textAlign: 'center' }}>
-          <div className="landing-container fade-in">
-            <h2 style={{ fontSize: '3.5rem', marginBottom: '2rem' }}>Pronto para faturar mais?</h2>
-            <Link to="/admin/register" className="lp-btn-primary" style={{ padding: '1.5rem 4rem', fontSize: '1.25rem' }}>
-              Criar Minha Loja Agora
+    <div className="landing-page">
+      {/* Navigation */}
+      <nav className="lp-nav">
+        <div className="landing-container" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+          <Link to="/" className="lp-logo">
+            <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" style={{ height: '60px', width: 'auto' }} />
+          </Link>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <Link to="/admin" className="btn-lp btn-lp-secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.9rem' }}>
+              Login do Lojista
             </Link>
-            <p style={{ marginTop: '2rem', color: 'var(--lp-text-muted)' }}>
-              Sem cartão de crédito. Teste grátis por 7 dias.
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="lp-hero">
+        <div className="lp-hero-bg"></div>
+        <div className="landing-container lp-hero-content">
+          <div className={`fade-up ${isVisible ? '' : 'hidden'}`} style={{ position: 'relative', z-index: 2 }}>
+            <div className="floating-element" style={{ top: '-40px', left: '-60px', fontSize: '3rem' }}>🍔</div>
+            <div className="floating-element" style={{ bottom: '-20px', right: '-40px', fontSize: '2.5rem', animationDelay: '2s' }}>🍕</div>
+            <div className="floating-element" style={{ top: '20px', right: '100px', fontSize: '2rem', animationDelay: '4s' }}>🍧</div>
+            
+            <h1 className="headline">
+              Seu WhatsApp está te fazendo <span className="text-primary">perder vendas</span> todos os dias.
+            </h1>
+            <p className="subheadline">
+              Transforme seu delivery em uma operação profissional com cardápio digital, pedidos automáticos e gestão completa em um só lugar. Pare de depender de atendente para faturar.
+            </p>
+            <div className="lp-hero-buttons">
+              <Link to="/admin/register" className="btn-lp btn-lp-primary">
+                Começar a Vender Agora <ArrowRight size={18} style={{ marginLeft: '8px' }} />
+              </Link>
+            </div>
+            <p style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: 'var(--lp-text-muted-dark)' }}>
+              <CheckCircle2 size={14} style={{ display: 'inline', marginRight: '4px', color: '#16a34a' }}/> Setup em 5 minutos. Sem taxa sobre vendas.
             </p>
           </div>
-        </section>
-      </main>
 
-      <footer className="lp-footer">
+          <div className={`mockup-composition fade-up delay-1 ${isVisible ? '' : 'hidden'}`}>
+            <div className="laptop-mockup">
+              <div className="laptop-header">
+                <div className="laptop-dot" style={{background: '#ef4444'}}></div>
+                <div className="laptop-dot" style={{background: '#f59e0b'}}></div>
+                <div className="laptop-dot" style={{background: '#22c55e'}}></div>
+              </div>
+              <div className="laptop-body">
+                <div className="laptop-sidebar">
+                  <div className="laptop-skeleton-line" style={{width: '60%', marginBottom: '20px'}}></div>
+                  <div className="laptop-skeleton-line" style={{width: '100%'}}></div>
+                  <div className="laptop-skeleton-line" style={{width: '80%'}}></div>
+                  <div className="laptop-skeleton-line" style={{width: '90%'}}></div>
+                </div>
+                <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                  <div style={{display: 'flex', gap: '10px'}}>
+                    <div style={{flex: 1, height: '60px', background: '#18181b', borderRadius: '8px', border: '1px solid #27272a', padding: '10px'}}>
+                      <div className="laptop-skeleton-line" style={{width: '40%', marginBottom: '8px', background: '#3f3f46'}}></div>
+                      <div className="laptop-skeleton-line" style={{width: '70%', height: '12px', background: '#e63946'}}></div>
+                    </div>
+                    <div style={{flex: 1, height: '60px', background: '#18181b', borderRadius: '8px', border: '1px solid #27272a', padding: '10px'}}>
+                       <div className="laptop-skeleton-line" style={{width: '40%', marginBottom: '8px', background: '#3f3f46'}}></div>
+                       <div className="laptop-skeleton-line" style={{width: '50%', height: '12px', background: '#22c55e'}}></div>
+                    </div>
+                  </div>
+                  <div style={{flex: 1, background: '#18181b', borderRadius: '8px', border: '1px solid #27272a', padding: '10px'}}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px', borderBottom: '1px solid #27272a', paddingBottom: '10px'}}>
+                       <div className="laptop-skeleton-line" style={{width: '20%', background: '#3f3f46'}}></div>
+                       <div className="laptop-skeleton-line" style={{width: '10%', background: '#3f3f46'}}></div>
+                    </div>
+                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                       <div className="laptop-skeleton-line" style={{width: '30%'}}></div>
+                       <div className="laptop-skeleton-line" style={{width: '15%'}}></div>
+                    </div>
+                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                       <div className="laptop-skeleton-line" style={{width: '40%'}}></div>
+                       <div className="laptop-skeleton-line" style={{width: '10%'}}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="phone-mockup">
+              <div className="phone-notch"></div>
+              <div className="phone-body">
+                <div style={{width: '100%', height: '80px', background: '#e5e5e5', borderRadius: '12px', marginBottom: '15px'}}></div>
+                <div style={{width: '60%', height: '16px', background: '#d4d4d8', borderRadius: '8px', marginBottom: '8px'}}></div>
+                <div style={{width: '40%', height: '12px', background: '#e4e4e7', borderRadius: '6px', marginBottom: '20px'}}></div>
+                
+                <div style={{display: 'flex', gap: '10px', marginBottom: '15px'}}>
+                   <div style={{width: '60px', height: '24px', background: '#e63946', borderRadius: '12px'}}></div>
+                   <div style={{width: '60px', height: '24px', background: '#e4e4e7', borderRadius: '12px'}}></div>
+                </div>
+
+                <div style={{display: 'flex', gap: '10px', marginBottom: '10px', background: '#fff', padding: '10px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)'}}>
+                   <div style={{width: '60px', height: '60px', background: '#e5e5e5', borderRadius: '8px'}}></div>
+                   <div style={{flex: 1}}>
+                      <div style={{width: '80%', height: '12px', background: '#d4d4d8', borderRadius: '4px', marginBottom: '6px'}}></div>
+                      <div style={{width: '100%', height: '8px', background: '#e4e4e7', borderRadius: '4px', marginBottom: '4px'}}></div>
+                      <div style={{width: '40%', height: '12px', background: '#e63946', borderRadius: '4px', marginTop: '8px'}}></div>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pain Section */}
+      <section className="lp-pain reveal">
         <div className="landing-container">
-          <div className="footer-grid">
-            <div className="footer-about">
-              <img src="/assets/logo-anoto.png" alt="ANOTÔ" className="lp-logo" />
-              <p>A plataforma definitiva para escala de restaurantes e delivery no Brasil.</p>
-            </div>
-            <div className="footer-links">
-              <h4>Produto</h4>
-              <ul>
-                <li><a href="#recursos">Recursos</a></li>
-                <li><a href="#precos">Preços</a></li>
-                <li><a href="#faq">FAQ</a></li>
+          <header className="lp-section-header">
+            <h2 className="lp-section-title">Ainda atende pedidos no WhatsApp?</h2>
+            <p className="subheadline" style={{ margin: '0 auto' }}>A cada minuto que seu cliente passa esperando uma resposta, é uma chance de ele ir para o concorrente.</p>
+          </header>
+
+          <div className="split-comparison">
+            <div className="split-side split-bad">
+              <h3 className="split-title"><MessageSquare size={24} /> A Bagunça do WhatsApp</h3>
+              <ul className="split-list">
+                <li><XCircle size={20} /> 38 mensagens acumuladas não respondidas</li>
+                <li><XCircle size={20} /> Cliente perguntando "qual o cardápio?" pela 10ª vez</li>
+                <li><XCircle size={20} /> Áudios longos e confusos no meio do pico</li>
+                <li><XCircle size={20} /> Pedido anotado errado ou esquecido</li>
+                <li><XCircle size={20} /> Print de PIX falso ou perdido na galeria</li>
+                <li><XCircle size={20} /> Atendente sobrecarregado (e custando caro)</li>
+                <li><XCircle size={20} /> Cliente desiste pela demora e não volta mais</li>
               </ul>
             </div>
-            <div className="footer-links">
-              <h4>Empresa</h4>
-              <ul>
-                <li><a href="#">Sobre nós</a></li>
-                <li><a href="#">Blog</a></li>
-                <li><a href="#">Contato</a></li>
-              </ul>
-            </div>
-            <div className="footer-links">
-              <h4>Legal</h4>
-              <ul>
-                <li><a href="#">Privacidade</a></li>
-                <li><a href="#">Termos de Uso</a></li>
+            <div className="split-side split-good">
+              <h3 className="split-title"><Zap size={24} /> O Profissionalismo ANOTÔ</h3>
+              <ul className="split-list">
+                <li><CheckCircle2 size={20} /> Pedido cai pronto e pago no painel</li>
+                <li><CheckCircle2 size={20} /> Cliente escolhe tudo sozinho em segundos</li>
+                <li><CheckCircle2 size={20} /> Cardápio sempre atualizado (itens esgotados somem)</li>
+                <li><CheckCircle2 size={20} /> Impressão automática direto para a cozinha</li>
+                <li><CheckCircle2 size={20} /> Histórico de clientes para remarketing</li>
+                <li><CheckCircle2 size={20} /> Atendimento instantâneo 24h por dia</li>
+                <li><CheckCircle2 size={20} /> Operação flui, você foca em qualidade e lucro</li>
               </ul>
             </div>
           </div>
-          <div className="footer-bottom">
-            <p>© 2026 ANOTÔ APP. Todos os direitos reservados.</p>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <ShieldCheck size={18} /> 100% Seguro
+        </div>
+      </section>
+
+      {/* Demo Section */}
+      <section className="lp-demo reveal">
+        <div className="landing-container">
+          <header className="lp-section-header">
+            <h2 className="lp-section-title text-light">Veja como seu delivery ficaria</h2>
+            <p className="subheadline" style={{ margin: '0 auto', color: '#a1a1aa' }}>Uma experiência de compra ultra-rápida que faz seu cliente sentir que está pedindo em uma rede de fast-food gigante.</p>
+          </header>
+
+          <div className="demo-tabs">
+            <button className={`demo-tab ${activeTab === 'burger' ? 'active' : ''}`} onClick={() => setActiveTab('burger')}>🍔 Hamburgueria</button>
+            <button className={`demo-tab ${activeTab === 'pizza' ? 'active' : ''}`} onClick={() => setActiveTab('pizza')}>🍕 Pizzaria</button>
+            <button className={`demo-tab ${activeTab === 'acai' ? 'active' : ''}`} onClick={() => setActiveTab('acai')}>🍧 Açaiteria</button>
+          </div>
+
+          <div className="demo-content">
+            <div className="phone-mockup" style={{ position: 'relative', transform: 'none', left: 'auto', bottom: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', width: '300px', height: '600px' }}>
+              <div className="phone-notch"></div>
+              <div className="phone-body" style={{ padding: '0', background: '#fff' }}>
+                <div style={{ height: '140px', background: activeTab === 'burger' ? '#18181b' : activeTab === 'pizza' ? '#7f1d1d' : '#4c1d95', position: 'relative' }}>
+                  <div style={{ position: 'absolute', bottom: '-30px', left: '20px', width: '60px', height: '60px', borderRadius: '50%', background: '#fff', border: '3px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+                    {activeTab === 'burger' ? '🍔' : activeTab === 'pizza' ? '🍕' : '🍧'}
+                  </div>
+                </div>
+                <div style={{ padding: '40px 20px 20px' }}>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem', color: '#09090b' }}>
+                    {activeTab === 'burger' ? 'Smash Premium' : activeTab === 'pizza' ? 'Pizzaria Napoli' : 'Açaí Tropical'}
+                  </h3>
+                  <p style={{ margin: '0 0 20px 0', fontSize: '0.8rem', color: '#71717a' }}>Aberto agora • 30-40 min</p>
+                  
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'hidden' }}>
+                    <div style={{ padding: '6px 12px', background: '#e63946', color: '#fff', borderRadius: '100px', fontSize: '0.8rem', fontWeight: '600' }}>Destaques</div>
+                    <div style={{ padding: '6px 12px', background: '#f4f4f5', color: '#71717a', borderRadius: '100px', fontSize: '0.8rem', fontWeight: '600' }}>Combos</div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '15px', padding: '12px', border: '1px solid #f4f4f5', borderRadius: '12px' }}>
+                     <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', color: '#09090b' }}>
+                          {activeTab === 'burger' ? 'Duplo Smash Bacon' : activeTab === 'pizza' ? 'Pizza Calabresa (G)' : 'Barca de Açaí 1L'}
+                        </h4>
+                        <p style={{ margin: '0 0 8px 0', fontSize: '0.75rem', color: '#71717a', lineHeight: '1.4' }}>
+                          {activeTab === 'burger' ? '2 blends de 90g, cheddar, bacon crocante e molho especial.' : activeTab === 'pizza' ? 'Calabresa fatiada, cebola, azeitonas e mussarela.' : 'Açaí puro com 4 acompanhamentos grátis.'}
+                        </p>
+                        <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#09090b' }}>
+                          R$ {activeTab === 'burger' ? '34,90' : activeTab === 'pizza' ? '55,00' : '45,90'}
+                        </div>
+                     </div>
+                     <div style={{ width: '80px', height: '80px', background: '#f4f4f5', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>
+                        {activeTab === 'burger' ? '🍔' : activeTab === 'pizza' ? '🍕' : '🍧'}
+                     </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Benefits */}
+      <section className="lp-benefits reveal">
+        <div className="landing-container">
+          <header className="lp-section-header">
+            <h2 className="lp-section-title text-light">O que muda no seu negócio no primeiro mês</h2>
+          </header>
+
+          <div className="benefits-grid">
+            <div className="benefit-card">
+              <div className="benefit-icon"><TrendingUp size={24} /></div>
+              <h3 className="text-light">Mais lucro, menos custo</h3>
+              <p>Receba dezenas de pedidos simultâneos sem precisar contratar mais atendentes. O sistema faz o trabalho por você.</p>
+            </div>
+            <div className="benefit-card">
+              <div className="benefit-icon"><Printer size={24} /></div>
+              <h3 className="text-light">Cozinha organizada</h3>
+              <p>Chega de garrancho no papel. Os pedidos saem padronizados na impressora térmica direto para o chapeiro ou pizzaiolo.</p>
+            </div>
+            <div className="benefit-card">
+              <div className="benefit-icon"><Clock size={24} /></div>
+              <h3 className="text-light">Fim do estresse no pico</h3>
+              <p>Sexta à noite não precisa ser um caos. Os pedidos entram em fila perfeitamente organizada no seu painel.</p>
+            </div>
+            <div className="benefit-card">
+              <div className="benefit-icon"><BarChart size={24} /></div>
+              <h3 className="text-light">Controle total</h3>
+              <p>Saiba exatamente quanto faturou, qual o produto mais vendido e quem são seus melhores clientes. Dados para crescer.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="lp-pricing reveal" id="pricing">
+        <div className="landing-container">
+          <header className="lp-section-header">
+            <h2 className="lp-section-title">O melhor investimento para o seu delivery</h2>
+            <p className="subheadline" style={{ margin: '0 auto' }}>Escolha o plano que faz mais sentido para o seu momento atual.</p>
+            
+            <div className="pricing-toggle-wrapper">
+              <span className={billingCycle === 'monthly' ? 'active' : ''}>Mensal</span>
+              <button 
+                className={`pricing-toggle ${billingCycle === 'annual' ? 'annual' : ''}`}
+                onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'annual' : 'monthly')}
+              >
+                <div className="toggle-dot"></div>
+              </button>
+              <span className={billingCycle === 'annual' ? 'active' : ''}>Anual <span className="discount-badge">30% OFF</span></span>
+            </div>
+          </header>
+
+          <div className="pricing-grid-lp">
+            <div className="pricing-card-lp">
+              <div className="plan-name">Plano Único</div>
+              <div className="plan-price">
+                <span className="currency">R$</span>
+                <span className="amount">{billingCycle === 'monthly' ? '97' : '67'}</span>
+                <span className="period">/mês</span>
+              </div>
+              <p className="plan-desc">Tudo o que você precisa para dominar o seu bairro e escalar vendas.</p>
+              
+              <ul className="plan-features">
+                <li><CheckCircle2 size={18} /> Cardápio Digital Ilimitado</li>
+                <li><CheckCircle2 size={18} /> Pedidos Ilimitados (Zero Taxas)</li>
+                <li><CheckCircle2 size={18} /> Gestão de Bairros e CEP</li>
+                <li><CheckCircle2 size={18} /> Impressão Térmica Automática</li>
+                <li><CheckCircle2 size={18} /> CRM de Clientes e Remarketing</li>
+                <li><CheckCircle2 size={18} /> Dashboard de Vendas em Tempo Real</li>
+              </ul>
+
+              <Link to="/admin/register" className="btn-lp btn-lp-primary" style={{ width: '100%', marginTop: '2rem' }}>
+                Começar Agora
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Brutal Comparison */}
+      <section className="lp-comparison">
+        <div className="landing-container">
+          <header className="lp-section-header">
+            <h2 className="lp-section-title text-dark">A Escolha é Simples</h2>
+            <p className="subheadline" style={{ margin: '0 auto', color: '#71717a' }}>Negócios grandes não dependem de WhatsApp manual.</p>
+          </header>
+
+          <div className="comparison-table-wrapper">
+            <table className="comparison-table">
+              <thead>
+                <tr>
+                  <th>Recurso</th>
+                  <th>WhatsApp Tradicional</th>
+                  <th className="anoto-col">ANOTÔ Premium</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Recepção de Pedidos</td>
+                  <td>Manual (Um por um)</td>
+                  <td className="anoto-col">Automático (Infinitos ao mesmo tempo)</td>
+                </tr>
+                <tr>
+                  <td>Apresentação do Cardápio</td>
+                  <td>PDF pesado ou texto confuso</td>
+                  <td className="anoto-col">App digital interativo e com fotos</td>
+                </tr>
+                <tr>
+                  <td>Erros de anotação</td>
+                  <td>Frequentes (gera prejuízo)</td>
+                  <td className="anoto-col">Zero (cliente escolhe e revisa)</td>
+                </tr>
+                <tr>
+                  <td>Impressão na cozinha</td>
+                  <td>Não existe ou precisa copiar/colar</td>
+                  <td className="anoto-col">1 Clique direto na impressora</td>
+                </tr>
+                <tr>
+                  <td>Controle de Caixa e Vendas</td>
+                  <td>No caderno ou planilha</td>
+                  <td className="anoto-col">Painel de métricas em tempo real</td>
+                </tr>
+                <tr>
+                  <td>Capacidade de Crescimento</td>
+                  <td>Limitada pela velocidade do atendente</td>
+                  <td className="anoto-col">Escalável. Pronto para 1.000 pedidos/dia</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="lp-testimonials">
+        <div className="landing-container">
+          <header className="lp-section-header">
+            <h2 className="lp-section-title text-light">Negócios reais crescendo</h2>
+          </header>
+
+          <div className="testimonials-grid">
+            <div className="testim-card">
+              <p>"Antes eu enlouquecia no sábado à noite. O WhatsApp travava, cliente xingava. Hoje os pedidos entram organizados sozinhos e eu só me preocupo em fritar hambúrguer."</p>
+              <div className="testim-author">
+                <div className="testim-avatar">B</div>
+                <div>
+                  <strong style={{ display: 'block', color: 'white' }}>Marcos - Burger House</strong>
+                  <span style={{ color: '#71717a', fontSize: '0.85rem' }}>Hamburgueria</span>
+                </div>
+              </div>
+            </div>
+            <div className="testim-card">
+              <p>"Parei de perder cliente por demora no atendimento. A pessoa clica no link do Insta, monta a pizza e me manda. Reduzi os erros de borda recheada a zero."</p>
+              <div className="testim-author">
+                <div className="testim-avatar">P</div>
+                <div>
+                  <strong style={{ display: 'block', color: 'white' }}>Roberto - Pizzaria Napoli</strong>
+                  <span style={{ color: '#71717a', fontSize: '0.85rem' }}>Pizzaria</span>
+                </div>
+              </div>
+            </div>
+            <div className="testim-card">
+              <p>"Açaiteria é complicado porque tem muito adicional. No WhatsApp o cliente mandava um áudio de 2 minutos. Com o ANOTÔ, ele marca as caixinhas e o pedido sai perfeito."</p>
+              <div className="testim-author">
+                <div className="testim-avatar">A</div>
+                <div>
+                  <strong style={{ display: 'block', color: 'white' }}>Juliana - Açaí Tropical</strong>
+                  <span style={{ color: '#71717a', fontSize: '0.85rem' }}>Açaiteria</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Final */}
+      <section className="lp-cta">
+        <div className="landing-container">
+          <h2 className="headline" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>Quantos pedidos você perdeu hoje?</h2>
+          <p className="subheadline" style={{ fontSize: '1.25rem' }}>Enquanto você responde mensagem por mensagem digitando preço, seu concorrente recebe pedidos automáticos.</p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', margin: '3rem 0' }}>
+            <Link to="/admin/register" className="btn-lp btn-lp-white" style={{ padding: '1.25rem 3rem', fontSize: '1.2rem' }}>
+              Pare de depender do WhatsApp
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="landing-footer">
+        <div className="landing-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="lp-logo" style={{ fontSize: '1.2rem' }}>
+            <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" style={{ height: '50px', width: 'auto' }} />
+          </div>
+          <div className="footer-copy">© 2024 Anotô Platform. Todos os direitos reservados. Feito para escalar o seu delivery.</div>
         </div>
       </footer>
+
+
+      {/* WhatsApp Float */}
+      <a 
+        href="https://wa.me/5511999999999" 
+        className="whatsapp-float" 
+        target="_blank" 
+        rel="noopener noreferrer"
+      >
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
+      </a>
     </div>
   );
 }
