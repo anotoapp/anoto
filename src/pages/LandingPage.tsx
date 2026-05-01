@@ -60,7 +60,7 @@ export default function LandingPage() {
       <section className="lp-hero">
         <div className="lp-hero-bg"></div>
         <div className="landing-container lp-hero-content">
-          <div className={`fade-up ${isVisible ? '' : 'hidden'}`} style={{ position: 'relative', z-index: 2 }}>
+          <div className={`fade-up ${isVisible ? '' : 'hidden'}`} style={{ position: 'relative', zIndex: 2 }}>
             <div className="floating-element" style={{ top: '-40px', left: '-60px', fontSize: '3rem' }}>🍔</div>
             <div className="floating-element" style={{ bottom: '-20px', right: '-40px', fontSize: '2.5rem', animationDelay: '2s' }}>🍕</div>
             <div className="floating-element" style={{ top: '20px', right: '100px', fontSize: '2rem', animationDelay: '4s' }}>🍧</div>
@@ -322,7 +322,7 @@ export default function LandingPage() {
       </section>
 
       {/* Brutal Comparison */}
-      <section className="lp-comparison">
+      <section className="lp-comparison reveal">
         <div className="landing-container">
           <header className="lp-section-header">
             <h2 className="lp-section-title text-dark">A Escolha é Simples</h2>
@@ -376,7 +376,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="lp-testimonials">
+      <section className="lp-testimonials reveal">
         <div className="landing-container">
           <header className="lp-section-header">
             <h2 className="lp-section-title text-light">Negócios reais crescendo</h2>
@@ -418,11 +418,11 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Final */}
-      <section className="lp-cta">
+      <section className="lp-cta reveal">
         <div className="landing-container">
-          <h2 className="headline" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>Quantos pedidos você perdeu hoje?</h2>
-          <p className="subheadline" style={{ fontSize: '1.25rem' }}>Enquanto você responde mensagem por mensagem digitando preço, seu concorrente recebe pedidos automáticos.</p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', margin: '3rem 0' }}>
+          <h2 className="headline" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: 'white' }}>Quantos pedidos você perdeu hoje?</h2>
+          <p className="subheadline" style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.9)', margin: '0 auto 3rem' }}>Enquanto você responde mensagem por mensagem digitando preço, seu concorrente recebe pedidos automáticos.</p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
             <Link to="/admin/register" className="btn-lp btn-lp-white" style={{ padding: '1.25rem 3rem', fontSize: '1.2rem' }}>
               Pare de depender do WhatsApp
             </Link>
@@ -438,7 +438,6 @@ export default function LandingPage() {
           <div className="footer-copy">© 2024 Anotô Platform. Todos os direitos reservados. Feito para escalar o seu delivery.</div>
         </div>
       </footer>
-
 
       {/* WhatsApp Float */}
       <a 
