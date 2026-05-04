@@ -58,9 +58,9 @@ export default function LandingPage() {
               Transforme seu delivery em uma operação profissional com cardápio digital, pedidos automáticos e gestão completa em um só lugar. Pare de depender de atendente para faturar.
             </p>
             <div className="lp-hero-buttons">
-              <Link to="/admin/register" className="btn-lp btn-lp-primary">
+              <a href="https://pay.kiwify.com.br/8cR0dlH" target="_blank" rel="noopener noreferrer" className="btn-lp btn-lp-primary">
                 Começar a Vender Agora <ArrowRight size={18} style={{ marginLeft: '8px' }} />
-              </Link>
+              </a>
             </div>
             <p className="hero-trust-tag">
               <CheckCircle2 size={14} /> Setup em 5 minutos. Sem taxa sobre vendas.
@@ -287,9 +287,9 @@ export default function LandingPage() {
                 <li><CheckCircle2 size={18} /> CRM de Clientes e Remarketing</li>
               </ul>
 
-              <Link to="/admin/register" className="btn-lp btn-lp-primary full-width">
+              <a href={billingCycle === 'monthly' ? 'https://pay.kiwify.com.br/8cR0dlH' : 'https://pay.kiwify.com.br/OLBam8a'} target="_blank" rel="noopener noreferrer" className="btn-lp btn-lp-primary full-width">
                 Começar Agora
-              </Link>
+              </a>
             </div>
           </div>
         </div>
@@ -339,9 +339,9 @@ export default function LandingPage() {
           <h2 className="headline" style={{ color: 'white' }}>Quantos pedidos você perdeu hoje?</h2>
           <p className="subheadline center-text" style={{ color: 'white', marginBottom: '3rem' }}>Pare de digitar preços e comece a receber pedidos automáticos.</p>
           <div className="center-content">
-            <Link to="/admin/register" className="btn-lp btn-lp-white">
+            <a href="https://pay.kiwify.com.br/8cR0dlH" target="_blank" rel="noopener noreferrer" className="btn-lp btn-lp-white">
               Quero Profissionalizar Meu Delivery
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -351,10 +351,6 @@ export default function LandingPage() {
           <div className="footer-brand">
             <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" className="footer-logo" />
             <p className="footer-tagline">Escalando o seu delivery sem depender de taxas abusivas.</p>
-            <div className="social-links">
-              <a href="#" className="social-icon">Instagram</a>
-              <a href="#" className="social-icon">YouTube</a>
-            </div>
           </div>
           
           <div className="footer-links-group">
@@ -363,25 +359,25 @@ export default function LandingPage() {
               <Link to="/admin">Login Lojista</Link>
               <Link to="/admin/register">Criar Loja</Link>
               <a href="#pricing">Planos</a>
+              <Link to="/legal">Termos e Privacidade</Link>
             </div>
 
             <div className="footer-links">
               <h4>Suporte</h4>
-              <a href="https://wa.me/5511999999999">WhatsApp</a>
-              <a href="#">Termos de Uso</a>
+              <a href="https://wa.me/5519995933655" target="_blank" rel="noopener noreferrer">WhatsApp</a>
             </div>
           </div>
         </div>
         <div className="footer-bottom">
           <div className="landing-container">
-            <p>© 2024 Anotô Platform. Todos os direitos reservados.</p>
+            <p>© 2025 Anotô Platform. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
 
       {/* WhatsApp Float */}
       <a 
-        href="https://wa.me/5511999999999" 
+        href="https://wa.me/5519995933655" 
         className="whatsapp-float" 
         target="_blank" 
         rel="noopener noreferrer"

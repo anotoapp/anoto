@@ -73,7 +73,7 @@ serve(async (req) => {
 
       if (error) throw error
 
-      // Garante que o email está na whitelist (para novos cadastros futuros)
+      // 3. Garante que o email está na whitelist (para novos cadastros futuros)
       await supabase
         .from('authorized_emails')
         .upsert({
@@ -82,6 +82,42 @@ serve(async (req) => {
           kiwify_order_id: payload.order_id || payload.id || null,
           authorized_at: new Date().toISOString()
         }, { onConflict: 'email' })
+
+      // 4. Enviar email de boas-vindas via Resend
+      const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+      if (RESEND_API_KEY) {
+        try {
+          const res = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${RESEND_API_KEY}`
+            },
+            body: JSON.stringify({
+              from: 'ANOTÔ <onboarding@resend.dev>',
+              to: [customerEmail],
+              subject: '🚀 Seu acesso ao ANOTÔ está liberado!',
+              html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; padding: 20px;">
+                  <h1 style="color: #dc2626;">Bem-vindo ao ANOTÔ!</h1>
+                  <p>Olá! Sua assinatura do plano <strong>${mapPlanName(planName)}</strong> foi confirmada com sucesso.</p>
+                  <p>Agora você já pode criar sua loja profissional e começar a vender:</p>
+                  <a href="https://anoto.com.br/admin/register" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 20px 0;">CRIAR MINHA LOJA AGORA</a>
+                  <p style="color: #666; font-size: 0.9rem;"><strong>IMPORTANTE:</strong> No momento do cadastro, utilize o mesmo email que você usou na compra: <strong>${customerEmail}</strong></p>
+                  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                  <p>Se tiver qualquer dúvida, é só chamar no nosso suporte:</p>
+                  <a href="https://wa.me/5519995933655" style="color: #2563eb;">Chamar no WhatsApp de Suporte</a>
+                  <p>Bora vender!</p>
+                </div>
+              `
+            })
+          })
+          const resData = await res.json()
+          console.log('[Kiwify Webhook] 📧 Welcome email sent:', resData)
+        } catch (emailErr) {
+          console.error('[Kiwify Webhook] ❌ Error sending email:', emailErr)
+        }
+      }
 
       console.log(`[Kiwify Webhook] ✅ Subscription activated for profile ${profile.id}`)
 

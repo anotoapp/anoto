@@ -14,6 +14,7 @@ import DeliveryFeesAdmin from './pages/admin/DeliveryFeesAdmin';
 import CouponsAdmin from './pages/admin/CouponsAdmin';
 import CustomersAdmin from './pages/admin/CustomersAdmin';
 import Subscription from './pages/admin/Subscription';
+import Legal from './pages/Legal';
 import OrderTracking from './pages/OrderTracking';
 import { getStoreSlug, isLandingPage } from './utils/multitenancy';
 
@@ -30,6 +31,8 @@ function App() {
         // Se houver um slug no subdomínio, a raiz "/" mostra a StoreFront desse slug
         <Route path="/" element={<StoreFront customSlug={storeSlug || undefined} />} />
       )}
+      
+      <Route path="/legal" element={<Legal />} />
       
       {/* Rota do Cliente (Vitrine via Path - Legado/Backup) */}
       <Route path="/:storeSlug" element={<StoreFront />} />

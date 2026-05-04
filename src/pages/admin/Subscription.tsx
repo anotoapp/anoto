@@ -331,7 +331,7 @@ export default function Subscription() {
         <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
           Dúvidas sobre pagamento ou plano?{' '}
           <a
-            href="https://wa.me/5511999999999"
+            href="https://wa.me/5519995933655"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: '#dc2626', fontWeight: '700', textDecoration: 'none' }}
