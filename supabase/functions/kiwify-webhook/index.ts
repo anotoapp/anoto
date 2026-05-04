@@ -100,14 +100,14 @@ serve(async (req) => {
               html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; padding: 20px;">
                   <h1 style="color: #dc2626;">Bem-vindo ao ANOTÔ!</h1>
-                  <p>Olá! Sua assinatura do plano <strong>${mapPlanName(planName)}</strong> foi confirmada com sucesso.</p>
-                  <p>Agora você já pode criar sua loja profissional e começar a vender:</p>
-                  <a href="https://anoto.com.br/admin/register" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 20px 0;">CRIAR MINHA LOJA AGORA</a>
-                  <p style="color: #666; font-size: 0.9rem;"><strong>IMPORTANTE:</strong> No momento do cadastro, utilize o mesmo email que você usou na compra: <strong>${customerEmail}</strong></p>
-                  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-                  <p>Se tiver qualquer dúvida, é só chamar no nosso suporte:</p>
-                  <a href="https://wa.me/5519995933655" style="color: #2563eb;">Chamar no WhatsApp de Suporte</a>
-                  <p>Bora vender!</p>
+                  <p>Olá! Sua assinatura do <strong>ANOTÔ Profissional</strong> foi confirmada com sucesso.</p>
+                  <p>Agora você já pode criar sua loja e começar a vender:</p>
+                  <a href="https://anoto.com.br/admin/register" style="display: inline-block; background: #dc2626; color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">CRIAR MINHA LOJA AGORA</a>
+                  <p style="color: #666; font-size: 0.9rem;"><strong>IMPORTANTE:</strong> No cadastro, use o email: <strong>${customerEmail}</strong></p>
+                  <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;" />
+                  <p style="font-size: 0.85rem; color: #64748b;">Dúvidas? Fale conosco:</p>
+                  <a href="https://wa.me/5519995933655" style="color: #2563eb; font-weight: 600; text-decoration: none;">WhatsApp de Suporte →</a>
+                  <p style="margin-top: 30px; font-weight: bold; color: #0f172a;">Equipe ANOTÔ</p>
                 </div>
               `
             })

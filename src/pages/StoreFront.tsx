@@ -1,18 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, Search, X } from 'lucide-react';
+import { Search, MapPin, ChevronRight, ChevronDown } from 'lucide-react';
 import { Header } from '../components/Header';
-import { CategoryNav } from '../components/CategoryNav';
 import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
 import { CartDrawer } from '../components/CartDrawer';
+import { BottomNav } from '../components/BottomNav';
 import { supabase } from '../lib/supabase';
 import type { Product, CartItem, ProductOption, RestaurantConfig, CustomerProfile } from '../types';
 import { formatWhatsAppMessage } from '../utils/whatsapp';
 import { isStoreOpen } from '../utils/storeStatus';
 
 import '../App.css';
-
 
 interface StoreFrontProps {
   customSlug?: string;
@@ -25,20 +24,18 @@ function StoreFront({ customSlug }: StoreFrontProps) {
   const navigate = useNavigate();
   const [config, setConfig] = useState<RestaurantConfig | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
+  const [activeTab, setActiveTab] = useState('inicio');
 
   useEffect(() => {
-    // Carregar cliente do localStorage (Login via WhatsApp)
     const savedCustomer = localStorage.getItem('anoto_customer');
     if (savedCustomer) {
       try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCustomer(JSON.parse(savedCustomer));
       } catch {
         console.error('Error parsing customer from local storage');
@@ -47,61 +44,39 @@ function StoreFront({ customSlug }: StoreFrontProps) {
 
     async function loadData() {
       try {
-        // Fetch Store
         let storeQuery = supabase.from('stores').select('*');
-        
         if (storeSlug) {
           storeQuery = storeQuery.eq('slug', storeSlug);
         } else {
-          // Fallback para a primeira loja se não houver slug
           storeQuery = storeQuery.limit(1);
         }
 
         const { data: storeData, error: storeError } = await storeQuery.single();
-
         if (storeError) throw storeError;
 
-        // Fetch Categories
         const { data: categoriesData, error: catError } = await supabase
           .from('categories')
           .select('*')
           .eq('store_id', storeData.id);
-
         if (catError) throw catError;
 
-        // Fetch Products
         const { data: productsData, error: prodError } = await supabase
           .from('products')
           .select('*')
           .in('category_id', categoriesData.map(c => c.id));
-
         if (prodError) throw prodError;
 
         let parsedHours = null;
         if (storeData.opening_hours) {
           try {
-            const parsed = typeof storeData.opening_hours === 'string' && storeData.opening_hours.startsWith('{') 
+            parsedHours = typeof storeData.opening_hours === 'string' 
               ? JSON.parse(storeData.opening_hours) 
               : storeData.opening_hours;
-            
-            if (typeof parsed === 'object' && parsed.monday) {
-              parsedHours = parsed;
-            }
-          } catch {
-            // mantém parsedHours como null se o parse falhar
-          }
-        }
-
-        let parsedTheme = storeData.theme;
-        if (typeof storeData.theme === 'string' && storeData.theme.startsWith('{')) {
-          try {
-            parsedTheme = JSON.parse(storeData.theme);
           } catch (e) {
-            console.error('Error parsing theme:', e);
+            console.error('Error parsing hours:', e);
           }
         }
 
-        // Map data to RestaurantConfig
         const loadedConfig: RestaurantConfig = {
           id: storeData.id,
           name: storeData.name,
@@ -113,38 +88,15 @@ function StoreFront({ customSlug }: StoreFrontProps) {
           minOrder: storeData.min_order,
           is_open_manual: storeData.is_open_manual,
           opening_hours: parsedHours,
-          theme: {
-            primaryColor: parsedTheme?.primaryColor || '#FFB800',
-            secondaryColor: parsedTheme?.secondaryColor || '#C81D25',
-            accentColor: parsedTheme?.accentColor || '#C81D25',
-            backgroundColor: parsedTheme?.backgroundColor || '#FFFBF2',
-            textColor: parsedTheme?.textColor || '#2D0A0A',
-            borderRadius: parsedTheme?.borderRadius || '16px',
-            fontFamily: parsedTheme?.fontFamily || 'Outfit',
-          },
+          theme: storeData.theme || {},
           categories: categoriesData,
-          products: productsData.map(p => ({
-            ...p,
-            category: p.category_id // mapping for backward compatibility
-          })),
+          products: productsData.map(p => ({ ...p, category: p.category_id })),
         };
 
         setConfig(loadedConfig);
-        if (categoriesData.length > 0) {
-          setActiveCategory(categoriesData[0].id);
-        }
+        if (categoriesData.length > 0) setActiveCategory(categoriesData[0].id);
 
-        // Apply theme
-        const root = document.documentElement;
-        root.style.setProperty('--primary', loadedConfig.theme.primaryColor);
-        root.style.setProperty('--secondary', loadedConfig.theme.secondaryColor);
-        root.style.setProperty('--accent', loadedConfig.theme.accentColor);
-        root.style.setProperty('--bg', loadedConfig.theme.backgroundColor);
-        root.style.setProperty('--text', loadedConfig.theme.textColor);
-        root.style.setProperty('--radius', loadedConfig.theme.borderRadius);
-        
         document.title = loadedConfig.name;
-
       } catch (err) {
         console.error('Error loading data:', err);
         setError('Não foi possível carregar os dados da loja.');
@@ -158,13 +110,7 @@ function StoreFront({ customSlug }: StoreFrontProps) {
 
   const handleAddToCart = (quantity: number, selectedOptions: ProductOption[], notes: string) => {
     if (selectedProduct) {
-      const newItem: CartItem = {
-        product: selectedProduct,
-        quantity,
-        selectedOptions,
-        notes,
-      };
-      setCart([...cart, newItem]);
+      setCart([...cart, { product: selectedProduct, quantity, selectedOptions, notes }]);
       setSelectedProduct(null);
     }
   };
@@ -175,35 +121,30 @@ function StoreFront({ customSlug }: StoreFrontProps) {
     setCart(newCart);
   };
 
-  const handleCheckout = async (customerInfo: { name: string; phone: string; address: string; payment: string; type: string; neighborhood?: string; cep?: string }) => {
+  const handleCheckout = async (customerInfo: any) => {
     if (!config || !config.id) return;
-
     try {
-      // 1. Calculate total
       const total = cart.reduce((acc, item) => {
         const optionsPrice = item.selectedOptions.reduce((sum, o) => sum + o.price, 0);
         return acc + (item.product.price + optionsPrice) * item.quantity;
       }, 0) + (customerInfo.type === 'delivery' ? config.deliveryFee : 0);
 
-      // 2. Insert Order
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
           store_id: config.id,
           customer_name: customerInfo.name,
           customer_phone: customerInfo.phone,
-          customer_address: `${customerInfo.address}${customerInfo.neighborhood ? ` - Bairro: ${customerInfo.neighborhood}` : ''}${customerInfo.cep ? ` - CEP: ${customerInfo.cep}` : ''}`,
+          customer_address: `${customerInfo.address}${customerInfo.neighborhood ? ` - Bairro: ${customerInfo.neighborhood}` : ''}`,
           payment_method: customerInfo.payment,
           order_type: customerInfo.type,
           total: total,
           status: 'pending'
         })
-        .select()
-        .single();
+        .select().single();
 
       if (orderError) throw orderError;
 
-      // 3. Insert Order Items
       const orderItems = cart.map(item => ({
         order_id: orderData.id,
         product_id: item.product.id,
@@ -212,64 +153,28 @@ function StoreFront({ customSlug }: StoreFrontProps) {
         notes: item.notes || ''
       }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      // 4. Clear Cart and Open WhatsApp
+      await supabase.from('order_items').insert(orderItems);
       setCart([]);
       setIsCartOpen(false);
-      
-      const whatsappUrl = formatWhatsAppMessage(cart, customerInfo, config, orderData.id, storeSlug);
-      window.open(whatsappUrl, '_blank');
-      
-      // 5. Redirecionar para acompanhamento
+      window.open(formatWhatsAppMessage(cart, customerInfo, config, orderData.id, storeSlug), '_blank');
       navigate(`/${storeSlug}/order/${orderData.id}`);
-
     } catch (error) {
       console.error('Erro ao salvar pedido:', error);
-      alert('Houve um erro ao processar seu pedido. Tente novamente.');
+      alert('Houve um erro ao processar seu pedido.');
     }
   };
 
-  if (loading) {
-    return (
-      <div className="app-loading">
-        <div className="spinner"></div>
-        <p>Carregando cardápio...</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="app-loading"><div className="spinner"></div></div>;
+  if (error || !config) return <div className="app-error"><h2>{error || 'Loja não encontrada'}</h2></div>;
 
-  if (error || !config) {
-    return (
-      <div className="app-error">
-        <h2>Ops!</h2>
-        <p>{error || 'Loja não encontrada'}</p>
-      </div>
-    );
-  }
-
-  const storeStatus = config ? isStoreOpen(config) : { isOpen: true };
+  const storeStatus = isStoreOpen(config);
   const isOpen = storeStatus.isOpen;
 
-  const filteredProducts = config.products.filter(p => {
-    const matchesCategory = p.category === activeCategory;
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          p.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const highlights = config.products.slice(0, 4);
+  const filteredProducts = config.products.filter(p => p.category === activeCategory);
 
   return (
-    <div className={`app ${!isOpen ? 'store-closed' : ''}`}>
-      {!isOpen && (
-        <div className="closed-top-bar">
-          <Clock size={16} /> 
-          <span>{storeStatus.message || 'Estamos fechados no momento.'}</span>
-        </div>
-      )}
+    <div className="app" style={{ paddingBottom: '90px', background: '#fcfcfc', minHeight: '100vh' }}>
       <Header 
         config={config} 
         cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)} 
@@ -277,76 +182,59 @@ function StoreFront({ customSlug }: StoreFrontProps) {
         isOpen={isOpen}
       />
 
-
       <main className="container">
-        <div className="search-container fade-in">
-          <div className="search-wrapper">
-            <Search size={20} className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="O que você está procurando?" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <button className="clear-search" onClick={() => setSearchQuery('')}>
-                <X size={18} />
-              </button>
-            )}
+        <div className="delivery-fee-card">
+          <div className="delivery-info-main">
+            <div className="icon-circle"><MapPin size={18} /></div>
+            <span>Calcular taxa e tempo de entrega</span>
           </div>
+          <ChevronRight size={18} className="arrow-icon" />
         </div>
 
-        <CategoryNav 
-          categories={config.categories} 
-          activeCategory={activeCategory} 
-          onCategoryChange={setActiveCategory} 
-        />
+        <div className="filter-row">
+          <div className="category-select-wrapper">
+            <select value={activeCategory} onChange={(e) => setActiveCategory(e.target.value)} className="category-select">
+              {config.categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+            </select>
+            <ChevronDown size={16} className="select-arrow" />
+          </div>
+          <button className="search-btn-round"><Search size={20} /></button>
+        </div>
 
-        <section className="product-list fade-in">
-          <h2 className="category-title">
-            {config.categories.find(c => c.id === activeCategory)?.name}
-          </h2>
-          <div className="products-grid">
+        {activeTab === 'inicio' && highlights.length > 0 && (
+          <section className="highlights-section">
+            <h2 className="section-title">Destaques</h2>
+            <div className="highlights-scroll">
+              {highlights.map(product => (
+                <ProductCard key={`h-${product.id}`} product={product} layout="grid" onAdd={() => setSelectedProduct(product)} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="main-products">
+          <h2 className="section-title">{config.categories.find(c => c.id === activeCategory)?.name || 'Produtos'}</h2>
+          <div className="products-list-vertical">
             {filteredProducts.map(product => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                onAdd={() => {
-                  if (isOpen) {
-                    setSelectedProduct(product);
-                  } else {
-                    alert('Nossa loja está fechada no momento. Abriremos em breve!');
-                  }
-                }} 
-                disabled={!isOpen}
-              />
+              <ProductCard key={product.id} product={product} layout="list" onAdd={() => setSelectedProduct(product)} />
             ))}
           </div>
         </section>
       </main>
 
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)} />
+
       {selectedProduct && (
-        <ProductModal 
-          product={selectedProduct} 
-          onClose={() => setSelectedProduct(null)} 
-          onAddToCart={handleAddToCart} 
-        />
+        <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} onAddToCart={handleAddToCart} />
       )}
 
       <CartDrawer 
-        isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)} 
-        cart={cart} 
-        onRemoveItem={handleRemoveFromCart} 
-        config={config} 
-        onCheckout={handleCheckout} 
-        customer={customer}
-        onCustomerUpdate={setCustomer}
-        onSelectUpsell={(product) => setSelectedProduct(product)}
+        isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cart={cart} 
+        onRemoveItem={handleRemoveFromCart} config={config} onCheckout={handleCheckout} 
+        customer={customer} onCustomerUpdate={setCustomer} onSelectUpsell={(p) => setSelectedProduct(p)}
       />
     </div>
   );
 }
 
 export default StoreFront;
-

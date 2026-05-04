@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, MapPin, Clock } from 'lucide-react';
+import { ShoppingCart, MapPin } from 'lucide-react';
 import type { RestaurantConfig } from '../types';
 
 import './Header.css';
@@ -12,7 +12,6 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ config, cartCount, onCartClick, isOpen }) => {
-
   return (
     <header className="store-header">
       <div className="store-banner-wrapper">
@@ -25,28 +24,34 @@ export const Header: React.FC<HeaderProps> = ({ config, cartCount, onCartClick, 
         </button>
       </div>
 
-      <div className="store-info-section">
-        <div className="store-logo-floating">
-          <img src={config.logo} alt={config.name} />
-        </div>
-
-        <div className="store-text-info">
-          <h1>{config.name}</h1>
-          <p className="store-address">
-            <MapPin size={14} style={{ marginRight: '4px' }} />
-            {config.address}
-          </p>
-
-          <div className="store-meta-badges">
-            <span className={`meta-badge ${isOpen ? 'status-open' : 'status-closed'}`}>
-              {isOpen ? 'Aberto agora' : 'Fechado agora'}
-            </span>
-            <span className="meta-badge status-time">
-              <Clock size={14} style={{ marginRight: '4px' }} />
-              30-45 min
-            </span>
+      <div className="store-info-container">
+        <div className="store-info-card">
+          <div className="store-logo-floating">
+            <img src={config.logo} alt={config.name} />
           </div>
 
+          <div className="store-text-info">
+            <h1>{config.name}</h1>
+            
+            <div className="store-sub-info">
+              <span className="info-item">
+                <MapPin size={14} className="info-icon" />
+                São Pedro - SP
+              </span>
+              <span className="info-dot">•</span>
+              <button className="info-link">Mais informações</button>
+            </div>
+
+            <div className="store-status-row">
+              <span className={`status-text ${isOpen ? 'open' : 'closed'}`}>
+                {isOpen ? 'Aberto' : 'Fechado'}
+              </span>
+              <span className="status-dot">•</span>
+              <span className="status-hours">
+                {isOpen ? 'Fecha às 23h00' : 'Abrimos às 18h00'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </header>
