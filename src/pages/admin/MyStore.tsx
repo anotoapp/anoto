@@ -580,7 +580,7 @@ export default function MyStore() {
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
                   {(() => {
-                    const status = isStoreOpen(store as any);
+                    const status = isStoreOpen(store as unknown as import('../../types').RestaurantConfig);
                     return (
                       <div style={{ 
                         padding: '6px 12px', 

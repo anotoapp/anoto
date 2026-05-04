@@ -11,7 +11,7 @@ interface CartDrawerProps {
   cart: CartItem[];
   onRemoveItem: (index: number) => void;
   config: RestaurantConfig;
-  onCheckout: (customerInfo: { name: string; address: string; phone: string; payment: string; type: string; neighborhood?: string; cep?: string }) => void;
+  onCheckout: (customerInfo: { name: string; address: string; phone: string; payment: string; type: 'delivery' | 'pickup'; neighborhood?: string; cep?: string }) => void;
   customer?: CustomerProfile | null;
   onCustomerUpdate?: (profile: CustomerProfile) => void;
   onSelectUpsell?: (product: Product) => void;
@@ -33,7 +33,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [payment, setPayment] = useState('Cartão de Crédito/Débito (Máquina)');
-  const [type, setType] = useState('delivery');
+  const [type, setType] = useState<'delivery' | 'pickup'>('delivery');
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState<{ type: 'fixed' | 'percentage', value: number } | null>(null);
   const [couponError, setCouponError] = useState('');
@@ -74,25 +74,28 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   }, [isOpen, config.id]);
 
   useEffect(() => {
-    if (customer) {
-      setName(customer.full_name || '');
-      setAddress(customer.address || '');
-      
-      // Auto-select neighborhood from customer profile
-      if (customer.neighborhood && neighborhoods.length > 0) {
-        const found = neighborhoods.find(n => n.neighborhood === customer.neighborhood);
-        if (found) {
-          setSelectedNeighborhood({ neighborhood: found.neighborhood, fee: found.fee });
+    const timer = setTimeout(() => {
+      if (customer) {
+        setName(customer.full_name || '');
+        setAddress(customer.address || '');
+        
+        // Auto-select neighborhood from customer profile
+        if (customer.neighborhood && neighborhoods.length > 0) {
+          const found = neighborhoods.find(n => n.neighborhood === customer.neighborhood);
+          if (found) {
+            setSelectedNeighborhood({ neighborhood: found.neighborhood, fee: found.fee });
+          }
         }
+      } else {
+        const savedName = localStorage.getItem('anoto_customer_name');
+        const savedPhone = localStorage.getItem('anoto_customer_phone');
+        const savedAddress = localStorage.getItem('anoto_customer_address');
+        if (savedName) setName(savedName || '');
+        if (savedPhone) setPhone(savedPhone || '');
+        if (savedAddress) setAddress(savedAddress || '');
       }
-    } else {
-      const savedName = localStorage.getItem('anoto_customer_name');
-      const savedPhone = localStorage.getItem('anoto_customer_phone');
-      const savedAddress = localStorage.getItem('anoto_customer_address');
-      if (savedName) setName(savedName || '');
-      if (savedPhone) setPhone(savedPhone || '');
-      if (savedAddress) setAddress(savedAddress || '');
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [customer, neighborhoods]);
 
   const handleCepLookup = async (value: string) => {

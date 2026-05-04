@@ -109,6 +109,7 @@ export default function AdminLayout() {
   }, [navigate, loadAllData]);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [masterAuthorized, setMasterAuthorized] = useState(false);
 
   if (loading) {
     return (
@@ -127,6 +128,19 @@ export default function AdminLayout() {
   if (!user) return null;
 
   const isSuperAdmin = userProfile?.role === 'superadmin';
+
+  const handleMasterClick = (e: React.MouseEvent) => {
+    if (!masterAuthorized) {
+      e.preventDefault();
+      const key = prompt('Digite a Chave Master para acessar:');
+      if (key === 'ANOTO2024') { // Chave hardcoded simples para início
+        setMasterAuthorized(true);
+        navigate('/admin/master');
+      } else {
+        alert('Chave incorreta!');
+      }
+    }
+  };
 
   return (
     <div className="admin-layout">
@@ -177,7 +191,11 @@ export default function AdminLayout() {
           {isSuperAdmin && (
             <>
               <div className="nav-divider" />
-              <NavLink to="/admin/master" className="nav-item superadmin" onClick={() => setMobileMenuOpen(false)}>
+              <NavLink 
+                to="/admin/master" 
+                className="nav-item superadmin" 
+                onClick={handleMasterClick}
+              >
                 <Shield size={20} /> Master
               </NavLink>
             </>
@@ -211,7 +229,25 @@ export default function AdminLayout() {
             </div>
           </div>
         )}
-        <Outlet context={{ store, userProfile, user }} />
+        {window.location.pathname.includes('/admin/master') && !masterAuthorized ? (
+          <div style={{ padding: '40px', textAlign: 'center' }}>
+            <Shield size={48} color="#dc2626" style={{ marginBottom: '16px' }} />
+            <h2>Acesso Restrito</h2>
+            <p>Você precisa da Chave Master para visualizar esta área.</p>
+            <button 
+              onClick={() => {
+                const key = prompt('Digite a Chave Master:');
+                if (key === 'ANOTO2024') setMasterAuthorized(true);
+                else alert('Chave incorreta!');
+              }}
+              style={{ marginTop: '20px', padding: '12px 24px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              Autenticar Master
+            </button>
+          </div>
+        ) : (
+          <Outlet context={{ store, userProfile, user }} />
+        )}
       </main>
 
     </div>

@@ -55,7 +55,7 @@ export default function OrdersDashboard() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders((data as any) || []);
+      setOrders((data as unknown as Order[]) || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
     }

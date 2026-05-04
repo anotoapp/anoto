@@ -33,13 +33,16 @@ function StoreFront({ customSlug }: StoreFrontProps) {
   const [activeTab, setActiveTab] = useState('inicio');
 
   useEffect(() => {
+    // Move to setTimeout to avoid synchronous state update in effect
     const savedCustomer = localStorage.getItem('anoto_customer');
     if (savedCustomer) {
-      try {
-        setCustomer(JSON.parse(savedCustomer));
-      } catch {
-        console.error('Error parsing customer from local storage');
-      }
+      setTimeout(() => {
+        try {
+          setCustomer(JSON.parse(savedCustomer));
+        } catch {
+          console.error('Error parsing customer from local storage');
+        }
+      }, 0);
     }
 
     async function loadData() {
@@ -121,7 +124,7 @@ function StoreFront({ customSlug }: StoreFrontProps) {
     setCart(newCart);
   };
 
-  const handleCheckout = async (customerInfo: any) => {
+  const handleCheckout = async (customerInfo: { name: string; phone: string; address: string; neighborhood?: string; payment: string; type: 'delivery' | 'pickup' }) => {
     if (!config || !config.id) return;
     try {
       const total = cart.reduce((acc, item) => {

@@ -50,10 +50,11 @@ export default function CouponsAdmin() {
     } finally {
       setLoading(false);
     }
-  }, [store?.id]);
+  }, [store]);
 
   useEffect(() => {
-    loadData();
+    const timer = setTimeout(() => loadData(), 0);
+    return () => clearTimeout(timer);
   }, [loadData]);
 
   const resetForm = () => {

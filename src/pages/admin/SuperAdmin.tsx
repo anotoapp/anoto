@@ -31,9 +31,9 @@ interface MonthlyData {
 }
 
 const PLAN_PRICES: Record<string, number> = {
-  'Starter': 39.90,
-  'Growth': 79.90,
-  'Diamond': 149.90,
+  'Mensal': 39.90,
+  'Anual': 24.75, // MRR equivalente (297 / 12)
+  'Starter': 39.90, // Fallback para compatibilidade
 };
 
 function formatCurrency(value: number) {
@@ -258,13 +258,13 @@ export default function SuperAdmin() {
       <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '28px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
-            <h3 style={{ margin: 0, fontWeight: '700', color: '#0f172a' }}>Meta: 250 Assinantes</h3>
+            <h3 style={{ margin: 0, fontWeight: '700', color: '#0f172a' }}>Meta: R$ 10.000,00 MRR</h3>
             <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.85rem' }}>
-              {stats.activeSubscribers} de 250 — faltam {Math.max(0, 250 - stats.activeSubscribers)} assinantes
+              {formatCurrency(stats.mrr)} de R$ 10.000,00 — faltam {formatCurrency(Math.max(0, 10000 - stats.mrr))}
             </p>
           </div>
           <span style={{ fontWeight: '900', fontSize: '1.5rem', color: '#dc2626' }}>
-            {Math.round((stats.activeSubscribers / 250) * 100)}%
+            {Math.round((stats.mrr / 10000) * 100)}%
           </span>
         </div>
         <div style={{ width: '100%', height: '12px', background: '#f1f5f9', borderRadius: '6px', overflow: 'hidden' }}>
@@ -272,14 +272,14 @@ export default function SuperAdmin() {
             height: '100%',
             borderRadius: '6px',
             background: 'linear-gradient(90deg, #dc2626, #f59e0b)',
-            width: `${Math.min((stats.activeSubscribers / 250) * 100, 100)}%`,
+            width: `${Math.min((stats.mrr / 10000) * 100, 100)}%`,
             transition: 'width 1s ease'
           }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '0.75rem', color: '#94a3b8' }}>
-          <span>0</span>
-          <span>Meta: MRR R$ {formatCurrency(250 * 39.90)}</span>
-          <span>250</span>
+          <span>R$ 0</span>
+          <span>Próximo marco: 250 clientes ativos</span>
+          <span>R$ 10.000</span>
         </div>
       </div>
 

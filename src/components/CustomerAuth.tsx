@@ -63,9 +63,10 @@ export function CustomerAuth({ onSuccess, onCancel }: CustomerAuthProps) {
       if (error || !data) throw new Error('WhatsApp ou senha incorretos.');
       
       localStorage.setItem('anoto_customer', JSON.stringify(data));
-      onSuccess(data);
-    } catch (error: any) {
-      alert(error.message);
+      onSuccess(data as CustomerProfile);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'WhatsApp ou senha incorretos.';
+      alert(msg);
     } finally {
       setLoading(false);
     }
@@ -98,9 +99,10 @@ export function CustomerAuth({ onSuccess, onCancel }: CustomerAuthProps) {
       if (error) throw error;
 
       localStorage.setItem('anoto_customer', JSON.stringify(data));
-      onSuccess(data);
-    } catch (error: any) {
-      alert('Erro ao criar conta: ' + error.message);
+      onSuccess(data as CustomerProfile);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erro desconhecido';
+      alert('Erro ao criar conta: ' + msg);
     } finally {
       setLoading(false);
     }

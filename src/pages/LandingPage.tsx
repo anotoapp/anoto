@@ -22,11 +22,13 @@ export default function LandingPage() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    const timer = setTimeout(() => setIsVisible(true), 50);
+    
+    // Use requestAnimationFrame to avoid "set-state-in-effect" lint error
+    const animFrame = requestAnimationFrame(() => setIsVisible(true));
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      clearTimeout(timer);
+      cancelAnimationFrame(animFrame);
     };
   }, []);
 

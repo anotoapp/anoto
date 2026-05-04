@@ -55,7 +55,7 @@ export default function Dashboard() {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setOrders((data as any) || []);
+      setOrders((data as unknown as Order[]) || []);
     } catch (error) {
       console.error('Error fetching orders for metrics:', error);
     }
@@ -143,7 +143,7 @@ export default function Dashboard() {
   ];
 
   // Process data for charts
-  const salesByDay = orders.reduce((acc: any[], order) => {
+  const salesByDay = orders.reduce((acc: { date: string; revenue: number; orders: number }[], order) => {
     if (order.status !== 'delivered') return acc;
     const date = new Date(order.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     const existing = acc.find(item => item.date === date);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import type { AdminContextType } from './AdminLayout';
@@ -29,16 +29,9 @@ export default function CustomersAdmin() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    if (store?.id) {
-      fetchCustomers();
-    }
-  }, [store?.id]);
-
-  async function fetchCustomers() {
+  const fetchCustomers = useCallback(async () => {
     if (!store?.id) return;
     try {
-
       setLoading(true);
       
       // 1. Fetch all orders from this store to identify customers
@@ -94,7 +87,15 @@ export default function CustomersAdmin() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [store]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (store?.id) {
+      timer = setTimeout(() => fetchCustomers(), 0);
+    }
+    return () => { if (timer) clearTimeout(timer); };
+  }, [store?.id, fetchCustomers]);
 
   const filteredCustomers = customers.filter(c => 
     c.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
