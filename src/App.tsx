@@ -13,6 +13,7 @@ import SuperAdmin from './pages/admin/SuperAdmin';
 import DeliveryFeesAdmin from './pages/admin/DeliveryFeesAdmin';
 import CouponsAdmin from './pages/admin/CouponsAdmin';
 import CustomersAdmin from './pages/admin/CustomersAdmin';
+import Subscription from './pages/admin/Subscription';
 import OrderTracking from './pages/OrderTracking';
 import { getStoreSlug, isLandingPage } from './utils/multitenancy';
 
@@ -48,6 +49,7 @@ function App() {
         <Route path="coupons" element={<CouponsAdmin />} />
         <Route path="customers" element={<CustomersAdmin />} />
         <Route path="settings" element={<StoreSettings />} />
+        <Route path="subscription" element={<Subscription />} />
 
         <Route path="master" element={<SuperAdmin />} />
       </Route>

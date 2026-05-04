@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, ShoppingBag, Package, Store, Truck, Settings, LogOut, Shield, Menu, Ticket, Users
+  LayoutDashboard, ShoppingBag, Package, Store, Truck, Settings, LogOut, Shield, Menu, Ticket, Users, CreditCard
 } from 'lucide-react';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -169,6 +169,9 @@ export default function AdminLayout() {
           <NavLink to="/admin/settings" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
             <Settings size={20} /> Ajustes
           </NavLink>
+          <NavLink to="/admin/subscription" className="nav-item" onClick={() => setMobileMenuOpen(false)}>
+            <CreditCard size={20} /> Assinatura
+          </NavLink>
 
 
           {isSuperAdmin && (
@@ -197,9 +200,14 @@ export default function AdminLayout() {
         {store?.subscription_status === 'expired' && (
           <div className="subscription-overlay">
             <div className="subscription-content">
+              <div className="warning-icon">⚠️</div>
               <h2>Sua assinatura expirou 💳</h2>
-              <p>O acesso ao seu painel foi pausado. Regularize seu pagamento para continuar vendendo.</p>
-              <a href="https://kiwify.com.br/..." className="lp-btn-primary">Renovar Agora</a>
+              <p>O acesso ao seu painel foi pausado. Regularize seu pagamento para continuar vendendo e gerindo seus pedidos.</p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '20px' }}>
+                <NavLink to="/admin/subscription" className="lp-btn-primary" style={{ textDecoration: 'none' }}>
+                  Ver Opções de Plano
+                </NavLink>
+              </div>
             </div>
           </div>
         )}

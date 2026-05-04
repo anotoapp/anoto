@@ -420,3 +420,28 @@
     padding: 20px !important;
   }
 }
+
+.warning-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.plan-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.plan-card:hover {
+  transform: translateY(-8px);
+}
+
+.subscription-page h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+@media (max-width: 1024px) {
+  .subscription-page .store-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

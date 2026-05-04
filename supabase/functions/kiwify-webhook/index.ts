@@ -1,65 +1,124 @@
 // Supabase Edge Function for Kiwify Webhook
 // Path: supabase/functions/kiwify-webhook/index.ts
+// Deploy: npx supabase functions deploy kiwify-webhook --project-ref ehpnsastaisgnamuqfpn
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Map Kiwify product/plan names to our internal plan names
+function mapPlanName(rawName: string | undefined): string {
+  if (!rawName) return 'Starter';
+  const name = rawName.toLowerCase();
+  if (name.includes('diamond')) return 'Diamond';
+  if (name.includes('growth')) return 'Growth';
+  return 'Starter';
+}
+
 serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*' } })
+  }
+
   try {
     const payload = await req.json()
-    const { order_status, customer, product_name, plan_name } = payload
 
-    // Initialize Supabase Client
+    // Kiwify sends: order_status, customer { email, name }, product { name }, subscription { plan { name } }
+    const orderStatus = payload.order_status || payload.status
+    const customerEmail = payload.customer?.email
+    const planName = payload.subscription?.plan?.name || payload.product?.name || payload.plan_name
+
+    if (!customerEmail) {
+      return new Response(JSON.stringify({ error: 'Missing customer email' }), {
+        headers: { "Content-Type": "application/json" },
+        status: 400,
+      })
+    }
+
+    // Initialize Supabase Client with Service Role (admin access)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    console.log(`Webhook received: ${order_status} for ${customer.email}`)
+    console.log(`[Kiwify Webhook] Status: ${orderStatus} | Email: ${customerEmail} | Plan: ${planName}`)
 
-    if (order_status === 'paid' || order_status === 'approved') {
-      // 1. Find profile by email
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', customer.email)
-        .single()
+    // 1. Find the profile by email
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', customerEmail)
+      .single()
 
-      if (profile) {
-        // 2. Update store subscription
-        await supabase
-          .from('stores')
-          .update({ 
-            subscription_status: 'active',
-            plan_type: plan_name || 'Pro',
-            last_payment_at: new Date().toISOString()
-          })
-          .eq('owner_id', profile.id)
-      }
-    } else if (order_status === 'refunded' || order_status === 'canceled') {
-      // Handle cancellation
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', customer.email)
-        .single()
-
-      if (profile) {
-        await supabase
-          .from('stores')
-          .update({ subscription_status: 'expired' })
-          .eq('owner_id', profile.id)
-      }
+    if (profileError || !profile) {
+      console.warn(`[Kiwify Webhook] Profile not found for email: ${customerEmail}`)
+      // Return 200 so Kiwify doesn't retry forever — user may not be registered yet
+      return new Response(JSON.stringify({ success: false, message: 'User not found, ignoring.' }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      })
     }
+
+    // 2. Handle status transitions
+    if (orderStatus === 'paid' || orderStatus === 'approved' || orderStatus === 'active') {
+      const { error } = await supabase
+        .from('stores')
+        .update({
+          subscription_status: 'active',
+          plan_type: mapPlanName(planName),
+          last_payment_at: new Date().toISOString(),
+          subscription_id: payload.order_id || payload.id || null
+        })
+        .eq('owner_id', profile.id)
+
+      if (error) throw error
+
+      // Garante que o email está na whitelist (para novos cadastros futuros)
+      await supabase
+        .from('authorized_emails')
+        .upsert({
+          email: customerEmail.toLowerCase(),
+          plan_type: mapPlanName(planName),
+          kiwify_order_id: payload.order_id || payload.id || null,
+          authorized_at: new Date().toISOString()
+        }, { onConflict: 'email' })
+
+      console.log(`[Kiwify Webhook] ✅ Subscription activated for profile ${profile.id}`)
+
+    } else if (
+      orderStatus === 'refunded' ||
+      orderStatus === 'canceled' ||
+      orderStatus === 'cancelled' ||
+      orderStatus === 'chargedback'
+    ) {
+      const { error } = await supabase
+        .from('stores')
+        .update({ subscription_status: 'expired' })
+        .eq('owner_id', profile.id)
+
+      if (error) throw error
+
+      // Remove da whitelist ao cancelar/reembolsar
+      await supabase
+        .from('authorized_emails')
+        .delete()
+        .eq('email', customerEmail.toLowerCase())
+
+      console.log(`[Kiwify Webhook] ❌ Subscription expired for profile ${profile.id}`)
+    } else {
+      console.log(`[Kiwify Webhook] ⚠️ Unhandled status: ${orderStatus}`)
+    }
+
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { "Content-Type": "application/json" },
       status: 200,
     })
   } catch (error) {
+    console.error('[Kiwify Webhook] Error:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { "Content-Type": "application/json" },
-      status: 400,
+      status: 500,
     })
   }
 })
