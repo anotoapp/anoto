@@ -7,7 +7,10 @@ import {
   Search, 
   MessageCircle, 
   ShoppingBag, 
-  Clock
+  Clock,
+  ArrowUpRight,
+  TrendingUp,
+  UserCheck
 } from 'lucide-react';
 import './Admin.css';
 
@@ -34,7 +37,6 @@ export default function CustomersAdmin() {
     try {
       setLoading(true);
       
-      // 1. Fetch all orders from this store to identify customers
       const { data: orders, error: ordersError } = await supabase
         .from('orders')
         .select('customer_phone, total, created_at')
@@ -42,14 +44,12 @@ export default function CustomersAdmin() {
 
       if (ordersError) throw ordersError;
 
-      // 2. Fetch all customer profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('customers')
         .select('*');
 
       if (profilesError) throw profilesError;
 
-      // 3. Aggregate data
       const customerMap = new Map<string, CustomerStats>();
 
       orders.forEach(order => {
@@ -90,12 +90,9 @@ export default function CustomersAdmin() {
   }, [store]);
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    if (store?.id) {
-      timer = setTimeout(() => fetchCustomers(), 0);
-    }
-    return () => { if (timer) clearTimeout(timer); };
-  }, [store?.id, fetchCustomers]);
+    const timer = setTimeout(() => fetchCustomers(), 0);
+    return () => clearTimeout(timer);
+  }, [fetchCustomers]);
 
   const filteredCustomers = customers.filter(c => 
     c.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,113 +101,134 @@ export default function CustomersAdmin() {
 
   const totalCustomers = customers.length;
   const avgLTV = totalCustomers > 0 ? customers.reduce((acc, c) => acc + c.total_spent, 0) / totalCustomers : 0;
+  const topSpenders = customers.filter(c => c.total_spent > avgLTV * 1.5).length;
 
   return (
-    <div className="admin-page fade-in">
-      <header className="admin-header">
+    <div className="admin-page fade-in" style={{ padding: '0 20px 40px' }}>
+      <header className="admin-header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1>Gestão de Clientes</h1>
-          <p>Acompanhe o comportamento e fidelidade dos seus clientes.</p>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>Gestão de Clientes</h1>
+          <p style={{ color: '#64748b', marginTop: '4px' }}>Acompanhe o comportamento e fidelidade dos seus clientes.</p>
         </div>
-        <div className="header-stats">
-          <div className="mini-stat">
-            <span className="stat-label">Total de Clientes</span>
-            <span className="stat-value">{totalCustomers}</span>
-          </div>
-          <div className="mini-stat">
-            <span className="stat-label">Ticket Médio (LTV)</span>
-            <span className="stat-value">R$ {avgLTV.toFixed(2)}</span>
-          </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={fetchCustomers} className="secondary-action" style={{ padding: '10px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Clock size={16} /> Atualizar
+          </button>
         </div>
       </header>
 
-      <div className="admin-actions">
-        <div className="search-bar">
-          <Search size={20} />
-          <input 
-            type="text" 
-            placeholder="Buscar por nome ou WhatsApp..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* Stats Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+        <div style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ padding: '10px', background: '#eff6ff', color: '#2563eb', borderRadius: '12px' }}><Users size={20} /></div>
+            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#10b981', background: '#f0fdf4', padding: '4px 10px', borderRadius: '20px' }}>TOTAL</span>
+          </div>
+          <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem', fontWeight: '600' }}>Base de Clientes</p>
+          <h2 style={{ margin: '4px 0 0', fontSize: '2rem', fontWeight: '800' }}>{totalCustomers}</h2>
+        </div>
+
+        <div style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ padding: '10px', background: '#fff7ed', color: '#ea580c', borderRadius: '12px' }}><TrendingUp size={20} /></div>
+            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#ea580c', background: '#fff7ed', padding: '4px 10px', borderRadius: '20px' }}>LTV MÉDIO</span>
+          </div>
+          <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem', fontWeight: '600' }}>Valor Médio por Cliente</p>
+          <h2 style={{ margin: '4px 0 0', fontSize: '2rem', fontWeight: '800' }}>R$ {avgLTV.toFixed(2)}</h2>
+        </div>
+
+        <div style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ padding: '10px', background: '#f5f3ff', color: '#7c3aed', borderRadius: '12px' }}><UserCheck size={20} /></div>
+            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#7c3aed', background: '#f5f3ff', padding: '4px 10px', borderRadius: '20px' }}>VIPs</span>
+          </div>
+          <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem', fontWeight: '600' }}>Clientes com maior gasto</p>
+          <h2 style={{ margin: '4px 0 0', fontSize: '2rem', fontWeight: '800' }}>{topSpenders}</h2>
         </div>
       </div>
 
-      <div className="customers-grid">
+      <div style={{ background: 'white', borderRadius: '24px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+            <input 
+              type="text" 
+              placeholder="Buscar por nome ou WhatsApp..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '14px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '0.95rem' }}
+            />
+          </div>
+          <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: '600' }}>
+            Exibindo {filteredCustomers.length} clientes
+          </div>
+        </div>
+
         {loading ? (
-          <div className="loading-state">
-            <div className="spinner"></div>
-            <p>Analisando base de clientes...</p>
+          <div style={{ textAlign: 'center', padding: '60px' }}>
+            <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
+            <p style={{ color: '#64748b' }}>Analisando base de clientes...</p>
           </div>
         ) : filteredCustomers.length === 0 ? (
-          <div className="empty-state">
-            <Users size={48} />
-            <p>Nenhum cliente encontrado.</p>
+          <div style={{ textAlign: 'center', padding: '80px 20px', background: '#f8fafc', borderRadius: '20px', border: '2px dashed #e2e8f0' }}>
+            <div style={{ width: '64px', height: '64px', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+              <Users size={32} color="#cbd5e1" />
+            </div>
+            <h3 style={{ color: '#1e293b', marginBottom: '8px' }}>Nenhum cliente encontrado</h3>
+            <p style={{ color: '#64748b', maxWidth: '300px', margin: '0 auto' }}>Os clientes aparecerão aqui assim que realizarem o primeiro pedido na sua loja.</p>
           </div>
         ) : (
-          <div className="admin-table-wrapper">
-            <table className="admin-table">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr>
-                  <th>Cliente</th>
-                  <th>Contato</th>
-                  <th>Pedidos</th>
-                  <th>Total Gasto</th>
-                  <th>Última Compra</th>
-                  <th>Ações</th>
+                <tr style={{ textAlign: 'left', borderBottom: '1px solid #f1f5f9' }}>
+                  <th style={{ padding: '16px', color: '#64748b', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase' }}>Cliente</th>
+                  <th style={{ padding: '16px', color: '#64748b', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase' }}>Pedidos</th>
+                  <th style={{ padding: '16px', color: '#64748b', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase' }}>Total Gasto</th>
+                  <th style={{ padding: '16px', color: '#64748b', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase' }}>Último Pedido</th>
+                  <th style={{ padding: '16px', color: '#64748b', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', textAlign: 'right' }}>Ação</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCustomers.map((customer) => (
-                  <tr key={customer.phone}>
-                    <td>
-                      <div className="customer-info-cell">
-                        <div className="customer-avatar">
+                  <tr key={customer.phone} className="customer-row" style={{ borderBottom: '1px solid #f8fafc', transition: 'all 0.2s' }}>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '40px', height: '40px', background: 'var(--brand-red)', color: 'white', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1rem' }}>
                           {customer.full_name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="customer-name">{customer.full_name}</div>
-                          <div className="customer-subtext">{customer.neighborhood}</div>
+                          <div style={{ fontWeight: '700', color: '#1e293b' }}>{customer.full_name}</div>
+                          <div style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <MessageCircle size={12} /> {customer.phone}
+                          </div>
                         </div>
                       </div>
                     </td>
-                    <td>
-                      <div className="phone-cell">
-                        <MessageCircle size={14} />
-                        {customer.phone}
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#475569', fontSize: '0.9rem', fontWeight: '600' }}>
+                        <ShoppingBag size={14} /> {customer.total_orders} pedidos
                       </div>
                     </td>
-                    <td>
-                      <div className="stats-cell">
-                        <ShoppingBag size={14} />
-                        {customer.total_orders} pedidos
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ color: '#10b981', fontWeight: '800', fontSize: '1rem' }}>
+                        R$ {customer.total_spent.toFixed(2)}
                       </div>
                     </td>
-                    <td>
-                      <div className="ltv-cell">
-                        <strong>R$ {customer.total_spent.toFixed(2)}</strong>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '0.85rem' }}>
+                        <Clock size={14} /> {customer.last_order_date ? new Date(customer.last_order_date).toLocaleDateString('pt-BR') : 'N/A'}
                       </div>
                     </td>
-                    <td>
-                      <div className="date-cell">
-                        <Clock size={14} />
-                        {customer.last_order_date 
-                          ? new Date(customer.last_order_date).toLocaleDateString('pt-BR') 
-                          : 'N/A'}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <a 
-                          href={`https://wa.me/55${customer.phone.replace(/\D/g, '')}`} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="btn-icon-link"
-                          title="Falar no WhatsApp"
-                        >
-                          <MessageCircle size={18} />
-                        </a>
-                      </div>
+                    <td style={{ padding: '16px', textAlign: 'right' }}>
+                      <a 
+                        href={`https://wa.me/55${customer.phone.replace(/\D/g, '')}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', background: '#f0fdf4', color: '#16a34a', borderRadius: '10px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '700', transition: 'all 0.2s' }}
+                      >
+                        WhatsApp <ArrowUpRight size={14} />
+                      </a>
                     </td>
                   </tr>
                 ))}
@@ -221,49 +239,8 @@ export default function CustomersAdmin() {
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        .customer-info-cell { display: flex; align-items: center; gap: 12px; }
-        .customer-avatar {
-          width: 36px;
-          height: 36px;
-          background: var(--primary);
-          color: white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 800;
-          font-size: 0.9rem;
-        }
-        .customer-name { font-weight: 700; color: #1e293b; }
-        .customer-subtext { font-size: 0.75rem; color: #64748b; }
-        .phone-cell, .stats-cell, .date-cell { 
-          display: flex; 
-          align-items: center; 
-          gap: 6px; 
-          font-size: 0.9rem; 
-          color: #475569;
-        }
-        .ltv-cell { color: #10b981; font-size: 1rem; }
-        .btn-icon-link {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: #f0fdf4;
-          color: #16a34a;
-          transition: all 0.2s;
-        }
-        .btn-icon-link:hover {
-          background: #16a34a;
-          color: white;
-          transform: translateY(-2px);
-        }
-        .header-stats { display: flex; gap: 24px; }
-        .mini-stat { display: flex; flex-direction: column; align-items: flex-end; }
-        .stat-label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
-        .stat-value { font-size: 1.25rem; font-weight: 800; color: #0f172a; }
+        .customer-row:hover { background-color: #f8fafc; }
+        .customer-row:hover .customer-avatar { transform: scale(1.1); }
       `}} />
     </div>
   );

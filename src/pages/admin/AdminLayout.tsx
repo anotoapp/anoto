@@ -202,10 +202,12 @@ export default function AdminLayout() {
           )}
         </nav>
         <div className="admin-footer">
-          {store?.plan_type && (
+          {store && (
             <div className="plan-badge">
-              <span className="plan-label">Plano:</span>
-              <span className={`plan-name ${store.plan_type.toLowerCase()}`}>{store.plan_type}</span>
+              <span className="plan-label">Status do Plano:</span>
+              <span className={`plan-name ${store.subscription_status || 'trial'}`}>
+                {store.subscription_status === 'active' ? (store.plan_type || 'Mensal') : 'Teste Grátis'}
+              </span>
             </div>
           )}
           <button onClick={() => supabase.auth.signOut()} className="nav-item logout">
