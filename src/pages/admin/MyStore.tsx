@@ -168,7 +168,7 @@ export default function MyStore() {
       <header className="dashboard-header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: '20px 24px', borderRadius: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', position: 'sticky', top: '0', zIndex: 100 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', color: '#0f172a' }}>Minha Loja</h1>
-          <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>Gerencie a identidade e configurações da sua marca</p>
+          <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>Identidade e configurações</p>
         </div>
         
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -185,10 +185,13 @@ export default function MyStore() {
               fontSize: '0.85rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px'
+              gap: '8px',
+              border: '1px solid #e2e8f0',
+              color: '#475569',
+              background: '#fff'
             }}
           >
-            <Eye size={18} /> Visualizar Loja
+            <Eye size={18} /> <span className="hide-mobile">Visualizar</span>
           </a>
 
           <div 
@@ -208,7 +211,8 @@ export default function MyStore() {
             }}
           >
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: store.is_open_manual ? '#059669' : '#dc2626' }}></div>
-            {store.is_open_manual ? 'LOJA ABERTA' : 'LOJA FECHADA'}
+            <span className="hide-mobile">{store.is_open_manual ? 'LOJA ABERTA' : 'LOJA FECHADA'}</span>
+            <span className="show-mobile-inline">{store.is_open_manual ? 'ABERTA' : 'FECHADA'}</span>
           </div>
 
           <button 
@@ -216,7 +220,7 @@ export default function MyStore() {
             disabled={saving}
             style={{ 
               padding: '10px 24px', 
-              background: 'var(--brand-red)', 
+              background: '#dc2626', 
               color: 'white', 
               border: 'none', 
               borderRadius: '10px', 
@@ -228,12 +232,12 @@ export default function MyStore() {
               boxShadow: '0 4px 12px rgba(220, 38, 38, 0.2)'
             }}
           >
-            <Save size={18} /> {saving ? 'Salvando...' : 'Salvar Alterações'}
+            <Save size={18} /> <span>{saving ? '...' : 'Salvar'}</span>
           </button>
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '32px', alignItems: 'flex-start' }}>
+      <div className="settings-layout">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {/* CARD 1: Identidade da Loja */}

@@ -92,24 +92,21 @@ export default function SuperAdmin() {
           monthlyMap[key] = { mrr: 0, subscribers: 0, newSubscribers: 0 };
         }
 
-        // Count subscribers and MRR per month (cumulative)
+        // Count subscribers and MRR per month (based on real authorizations)
         emailsData.forEach(email => {
           const d = new Date(email.authorized_at);
           const key = `${MONTH_NAMES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
           if (monthlyMap[key] !== undefined) {
             monthlyMap[key].newSubscribers += 1;
+            monthlyMap[key].subscribers += 1; // Real count in that month
             monthlyMap[key].mrr += PLAN_PRICES[email.plan_type || 'Starter'] || 39.90;
           }
         });
 
-        // Make cumulative subscriber count
-        let cumulative = Math.max(0, activeCount - newThisMonth);
-        const chartData: MonthlyData[] = Object.entries(monthlyMap).map(([month, data]) => {
-          cumulative += data.newSubscribers;
-          return { month, mrr: data.mrr, subscribers: cumulative, newSubscribers: data.newSubscribers };
-        });
-        // Fix: last month should show current actual count
-        if (chartData.length > 0) chartData[chartData.length - 1].subscribers = activeCount;
+        const chartData: MonthlyData[] = Object.entries(monthlyMap).map(([month, data]) => ({
+          month,
+          ...data
+        }));
 
         setMonthlyData(chartData);
         setStats({
