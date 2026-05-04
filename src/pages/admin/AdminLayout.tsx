@@ -130,16 +130,8 @@ export default function AdminLayout() {
   const isSuperAdmin = userProfile?.role === 'superadmin';
 
   const handleMasterClick = (e: React.MouseEvent) => {
-    if (!masterAuthorized) {
-      e.preventDefault();
-      const key = prompt('Digite a Chave Master para acessar:');
-      if (key === 'ANOTO2024') { // Chave hardcoded simples para início
-        setMasterAuthorized(true);
-        navigate('/admin/master');
-      } else {
-        alert('Chave incorreta!');
-      }
-    }
+    // Acesso direto para superadmins, sem necessidade de prompt
+    navigate('/admin/master');
   };
 
   return (
@@ -206,7 +198,9 @@ export default function AdminLayout() {
             <div className="plan-badge">
               <span className="plan-label">Status do Plano:</span>
               <span className={`plan-name ${store.subscription_status || 'trial'}`}>
-                {store.subscription_status === 'active' ? (store.plan_type || 'Mensal') : 'Teste Grátis'}
+                {store.subscription_status === 'active' 
+                  ? (store.plan_type === 'Anual' ? 'Anual' : 'Mensal') 
+                  : 'Teste Grátis'}
               </span>
             </div>
           )}
