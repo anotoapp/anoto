@@ -283,7 +283,7 @@ export default function OrdersDashboard() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ background: '#eef2ff', color: '#4f46e5', padding: '12px', borderRadius: '10px' }}><DollarSign size={24} /></div>
+          <div style={{ background: '#f0fdf4', color: '#16a34a', padding: '12px', borderRadius: '10px' }}><DollarSign size={24} /></div>
           <div>
             <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Faturamento Hoje</p>
             <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>R$ {todayRevenue.toFixed(2)}</h2>

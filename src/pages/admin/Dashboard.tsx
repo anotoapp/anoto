@@ -240,10 +240,10 @@ export default function Dashboard() {
         
         {/* Stats Card: Hoje */}
         <div style={{ 
-          background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)', 
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
           padding: '24px', 
           borderRadius: '20px', 
-          boxShadow: '0 10px 25px -5px rgba(37, 99, 235, 0.2)', 
+          boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.2)', 
           display: 'flex', 
           flexDirection: 'column', 
           gap: '16px',
@@ -322,7 +322,7 @@ export default function Dashboard() {
         <div style={{ background: '#fff', padding: '32px', borderRadius: '24px', boxShadow: '0 4px 25px rgba(0,0,0,0.02)', gridColumn: '1 / -1', border: '1px solid #f1f5f9' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.25rem', fontWeight: '700' }}>
-              <TrendingUp size={22} color="#2563eb" /> Histórico de Faturamento
+              <TrendingUp size={22} color="#10b981" /> Histórico de Faturamento
             </h3>
             <div style={{ textAlign: 'right' }}>
               <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block' }}>Total no Período</span>
@@ -335,8 +335,8 @@ export default function Dashboard() {
               <AreaChart data={salesByDay}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -361,11 +361,11 @@ export default function Dashboard() {
                 <Area 
                   type="monotone" 
                   dataKey="revenue" 
-                  stroke="#2563eb" 
+                  stroke="#10b981" 
                   strokeWidth={3} 
                   fillOpacity={1} 
                   fill="url(#colorRevenue)"
-                  dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }}
+                  dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                 />
               </AreaChart>
