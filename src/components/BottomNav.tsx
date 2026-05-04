@@ -12,7 +12,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, ca
   return (
     <nav className="bottom-nav">
       <button 
-        className={`nav-item ${activeTab === 'inicio' ? 'active' : ''}`}
+        className={`bottom-nav-btn ${activeTab === 'inicio' ? 'active' : ''}`}
         onClick={() => onTabChange('inicio')}
       >
         <Home size={22} />
@@ -20,7 +20,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, ca
       </button>
       
       <button 
-        className={`nav-item ${activeTab === 'promocoes' ? 'active' : ''}`}
+        className={`bottom-nav-btn ${activeTab === 'promocoes' ? 'active' : ''}`}
         onClick={() => onTabChange('promocoes')}
       >
         <Tag size={22} />
@@ -28,7 +28,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, ca
       </button>
       
       <button 
-        className={`nav-item ${activeTab === 'pedidos' ? 'active' : ''}`}
+        className={`bottom-nav-btn ${activeTab === 'pedidos' ? 'active' : ''}`}
         onClick={() => onTabChange('pedidos')}
       >
         <div className="icon-wrapper">
@@ -39,7 +39,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, ca
       </button>
       
       <button 
-        className={`nav-item ${activeTab === 'perfil' ? 'active' : ''}`}
+        className={`bottom-nav-btn ${activeTab === 'perfil' ? 'active' : ''}`}
         onClick={() => onTabChange('perfil')}
       >
         <User size={22} />
