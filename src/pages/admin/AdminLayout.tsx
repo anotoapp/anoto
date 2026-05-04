@@ -109,7 +109,6 @@ export default function AdminLayout() {
   }, [navigate, loadAllData]);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [masterAuthorized, setMasterAuthorized] = useState(false);
 
   if (loading) {
     return (
@@ -225,25 +224,7 @@ export default function AdminLayout() {
             </div>
           </div>
         )}
-        {window.location.pathname.includes('/admin/master') && !masterAuthorized ? (
-          <div style={{ padding: '40px', textAlign: 'center' }}>
-            <Shield size={48} color="#dc2626" style={{ marginBottom: '16px' }} />
-            <h2>Acesso Restrito</h2>
-            <p>Você precisa da Chave Master para visualizar esta área.</p>
-            <button 
-              onClick={() => {
-                const key = prompt('Digite a Chave Master:');
-                if (key === 'ANOTO2024') setMasterAuthorized(true);
-                else alert('Chave incorreta!');
-              }}
-              style={{ marginTop: '20px', padding: '12px 24px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              Autenticar Master
-            </button>
-          </div>
-        ) : (
-          <Outlet context={{ store, userProfile, user }} />
-        )}
+        <Outlet context={{ store, userProfile, user }} />
       </main>
 
     </div>
