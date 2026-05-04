@@ -129,7 +129,7 @@ export default function AdminLayout() {
 
   const isSuperAdmin = userProfile?.role === 'superadmin';
 
-  const handleMasterClick = (e: React.MouseEvent) => {
+  const handleMasterClick = () => {
     // Acesso direto para superadmins, sem necessidade de prompt
     navigate('/admin/master');
   };
