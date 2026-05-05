@@ -266,7 +266,6 @@ function StoreFront({ customSlug }: StoreFrontProps) {
       )
     : [];
 
-  const highlights = config.products.slice(0, 4);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
@@ -326,19 +325,7 @@ function StoreFront({ customSlug }: StoreFrontProps) {
               </section>
             )}
 
-            {/* ── Highlights carousel (only when no search) ───────────── */}
-            {!searchQuery && highlights.length > 0 && (
-              <section className="highlights-section">
-                <h2 className="section-title">⭐ Destaques</h2>
-                <div className="highlights-scroll">
-                  {highlights.map(product => (
-                    <ProductCard key={`h-${product.id}`} product={product} layout="grid" onAdd={() => setSelectedProduct(product)} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* ── Category sections (all rendered, observer tracks them) ─ */}
+            {/* ── Category carousels (all rendered, IntersectionObserver tracks them) ─ */}
             {!searchQuery && config.categories.map((category) => {
               const categoryProducts = config.products.filter(p => p.category === category.id);
               if (categoryProducts.length === 0) return null;
@@ -349,16 +336,19 @@ function StoreFront({ customSlug }: StoreFrontProps) {
                   data-category-id={category.id}
                   className="category-section"
                 >
-                  <h2 className="section-title category-section-title">
-                    {category.icon && <span className="section-icon">{category.icon}</span>}
-                    {category.name}
-                  </h2>
-                  <div className="products-list-vertical">
+                  <div className="category-section-header">
+                    <h2 className="section-title category-section-title">
+                      {category.icon && <span className="section-icon">{category.icon}</span>}
+                      {category.name}
+                    </h2>
+                    <span className="category-count">{categoryProducts.length} itens</span>
+                  </div>
+                  <div className="highlights-scroll category-carousel">
                     {categoryProducts.map(product => (
                       <ProductCard
                         key={product.id}
                         product={product}
-                        layout="list"
+                        layout="grid"
                         onAdd={() => setSelectedProduct(product)}
                       />
                     ))}
