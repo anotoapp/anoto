@@ -2,7 +2,7 @@
 
 -- 1. Adicionar colunas de assinatura na tabela de lojas
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'; -- trial, active, expired, canceled
-ALTER TABLE stores ADD COLUMN IF NOT EXISTS plan_type TEXT DEFAULT 'Starter'; -- Starter, Growth, Diamond
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS plan_type TEXT DEFAULT 'Mensal'; -- Mensal, Anual
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS last_payment_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS subscription_id TEXT; -- ID da Kiwify para referência
 
@@ -19,7 +19,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
 CREATE TABLE IF NOT EXISTS authorized_emails (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
-  plan_type TEXT DEFAULT 'Starter',
+  plan_type TEXT DEFAULT 'Mensal',
   kiwify_order_id TEXT,
   authorized_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -34,11 +34,11 @@ CREATE POLICY "Authorized emails select"
   ON authorized_emails FOR SELECT
   USING (true);
 
--- 6. Função segura para o frontend checar se um email está autorizado
-CREATE OR REPLACE FUNCTION is_email_authorized(check_email TEXT)
-RETURNS BOOLEAN AS $$
-  SELECT EXISTS(
-    SELECT 1 FROM authorized_emails WHERE LOWER(email) = LOWER(check_email)
-  );
+-- 6. Função segura para o frontend checar se um email está autorizado e pegar o plano
+CREATE OR REPLACE FUNCTION check_email_subscription(check_email TEXT)
+RETURNS TABLE (authorized BOOLEAN, plan TEXT) AS $$
+  SELECT 
+    EXISTS(SELECT 1 FROM authorized_emails WHERE LOWER(email) = LOWER(check_email)) as authorized,
+    (SELECT plan_type FROM authorized_emails WHERE LOWER(email) = LOWER(check_email) LIMIT 1) as plan;
 $$ LANGUAGE SQL SECURITY DEFINER;
 

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Search, MapPin, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, MapPin, ChevronRight } from 'lucide-react';
 import { Header } from '../components/Header';
 import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
@@ -10,7 +10,7 @@ import { supabase } from '../lib/supabase';
 import type { Product, CartItem, ProductOption, RestaurantConfig, CustomerProfile } from '../types';
 import { formatWhatsAppMessage } from '../utils/whatsapp';
 import { isStoreOpen } from '../utils/storeStatus';
-
+import { CategoryNav } from '../components/CategoryNav';
 import '../App.css';
 
 interface StoreFrontProps {
@@ -31,9 +31,16 @@ function StoreFront({ customSlug }: StoreFrontProps) {
   const [error, setError] = useState<string | null>(null);
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
   const [activeTab, setActiveTab] = useState('inicio');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
+  // Ref to track observer and avoid re-creating every render
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  // Prevent observer from overriding a user click for a brief window
+  const scrollingByClick = useRef(false);
 
   useEffect(() => {
-    // Move to setTimeout to avoid synchronous state update in effect
     const savedCustomer = localStorage.getItem('anoto_customer');
     if (savedCustomer) {
       setTimeout(() => {
@@ -72,8 +79,8 @@ function StoreFront({ customSlug }: StoreFrontProps) {
         let parsedHours = null;
         if (storeData.opening_hours) {
           try {
-            parsedHours = typeof storeData.opening_hours === 'string' 
-              ? JSON.parse(storeData.opening_hours) 
+            parsedHours = typeof storeData.opening_hours === 'string'
+              ? JSON.parse(storeData.opening_hours)
               : storeData.opening_hours;
           } catch (e) {
             console.error('Error parsing hours:', e);
@@ -98,7 +105,6 @@ function StoreFront({ customSlug }: StoreFrontProps) {
 
         setConfig(loadedConfig);
         if (categoriesData.length > 0) setActiveCategory(categoriesData[0].id);
-
         document.title = loadedConfig.name;
       } catch (err) {
         console.error('Error loading data:', err);
@@ -110,6 +116,85 @@ function StoreFront({ customSlug }: StoreFrontProps) {
 
     loadData();
   }, [storeSlug]);
+
+  // ─── IntersectionObserver: update activeCategory as the user scrolls ───────
+  useEffect(() => {
+    if (!config || activeTab !== 'inicio') return;
+
+    // Slight delay so that all category sections are already painted
+    const timer = setTimeout(() => {
+      if (observerRef.current) observerRef.current.disconnect();
+
+      const options: IntersectionObserverInit = {
+        root: null,
+        // Trigger when the section top edge enters the upper 35% of the viewport
+        rootMargin: '-10% 0px -65% 0px',
+        threshold: 0,
+      };
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (scrollingByClick.current) return; // ignore while user-initiated scroll is running
+
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const catId = (entry.target as HTMLElement).dataset.categoryId;
+            if (catId) {
+              setActiveCategory(catId);
+            }
+          }
+        });
+      }, options);
+
+      config.categories.forEach((cat) => {
+        const section = document.getElementById(`cat-section-${cat.id}`);
+        if (section) observerRef.current!.observe(section);
+      });
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      observerRef.current?.disconnect();
+    };
+  }, [config, activeTab]);
+
+  // Handle category chip click: disable observer briefly, then re-enable
+  const handleCategoryChange = useCallback((catId: string) => {
+    scrollingByClick.current = true;
+    setActiveCategory(catId);
+    setTimeout(() => {
+      scrollingByClick.current = false;
+    }, 900); // ~same duration as the CSS smooth scroll
+  }, []);
+
+  // Load orders when Pedidos tab is active
+  useEffect(() => {
+    if (activeTab === 'pedidos' && customer?.phone) {
+      async function loadOrders() {
+        setLoadingOrders(true);
+        try {
+          const { data, error } = await supabase
+            .from('orders')
+            .select('*, order_items(*, products(*))')
+            .eq('customer_phone', customer?.phone)
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+          setOrders(data || []);
+        } catch (err) {
+          console.error('Error loading orders:', err);
+        } finally {
+          setLoadingOrders(false);
+        }
+      }
+      loadOrders();
+    }
+  }, [activeTab, customer?.phone]);
+
+  const handleUpdateProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('anoto_customer', JSON.stringify(customer));
+    alert('Perfil atualizado com sucesso!');
+  };
 
   const handleAddToCart = (quantity: number, selectedOptions: ProductOption[], notes: string) => {
     if (selectedProduct) {
@@ -130,14 +215,14 @@ function StoreFront({ customSlug }: StoreFrontProps) {
       const total = cart.reduce((acc, item) => {
         const optionsPrice = item.selectedOptions.reduce((sum, o) => sum + o.price, 0);
         return acc + (item.product.price + optionsPrice) * item.quantity;
-      }, 0) + (customerInfo.type === 'delivery' ? config.deliveryFee : 0);
+      }, 0) + (customerInfo.type === 'delivery' ? (config.deliveryFee || 0) : 0);
 
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
           store_id: config.id,
           customer_name: customerInfo.name,
-          customer_phone: customerInfo.phone,
+          customer_phone: customerInfo.phone || '(00) 0000-0000',
           customer_address: `${customerInfo.address}${customerInfo.neighborhood ? ` - Bairro: ${customerInfo.neighborhood}` : ''}`,
           payment_method: customerInfo.payment,
           order_type: customerInfo.type,
@@ -161,9 +246,9 @@ function StoreFront({ customSlug }: StoreFrontProps) {
       setIsCartOpen(false);
       window.open(formatWhatsAppMessage(cart, customerInfo, config, orderData.id, storeSlug), '_blank');
       navigate(`/${storeSlug}/order/${orderData.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar pedido:', error);
-      alert('Houve um erro ao processar seu pedido.');
+      alert('Houve um erro ao processar seu pedido. Detalhe: ' + (error.message || JSON.stringify(error)));
     }
   };
 
@@ -173,67 +258,216 @@ function StoreFront({ customSlug }: StoreFrontProps) {
   const storeStatus = isStoreOpen(config);
   const isOpen = storeStatus.isOpen;
 
+  // Filtered products for search mode (flat, all categories)
+  const allFilteredProducts = searchQuery
+    ? config.products.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
+
   const highlights = config.products.slice(0, 4);
-  const filteredProducts = config.products.filter(p => p.category === activeCategory);
+  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <div className="app" style={{ paddingBottom: '90px', background: '#fcfcfc', minHeight: '100vh' }}>
-      <Header 
-        config={config} 
-        cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)} 
-        onCartClick={() => setIsCartOpen(true)} 
+    <div className="app" style={{ paddingBottom: '90px', background: '#f8f9fa', minHeight: '100vh' }}>
+      <Header
+        config={config}
+        cartCount={cartCount}
+        onCartClick={() => setIsCartOpen(true)}
         isOpen={isOpen}
       />
 
       <main className="container">
-        <div className="delivery-fee-card">
-          <div className="delivery-info-main">
-            <div className="icon-circle"><MapPin size={18} /></div>
-            <span>Calcular taxa e tempo de entrega</span>
-          </div>
-          <ChevronRight size={18} className="arrow-icon" />
-        </div>
+        {activeTab === 'inicio' && (
+          <>
+            <div className="delivery-fee-card">
+              <div className="delivery-info-main">
+                <div className="icon-circle"><MapPin size={18} /></div>
+                <span>Calcular taxa e tempo de entrega</span>
+              </div>
+              <ChevronRight size={18} className="arrow-icon" />
+            </div>
 
-        <div className="filter-row">
-          <div className="category-select-wrapper">
-            <select value={activeCategory} onChange={(e) => setActiveCategory(e.target.value)} className="category-select">
-              {config.categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-            </select>
-            <ChevronDown size={16} className="select-arrow" />
-          </div>
-          <button className="search-btn-round"><Search size={20} /></button>
-        </div>
+            <div className="search-container">
+              <div className="search-wrapper">
+                <Search size={20} className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="O que você está procurando?"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
+                />
+              </div>
+            </div>
 
-        {activeTab === 'inicio' && highlights.length > 0 && (
-          <section className="highlights-section">
-            <h2 className="section-title">Destaques</h2>
-            <div className="highlights-scroll">
-              {highlights.map(product => (
-                <ProductCard key={`h-${product.id}`} product={product} layout="grid" onAdd={() => setSelectedProduct(product)} />
-              ))}
+            {/* ── Category Chips (sticky) ─────────────────────────────── */}
+            {!searchQuery && (
+              <CategoryNav
+                categories={config.categories}
+                activeCategory={activeCategory}
+                onCategoryChange={handleCategoryChange}
+              />
+            )}
+
+            {/* ── Search Results ──────────────────────────────────────── */}
+            {searchQuery && (
+              <section className="main-products fade-in">
+                <h2 className="section-title">Resultados para "{searchQuery}"</h2>
+                <div className="products-list-vertical">
+                  {allFilteredProducts.map(product => (
+                    <ProductCard key={product.id} product={product} layout="list" onAdd={() => setSelectedProduct(product)} />
+                  ))}
+                  {allFilteredProducts.length === 0 && (
+                    <div className="empty-state"><p>Nenhum produto encontrado.</p></div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* ── Highlights carousel (only when no search) ───────────── */}
+            {!searchQuery && highlights.length > 0 && (
+              <section className="highlights-section">
+                <h2 className="section-title">⭐ Destaques</h2>
+                <div className="highlights-scroll">
+                  {highlights.map(product => (
+                    <ProductCard key={`h-${product.id}`} product={product} layout="grid" onAdd={() => setSelectedProduct(product)} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ── Category sections (all rendered, observer tracks them) ─ */}
+            {!searchQuery && config.categories.map((category) => {
+              const categoryProducts = config.products.filter(p => p.category === category.id);
+              if (categoryProducts.length === 0) return null;
+              return (
+                <section
+                  key={category.id}
+                  id={`cat-section-${category.id}`}
+                  data-category-id={category.id}
+                  className="category-section"
+                >
+                  <h2 className="section-title category-section-title">
+                    {category.icon && <span className="section-icon">{category.icon}</span>}
+                    {category.name}
+                  </h2>
+                  <div className="products-list-vertical">
+                    {categoryProducts.map(product => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        layout="list"
+                        onAdd={() => setSelectedProduct(product)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </>
+        )}
+
+        {activeTab === 'promocoes' && (
+          <section className="promo-section fade-in">
+            <h2 className="section-title">Ofertas do Dia 🔥</h2>
+            <div className="products-list-vertical">
+              {config.products
+                .filter(p => p.price < 30)
+                .map(product => (
+                  <ProductCard key={`p-${product.id}`} product={product} layout="list" onAdd={() => setSelectedProduct(product)} />
+                ))}
+              {config.products.filter(p => p.price < 30).length === 0 && (
+                <div className="empty-state"><p>Não há promoções ativas no momento.</p></div>
+              )}
             </div>
           </section>
         )}
 
-        <section className="main-products">
-          <h2 className="section-title">{config.categories.find(c => c.id === activeCategory)?.name || 'Produtos'}</h2>
-          <div className="products-list-vertical">
-            {filteredProducts.map(product => (
-              <ProductCard key={product.id} product={product} layout="list" onAdd={() => setSelectedProduct(product)} />
-            ))}
-          </div>
-        </section>
+        {activeTab === 'pedidos' && (
+          <section className="orders-section fade-in">
+            <h2 className="section-title">Meus Pedidos</h2>
+            {loadingOrders ? (
+              <div className="skeleton-loader">Carregando pedidos...</div>
+            ) : orders.length > 0 ? (
+              <div className="orders-list">
+                {orders.map(order => (
+                  <div key={order.id} className="order-summary-card" onClick={() => navigate(`/${storeSlug}/order/${order.id}`)}>
+                    <div className="order-header">
+                      <span className="order-date">{new Date(order.created_at).toLocaleDateString('pt-BR')}</span>
+                      <span className={`order-status-badge ${order.status}`}>{order.status}</span>
+                    </div>
+                    <div className="order-items-preview">
+                      {order.order_items?.map((item: any) => item.products?.name).join(', ')}
+                    </div>
+                    <div className="order-footer">
+                      <span className="order-total">R$ {order.total.toFixed(2)}</span>
+                      <ChevronRight size={16} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state"><p>Você ainda não fez nenhum pedido.</p></div>
+            )}
+          </section>
+        )}
+
+        {activeTab === 'perfil' && (
+          <section className="profile-section fade-in">
+            <h2 className="section-title">Meu Perfil</h2>
+            <form className="profile-form" onSubmit={handleUpdateProfile}>
+              <div className="form-group">
+                <label>Nome Completo</label>
+                <input
+                  type="text"
+                  value={customer?.full_name || ''}
+                  onChange={e => setCustomer({ ...customer!, full_name: e.target.value })}
+                  placeholder="Ex: João Silva"
+                />
+              </div>
+              <div className="form-group">
+                <label>WhatsApp</label>
+                <input
+                  type="text"
+                  value={customer?.phone || ''}
+                  onChange={e => setCustomer({ ...customer!, phone: e.target.value })}
+                  placeholder="55..."
+                />
+              </div>
+              <div className="form-group">
+                <label>Endereço de Entrega</label>
+                <input
+                  type="text"
+                  value={customer?.address || ''}
+                  onChange={e => setCustomer({ ...customer!, address: e.target.value })}
+                  placeholder="Rua, número, complemento"
+                />
+              </div>
+              <div className="form-group">
+                <label>Bairro</label>
+                <input
+                  type="text"
+                  value={customer?.neighborhood || ''}
+                  onChange={e => setCustomer({ ...customer!, neighborhood: e.target.value })}
+                />
+              </div>
+              <button type="submit" className="save-profile-btn">Salvar Alterações</button>
+            </form>
+          </section>
+        )}
       </main>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)} />
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} cartCount={cartCount} />
 
       {selectedProduct && (
         <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} onAddToCart={handleAddToCart} />
       )}
 
-      <CartDrawer 
-        isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cart={cart} 
-        onRemoveItem={handleRemoveFromCart} config={config} onCheckout={handleCheckout} 
+      <CartDrawer
+        isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cart={cart}
+        onRemoveItem={handleRemoveFromCart} config={config} onCheckout={handleCheckout}
         customer={customer} onCustomerUpdate={setCustomer} onSelectUpsell={(p) => setSelectedProduct(p)}
       />
     </div>

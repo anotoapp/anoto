@@ -32,12 +32,14 @@ export default function RegisterStore() {
     setLoading(true);
     try {
       // 0. Verificar se o email está na whitelist da Kiwify
-      const { data: isAuthorized, error: authCheckError } = await supabase
-        .rpc('is_email_authorized', { check_email: email });
+      const { data: authResult, error: authCheckError } = await supabase
+        .rpc('check_email_subscription', { check_email: email });
 
       if (authCheckError) throw authCheckError;
 
-      if (!isAuthorized) {
+      const { authorized, plan } = (authResult as any)?.[0] || { authorized: false, plan: 'Mensal' };
+
+      if (!authorized) {
         alert(
           `❌ Este e-mail (${email}) não possui uma assinatura ativa no ANOTÔ.\n\n` +
           `Para criar sua loja, adquira uma assinatura em:\nhttps://pay.kiwify.com.br/8cR0dlH\n\n` +
@@ -83,7 +85,8 @@ export default function RegisterStore() {
         address: address || 'Endereço da loja',
         delivery_fee: 5.00,
         min_order: 20.00,
-        opening_hours: JSON.stringify(defaultOpeningHours)
+        opening_hours: JSON.stringify(defaultOpeningHours),
+        plan_type: plan || 'Mensal'
       });
       if (storeError) throw storeError;
 

@@ -40,6 +40,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, disabl
         {layout === 'list' && <p className="product-description">{product.description}</p>}
         <div className="product-footer">
           <span className="product-price">R$ {product.price.toFixed(2)}</span>
+          <button 
+            className="add-to-cart-btn"
+            disabled={isCardDisabled}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isCardDisabled) onAdd(product);
+            }}
+          >
+            Adicionar
+          </button>
         </div>
       </div>
     </div>

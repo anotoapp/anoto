@@ -42,6 +42,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<{ neighborhood: string; fee: number } | null>(null);
   const [cep, setCep] = useState('');
   const [cepLoading, setCepLoading] = useState(false);
+  const [localNeighborhood, setLocalNeighborhood] = useState('');
 
 
   async function loadNeighborhoods() {
@@ -80,10 +81,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         setAddress(customer.address || '');
         
         // Auto-select neighborhood from customer profile
-        if (customer.neighborhood && neighborhoods.length > 0) {
-          const found = neighborhoods.find(n => n.neighborhood === customer.neighborhood);
-          if (found) {
-            setSelectedNeighborhood({ neighborhood: found.neighborhood, fee: found.fee });
+        if (customer.neighborhood) {
+          if (neighborhoods.length > 0) {
+            const found = neighborhoods.find(n => n.neighborhood === customer.neighborhood);
+            if (found) {
+              setSelectedNeighborhood({ neighborhood: found.neighborhood, fee: found.fee });
+            }
+          } else {
+            setLocalNeighborhood(customer.neighborhood);
           }
         }
       } else {
@@ -125,8 +130,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             });
             localStorage.setItem(`anoto_neighborhood_${config.id}`, matchedNeighborhood.neighborhood);
           } else {
-            // Even if no fee match, we update the address state
-            // But we might want to alert if the store doesn't deliver there
+            setLocalNeighborhood(neighborhoodName);
           }
         }
       } catch (error) {
@@ -375,28 +379,40 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       </div>
                     </div>
 
-                    <div className="form-group">
-                      <label>Bairro para Entrega</label>
-                      <select 
-                        value={selectedNeighborhood?.neighborhood || ''} 
-                        onChange={(e) => {
-                          const found = neighborhoods.find(n => n.neighborhood === e.target.value);
-                          if (found) {
-                            setSelectedNeighborhood({ neighborhood: found.neighborhood, fee: found.fee });
-                            localStorage.setItem(`anoto_neighborhood_${config.id}`, found.neighborhood);
-                          } else {
-                            setSelectedNeighborhood(null);
-                          }
-                        }}
-                      >
-                        <option value="">Selecione seu bairro...</option>
-                        {neighborhoods.map(n => (
-                          <option key={n.id} value={n.neighborhood}>
-                            {n.neighborhood} - R$ {n.fee.toFixed(2)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {neighborhoods.length > 0 ? (
+                      <div className="form-group">
+                        <label>Bairro para Entrega</label>
+                        <select 
+                          value={selectedNeighborhood?.neighborhood || ''} 
+                          onChange={(e) => {
+                            const found = neighborhoods.find(n => n.neighborhood === e.target.value);
+                            if (found) {
+                              setSelectedNeighborhood({ neighborhood: found.neighborhood, fee: found.fee });
+                              localStorage.setItem(`anoto_neighborhood_${config.id}`, found.neighborhood);
+                            } else {
+                              setSelectedNeighborhood(null);
+                            }
+                          }}
+                        >
+                          <option value="">Selecione seu bairro...</option>
+                          {neighborhoods.map(n => (
+                            <option key={n.id} value={n.neighborhood}>
+                              {n.neighborhood} - R$ {n.fee.toFixed(2)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="form-group">
+                        <label>Bairro</label>
+                        <input 
+                          type="text" 
+                          placeholder="Digite seu bairro"
+                          value={localNeighborhood}
+                          onChange={(e) => setLocalNeighborhood(e.target.value)}
+                        />
+                      </div>
+                    )}
 
                     <div className="form-group">
                       <label>Endereço Completo</label>
@@ -449,15 +465,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <button className="secondary-action" onClick={() => setStep('cart')}>Voltar</button>
                 <button 
                   className="primary-action" 
-                  disabled={!name || (type === 'delivery' && (!address || !selectedNeighborhood))}
+                  disabled={!name || (type === 'delivery' && (!address || (neighborhoods.length > 0 && !selectedNeighborhood)))}
                   onClick={() => onCheckout({ 
                     name, 
                     phone,
                     address: type === 'pickup' ? 'Retirada no local' : address, 
                     payment, 
                     type,
-                    neighborhood: type === 'delivery' ? selectedNeighborhood?.neighborhood : undefined,
-                    cep: customer?.cep
+                    neighborhood: type === 'delivery' ? (neighborhoods.length > 0 ? selectedNeighborhood?.neighborhood : localNeighborhood) : undefined,
+                    cep: customer?.cep || cep
                   })}
                 >
                   Confirmar Pedido

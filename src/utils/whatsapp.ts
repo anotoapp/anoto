@@ -55,6 +55,6 @@ ${customerInfo.type === 'delivery' ? `*Taxa de Entrega:* R$ ${config.deliveryFee
 _Pedido enviado via ANOTÔ_
   `.trim();
 
-  const phone = config.whatsappNumber.replace(/\D/g, '');
+  const phone = (config.whatsappNumber || '').replace(/\D/g, '');
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 };

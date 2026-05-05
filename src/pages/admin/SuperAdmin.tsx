@@ -33,7 +33,6 @@ interface MonthlyData {
 const PLAN_PRICES: Record<string, number> = {
   'Mensal': 39.90,
   'Anual': 24.75, // MRR equivalente (297 / 12)
-  'Starter': 39.90, // Fallback para compatibilidade
 };
 
 function formatCurrency(value: number) {
@@ -72,7 +71,7 @@ export default function SuperAdmin() {
         // Current MRR from active stores
         const activeMRR = storesData.reduce((acc, store) => {
           if (store.subscription_status !== 'active') return acc;
-          return acc + (PLAN_PRICES[store.plan_type || 'Starter'] || 39.90);
+          return acc + (PLAN_PRICES[store.plan_type || 'Mensal'] || 39.90);
         }, 0);
 
         const activeCount = storesData.filter(s => s.subscription_status === 'active').length;
@@ -99,7 +98,7 @@ export default function SuperAdmin() {
           if (monthlyMap[key] !== undefined) {
             monthlyMap[key].newSubscribers += 1;
             monthlyMap[key].subscribers += 1; // Real count in that month
-            monthlyMap[key].mrr += PLAN_PRICES[email.plan_type || 'Starter'] || 39.90;
+            monthlyMap[key].mrr += PLAN_PRICES[email.plan_type || 'Mensal'] || 39.90;
           }
         });
 
@@ -305,7 +304,7 @@ export default function SuperAdmin() {
               {stores.map(store => {
                 const statusStyle = getStatusStyle(store.subscription_status);
                 const storeMRR = store.subscription_status === 'active'
-                  ? PLAN_PRICES[store.plan_type || 'Starter'] || 39.90
+                  ? PLAN_PRICES[store.plan_type || 'Mensal'] || 39.90
                   : 0;
                 return (
                   <tr key={store.id} style={{ borderBottom: '1px solid #f1f5f9' }}>

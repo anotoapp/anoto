@@ -7,11 +7,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // Map Kiwify product/plan names to our internal plan names
 function mapPlanName(rawName: string | undefined): string {
-  if (!rawName) return 'Starter';
+  if (!rawName) return 'Mensal';
   const name = rawName.toLowerCase();
-  if (name.includes('diamond')) return 'Diamond';
-  if (name.includes('growth')) return 'Growth';
-  return 'Starter';
+  if (name.includes('anual')) return 'Anual';
+  return 'Mensal';
 }
 
 serve(async (req) => {

@@ -237,6 +237,33 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
             <input type="text" value={name} onChange={e => setName(e.target.value)} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }} />
           </div>
 
+          <div className="form-group" style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+              Descrição
+              <span style={{ fontWeight: '400', color: '#94a3b8', fontSize: '0.8rem', marginLeft: '6px' }}>
+                (aparece no card e no modal do produto)
+              </span>
+            </label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Ex: Pão brioche, blend 160g, queijo cheddar, alface americana, tomate, picles e molho especial da casa."
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                resize: 'vertical',
+                fontFamily: 'inherit',
+                fontSize: '0.95rem',
+                lineHeight: '1.5',
+                color: '#1e293b',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
           <div className="form-row" style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Preço Base</label>
