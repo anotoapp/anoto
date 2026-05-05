@@ -15,23 +15,28 @@
 /* Layout LIST (padrão) */
 .product-card.list {
   display: flex;
-  padding: 12px;
-  gap: 12px;
+  padding: 14px;
+  gap: 16px;
   align-items: center;
   max-width: 650px;
-  margin: 0 auto 1rem;
+  margin: 0 auto 0.8rem;
+  min-height: 110px; /* Garante que refrigerantes não fiquem 'baixos' */
 }
 
 .product-card.list .product-image-wrapper {
-  width: 90px;
-  height: 90px;
+  width: 95px;
+  height: 95px;
   flex-shrink: 0;
-  order: 2; /* Imagem na direita no modo lista */
+  order: 2;
 }
 
 .product-card.list .product-info {
   flex: 1;
   order: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 95px;
 }
 
 /* Layout GRID (Destaques) */
