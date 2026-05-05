@@ -127,8 +127,8 @@ function StoreFront({ customSlug }: StoreFrontProps) {
 
       const options: IntersectionObserverInit = {
         root: null,
-        // Trigger when the section top edge enters the upper 35% of the viewport
-        rootMargin: '-10% 0px -65% 0px',
+        // Compensate for sticky header + nav (around 130px)
+        rootMargin: '-150px 0px -60% 0px',
         threshold: 0,
       };
 
