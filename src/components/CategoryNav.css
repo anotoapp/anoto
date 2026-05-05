@@ -1,12 +1,12 @@
 .category-nav-container {
   position: sticky;
-  top: -1px; /* Gruda no topo absoluto */
-  z-index: 999; /* Garante que fique acima de tudo */
-  background: white;
-  padding: 14px 0;
+  top: 0; /* Fixa no topo absoluto do navegador */
+  z-index: 1000; /* Acima de tudo */
+  background: #ffffff;
+  padding: 12px 0;
   margin: 0 -1rem 1.5rem;
   border-bottom: 1px solid #f1f5f9;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .category-nav-scroll {

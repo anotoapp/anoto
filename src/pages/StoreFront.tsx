@@ -325,7 +325,7 @@ function StoreFront({ customSlug }: StoreFrontProps) {
               </section>
             )}
 
-            {/* ── Category carousels (all rendered, IntersectionObserver tracks them) ─ */}
+            {/* ── Category sections (vertical list, IntersectionObserver tracks them) ─ */}
             {!searchQuery && config.categories.map((category) => {
               const categoryProducts = config.products.filter(p => p.category === category.id);
               if (categoryProducts.length === 0) return null;
@@ -342,12 +342,12 @@ function StoreFront({ customSlug }: StoreFrontProps) {
                     </h2>
                     <span className="category-count">{categoryProducts.length} itens</span>
                   </div>
-                  <div className="highlights-scroll category-carousel">
+                  <div className="products-list-vertical">
                     {categoryProducts.map(product => (
                       <ProductCard
                         key={product.id}
                         product={product}
-                        layout="grid"
+                        layout="list"
                         onAdd={() => setSelectedProduct(product)}
                       />
                     ))}
