@@ -338,7 +338,6 @@ function StoreFront({ customSlug }: StoreFrontProps) {
                 >
                   <div className="category-section-header">
                     <h2 className="section-title category-section-title">
-                      {category.icon && <span className="section-icon">{category.icon}</span>}
                       {category.name}
                     </h2>
                     <span className="category-count">{categoryProducts.length} itens</span>

@@ -56,7 +56,6 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
             className={`category-chip ${activeCategory === category.id ? 'active' : ''}`}
             onClick={() => handleClick(category.id)}
           >
-            {category.icon && <span className="cat-icon">{category.icon}</span>}
             {category.name}
           </button>
         ))}
