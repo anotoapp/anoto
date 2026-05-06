@@ -128,8 +128,8 @@ function StoreFront({ customSlug }: StoreFrontProps) {
 
       const options: IntersectionObserverInit = {
         root: null,
-        // Compensate for sticky header + nav (around 130px)
-        rootMargin: '-150px 0px -60% 0px',
+        // Compensate for sticky category nav (around 60px)
+        rootMargin: '-80px 0px -70% 0px',
         threshold: 0,
       };
 
