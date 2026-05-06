@@ -494,3 +494,26 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* QR Code Section */
+.qr-code-container {
+  transition: all 0.3s ease;
+}
+
+.qr-code-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.download-btn {
+  transition: all 0.2s ease;
+}
+
+.download-btn:hover {
+  background-color: #0f172a !important;
+  transform: scale(1.02);
+}
+
+.download-btn:active {
+  transform: scale(0.98);
+}

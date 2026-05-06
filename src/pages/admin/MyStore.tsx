@@ -538,6 +538,109 @@ export default function MyStore() {
               </div>
             </div>
           </div>
+
+          {/* CARD 6: QR Code do Cardápio */}
+          <div className="settings-card" style={{ background: '#fff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9', marginBottom: '60px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
+              <div style={{ padding: '8px', background: '#fef2f2', borderRadius: '8px', color: '#dc2626' }}>
+                <Eye size={20} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#1e293b' }}>QR Code do Cardápio</h3>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px', alignItems: 'center' }}>
+              <div 
+                className="qr-code-container"
+                style={{ 
+                background: '#fff', 
+                padding: '16px', 
+                borderRadius: '24px', 
+                border: '2px solid #f1f5f9',
+                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/${store.slug}`)}`}
+                  alt="QR Code do Cardápio"
+                  style={{ width: '180px', height: '180px' }}
+                />
+                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#94a3b8' }}>ESCANEAR PARA TESTAR</span>
+              </div>
+
+              <div style={{ flex: 1, minWidth: '280px' }}>
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem', fontWeight: '700', color: '#0f172a' }}>Divulgue sua Loja</h4>
+                <p style={{ margin: '0 0 20px 0', fontSize: '0.9rem', color: '#64748b', lineHeight: '1.6' }}>
+                  Use este QR Code em suas mesas, panfletos ou adesivos. Ele leva o cliente diretamente para o seu cardápio digital no endereço:
+                  <br />
+                  <strong style={{ color: '#2563eb' }}>{window.location.origin}/{store.slug}</strong>
+                </p>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button 
+                    type="button"
+                    className="download-btn primary-action"
+                    onClick={async () => {
+                      try {
+                        const url = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(`${window.location.origin}/${store.slug}`)}`;
+                        const response = await fetch(url);
+                        const blob = await response.blob();
+                        const blobUrl = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = blobUrl;
+                        link.download = `qrcode-${store.slug}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(blobUrl);
+                      } catch (err) {
+                        console.error('Download error:', err);
+                        // Fallback
+                        window.open(`https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(`${window.location.origin}/${store.slug}`)}`, '_blank');
+                      }
+                    }}
+                    style={{ 
+                      padding: '12px 20px', 
+                      borderRadius: '10px', 
+                      background: '#1e293b', 
+                      color: 'white', 
+                      border: 'none', 
+                      fontWeight: '700', 
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    Baixar QR Code (PNG)
+                  </button>
+                  
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/${store.slug}`);
+                      alert('Link copiado com sucesso!');
+                    }}
+                    style={{ 
+                      padding: '12px 20px', 
+                      borderRadius: '10px', 
+                      background: '#f8fafc', 
+                      color: '#475569', 
+                      border: '1px solid #e2e8f0', 
+                      fontWeight: '700', 
+                      fontSize: '0.9rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Copiar Link
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* LIVE PREVIEW COLUMN */}

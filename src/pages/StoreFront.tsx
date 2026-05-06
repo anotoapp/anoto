@@ -6,6 +6,7 @@ import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
 import { CartDrawer } from '../components/CartDrawer';
 import { BottomNav } from '../components/BottomNav';
+import { ConversionBoosters } from '../components/ConversionBoosters';
 import { supabase } from '../lib/supabase';
 import type { Product, CartItem, ProductOption, RestaurantConfig, CustomerProfile } from '../types';
 import { formatWhatsAppMessage } from '../utils/whatsapp';
@@ -507,6 +508,11 @@ function StoreFront({ customSlug }: StoreFrontProps) {
         isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cart={cart}
         onRemoveItem={handleRemoveFromCart} config={config} onCheckout={handleCheckout}
         customer={customer} onCustomerUpdate={setCustomer} onSelectUpsell={(p) => setSelectedProduct(p)}
+      />
+
+      <ConversionBoosters 
+        primaryColor={config.theme?.primaryColor} 
+        storeName={config.name}
       />
     </div>
   );
