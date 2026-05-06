@@ -11,7 +11,18 @@ interface CartDrawerProps {
   cart: CartItem[];
   onRemoveItem: (index: number) => void;
   config: RestaurantConfig;
-  onCheckout: (customerInfo: { name: string; address: string; phone: string; payment: string; type: 'delivery' | 'pickup'; neighborhood?: string; cep?: string }) => void;
+  onCheckout: (customerInfo: { 
+    name: string; 
+    address: string; 
+    phone: string; 
+    payment: string; 
+    type: 'delivery' | 'pickup'; 
+    neighborhood?: string; 
+    cep?: string;
+    couponCode?: string;
+    discountAmount?: number;
+    subtotal?: number;
+  }) => void;
   customer?: CustomerProfile | null;
   onCustomerUpdate?: (profile: CustomerProfile) => void;
   onSelectUpsell?: (product: Product) => void;
@@ -473,7 +484,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     payment, 
                     type,
                     neighborhood: type === 'delivery' ? (neighborhoods.length > 0 ? selectedNeighborhood?.neighborhood : localNeighborhood) : undefined,
-                    cep: customer?.cep || cep
+                    cep: customer?.cep || cep,
+                    couponCode: couponDiscount ? couponCode : undefined,
+                    discountAmount: discountAmount,
+                    subtotal: subtotal
                   })}
                 >
                   Confirmar Pedido

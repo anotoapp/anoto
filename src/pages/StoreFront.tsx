@@ -209,13 +209,32 @@ function StoreFront({ customSlug }: StoreFrontProps) {
     setCart(newCart);
   };
 
-  const handleCheckout = async (customerInfo: { name: string; phone: string; address: string; neighborhood?: string; payment: string; type: 'delivery' | 'pickup' }) => {
+  const handleCheckout = async (customerInfo: { 
+    name: string; 
+    phone: string; 
+    address: string; 
+    neighborhood?: string; 
+    payment: string; 
+    type: 'delivery' | 'pickup';
+    couponCode?: string;
+    discountAmount?: number;
+    subtotal?: number;
+  }) => {
     if (!config || !config.id) return;
     try {
-      const total = cart.reduce((acc, item) => {
-        const optionsPrice = item.selectedOptions.reduce((sum, o) => sum + o.price, 0);
-        return acc + (item.product.price + optionsPrice) * item.quantity;
-      }, 0) + (customerInfo.type === 'delivery' ? (config.deliveryFee || 0) : 0);
+      const finalTotal = (customerInfo.subtotal || 0) - (customerInfo.discountAmount || 0) + 
+        (customerInfo.type === 'delivery' ? (customerInfo.neighborhood ? (config.products.length > 0 ? (config.deliveryFee || 0) : 0) : (config.deliveryFee || 0)) : 0);
+      
+      // Note: We use the total calculated in the drawer for consistency
+      const totalToSave = (customerInfo.subtotal || 0) - (customerInfo.discountAmount || 0) + 
+        (customerInfo.type === 'delivery' ? (config.deliveryFee || 0) : 0); // fallback if neighborhood logic is complex
+
+      // Re-calculate precisely to avoid discrepancies
+      const deliveryFeeValue = customerInfo.type === 'delivery' 
+        ? (config.id ? (await supabase.from('delivery_fees').select('fee').eq('store_id', config.id).eq('neighborhood', customerInfo.neighborhood || '').single()).data?.fee || config.deliveryFee || 0 : config.deliveryFee || 0)
+        : 0;
+
+      const total = (customerInfo.subtotal || 0) - (customerInfo.discountAmount || 0) + deliveryFeeValue;
 
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -226,12 +245,23 @@ function StoreFront({ customSlug }: StoreFrontProps) {
           customer_address: `${customerInfo.address}${customerInfo.neighborhood ? ` - Bairro: ${customerInfo.neighborhood}` : ''}`,
           payment_method: customerInfo.payment,
           order_type: customerInfo.type,
+          subtotal: customerInfo.subtotal,
+          discount_amount: customerInfo.discountAmount,
+          coupon_code: customerInfo.couponCode,
           total: total,
           status: 'pending'
         })
         .select().single();
 
       if (orderError) throw orderError;
+
+      // Increment coupon usage if applicable
+      if (customerInfo.couponCode) {
+        await supabase.rpc('increment_coupon_uses', { 
+          p_store_id: config.id, 
+          p_code: customerInfo.couponCode 
+        });
+      }
 
       const orderItems = cart.map(item => ({
         order_id: orderData.id,
@@ -300,6 +330,32 @@ function StoreFront({ customSlug }: StoreFrontProps) {
                 />
               </div>
             </div>
+
+            {/* ── Featured Products Carousel ─────────────────────────── */}
+            {!searchQuery && (
+              <section className="featured-section">
+                <div className="section-header-compact">
+                  <h2 className="section-title-compact">🔥 Destaques da Casa</h2>
+                </div>
+                <div className="featured-carousel">
+                  {config.products
+                    .slice(0, 6) // Fallback to first 6 for demo
+                    .map(product => (
+                      <div key={`featured-${product.id}`} className="featured-item" onClick={() => setSelectedProduct(product)}>
+                        <div className="featured-img-container">
+                          <img src={product.image} alt={product.name} />
+                          <div className="featured-price-tag">R$ {product.price.toFixed(2)}</div>
+                        </div>
+                        <div className="featured-info">
+                          <h3>{product.name}</h3>
+                          <p className="featured-desc">{product.description?.slice(0, 45)}{product.description && product.description.length > 45 ? '...' : ''}</p>
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
+              </section>
+            )}
 
             {/* ── Category Chips (sticky) ─────────────────────────────── */}
             {!searchQuery && (

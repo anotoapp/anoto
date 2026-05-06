@@ -243,8 +243,9 @@ export default function ProductsAdmin() {
                         
                         <div style={{ padding: '20px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: product.is_available ? 'var(--lp-text-dark)' : '#999' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: product.is_available ? 'var(--lp-text-dark)' : '#999', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               {product.name}
+                              {product.is_featured && <span title="Produto em Destaque" style={{ fontSize: '1rem' }}>✨</span>}
                             </h3>
                             <span style={{ fontWeight: '800', color: 'var(--brand-red)', fontSize: '1.1rem' }}>R$ {product.price.toFixed(2)}</span>
                           </div>

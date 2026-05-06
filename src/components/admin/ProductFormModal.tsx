@@ -21,6 +21,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
   const [categoryId, setCategoryId] = useState('');
   const [image, setImage] = useState('');
   const [upsellProductId, setUpsellProductId] = useState('');
+  const [isFeatured, setIsFeatured] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   
@@ -45,6 +46,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
       setCategoryId(productToEdit.category_id);
       setImage(productToEdit.image);
       setUpsellProductId(productToEdit.upsell_product_id || '');
+      setIsFeatured(productToEdit.is_featured || false);
       loadOptionGroups(productToEdit.id);
     } else {
       setName('');
@@ -53,6 +55,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
       setCategoryId(categories.length > 0 ? categories[0].id : '');
       setImage('');
       setUpsellProductId('');
+      setIsFeatured(false);
       setOptionGroups([]);
     }
   }, [productToEdit, categories]);
@@ -155,7 +158,8 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
         price, 
         category_id: categoryId, 
         image,
-        upsell_product_id: upsellProductId || null
+        upsell_product_id: upsellProductId || null,
+        is_featured: isFeatured
       };
       let productId = productToEdit?.id;
 
@@ -275,6 +279,19 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
                 {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
               </select>
             </div>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', background: '#fff9eb', padding: '12px 16px', borderRadius: '12px', border: '1px solid #fde68a' }}>
+            <input 
+              type="checkbox" 
+              id="isFeatured"
+              checked={isFeatured} 
+              onChange={e => setIsFeatured(e.target.checked)} 
+              style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+            />
+            <label htmlFor="isFeatured" style={{ margin: 0, fontWeight: '700', color: '#92400e', cursor: 'pointer' }}>
+              ✨ Destacar este produto (aparece no carrossel do topo)
+            </label>
           </div>
 
           <div className="form-group" style={{ marginBottom: '16px', background: '#eef2ff', padding: '16px', borderRadius: '12px', border: '1px solid #c7d2fe' }}>

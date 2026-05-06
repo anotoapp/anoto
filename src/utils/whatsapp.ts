@@ -2,7 +2,15 @@ import type { CartItem, RestaurantConfig } from '../types';
 
 export const formatWhatsAppMessage = (
   cart: CartItem[],
-  customerInfo: { name: string; address: string; payment: string; type: string },
+  customerInfo: { 
+    name: string; 
+    address: string; 
+    payment: string; 
+    type: string;
+    couponCode?: string;
+    discountAmount?: number;
+    subtotal?: number;
+  },
   config: RestaurantConfig,
   orderId?: string,
   storeSlug?: string
@@ -24,12 +32,13 @@ export const formatWhatsAppMessage = (
     )
     .join('\n\n');
 
-  const total = cart.reduce((acc, item) => {
+  const subtotalValue = customerInfo.subtotal || cart.reduce((acc, item) => {
     const optionsPrice = item.selectedOptions.reduce((sum, o) => sum + Number(o.price), 0);
     return acc + (item.product.price + optionsPrice) * item.quantity;
   }, 0);
 
-  const finalTotal = total + (customerInfo.type === 'delivery' ? config.deliveryFee : 0);
+  const discountValue = customerInfo.discountAmount || 0;
+  const finalTotal = subtotalValue - discountValue + (customerInfo.type === 'delivery' ? config.deliveryFee : 0);
 
   const trackingUrl = orderId && storeSlug 
     ? `\n\n📍 *ACOMPANHE SEU PEDIDO:* \n${window.location.origin}/${storeSlug}/order/${orderId}`
@@ -42,8 +51,8 @@ export const formatWhatsAppMessage = (
 ${itemsText}
 
 ------------------------------
-*Subtotal:* R$ ${total.toFixed(2)}
-${customerInfo.type === 'delivery' ? `*Taxa de Entrega:* R$ ${config.deliveryFee.toFixed(2)}` : '*Retirada no Balcão*'}
+*Subtotal:* R$ ${subtotalValue.toFixed(2)}
+${discountValue > 0 ? `*Desconto (${customerInfo.couponCode}):* - R$ ${discountValue.toFixed(2)}\n` : ''}*Taxa de Entrega:* ${customerInfo.type === 'delivery' ? `R$ ${config.deliveryFee.toFixed(2)}` : 'Grátis (Retirada)'}
 *TOTAL: R$ ${finalTotal.toFixed(2)}*
 
 📍 *DADOS DO CLIENTE*
