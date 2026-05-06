@@ -222,13 +222,6 @@ function StoreFront({ customSlug }: StoreFrontProps) {
   }) => {
     if (!config || !config.id) return;
     try {
-      const finalTotal = (customerInfo.subtotal || 0) - (customerInfo.discountAmount || 0) + 
-        (customerInfo.type === 'delivery' ? (customerInfo.neighborhood ? (config.products.length > 0 ? (config.deliveryFee || 0) : 0) : (config.deliveryFee || 0)) : 0);
-      
-      // Note: We use the total calculated in the drawer for consistency
-      const totalToSave = (customerInfo.subtotal || 0) - (customerInfo.discountAmount || 0) + 
-        (customerInfo.type === 'delivery' ? (config.deliveryFee || 0) : 0); // fallback if neighborhood logic is complex
-
       // Re-calculate precisely to avoid discrepancies
       const deliveryFeeValue = customerInfo.type === 'delivery' 
         ? (config.id ? (await supabase.from('delivery_fees').select('fee').eq('store_id', config.id).eq('neighborhood', customerInfo.neighborhood || '').single()).data?.fee || config.deliveryFee || 0 : config.deliveryFee || 0)
