@@ -301,8 +301,8 @@ body {
 
 /* ── Category sections (scroll-linked) ───────────────────── */
 .category-section {
-  margin-bottom: 0.5rem;
-  scroll-margin-top: 70px; /* offset for sticky category nav */
+  margin-bottom: 4px;
+  scroll-margin-top: 65px; /* offset for FIXED category nav */
 }
 
 .category-section-title {

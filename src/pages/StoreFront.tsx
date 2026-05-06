@@ -301,23 +301,36 @@ function StoreFront({ customSlug }: StoreFrontProps) {
         isOpen={isOpen}
       />
 
-      {/* ── Category Chips (sticky) ─────────────────────────────── */}
+      {/* ── Category Chips (FIXED) ─────────────────────────────── */}
       {activeTab === 'inicio' && !searchQuery && (
-        <div style={{ position: 'sticky', top: 0, zIndex: 1000, background: '#fff', borderBottom: '1px solid #f1f5f9' }}>
-          <div className="container" style={{ padding: '4px 1rem' }}>
-            <CategoryNav
-              categories={config.categories}
-              activeCategory={activeCategory}
-              onCategoryChange={handleCategoryChange}
-            />
+        <>
+          <div style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            zIndex: 1000, 
+            background: '#fff', 
+            borderBottom: '1px solid #f1f5f9',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)' 
+          }}>
+            <div className="container" style={{ padding: '2px 1rem' }}>
+              <CategoryNav
+                categories={config.categories}
+                activeCategory={activeCategory}
+                onCategoryChange={handleCategoryChange}
+              />
+            </div>
           </div>
-        </div>
+          {/* Espaçador para compensar a barra fixa */}
+          <div style={{ height: '58px' }}></div>
+        </>
       )}
 
-      <main className="container" style={{ marginTop: '0.25rem' }}>
+      <main className="container" style={{ marginTop: '0' }}>
         {activeTab === 'inicio' && (
           <>
-            <div className="search-container" style={{ marginBottom: '0.25rem' }}>
+            <div className="search-container" style={{ marginBottom: '8px', marginTop: '8px' }}>
               <div className="search-wrapper">
                 <Search size={20} className="search-icon" />
                 <input
@@ -332,7 +345,7 @@ function StoreFront({ customSlug }: StoreFrontProps) {
 
             {/* ── Featured Products Carousel ─────────────────────────── */}
             {!searchQuery && (
-              <section className="featured-section" style={{ marginBottom: '0.25rem' }}>
+              <section className="featured-section" style={{ marginBottom: '4px' }}>
                 <div className="section-header-compact">
                   <h2 className="section-title-compact">🔥 Destaques da Casa</h2>
                 </div>
