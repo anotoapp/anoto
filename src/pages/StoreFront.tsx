@@ -301,10 +301,23 @@ function StoreFront({ customSlug }: StoreFrontProps) {
         isOpen={isOpen}
       />
 
+      {/* ── Category Chips (sticky) ─────────────────────────────── */}
+      {activeTab === 'inicio' && !searchQuery && (
+        <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#fff' }}>
+          <div className="container">
+            <CategoryNav
+              categories={config.categories}
+              activeCategory={activeCategory}
+              onCategoryChange={handleCategoryChange}
+            />
+          </div>
+        </div>
+      )}
+
       <main className="container">
         {activeTab === 'inicio' && (
           <>
-            <div className="delivery-fee-card">
+            <div className="delivery-fee-card" style={{ marginTop: '0.5rem' }}>
               <div className="delivery-info-main">
                 <div className="icon-circle"><MapPin size={18} /></div>
                 <span>Calcular taxa e tempo de entrega</span>
@@ -312,7 +325,7 @@ function StoreFront({ customSlug }: StoreFrontProps) {
               <ChevronRight size={18} className="arrow-icon" />
             </div>
 
-            <div className="search-container">
+            <div className="search-container" style={{ marginBottom: '0.5rem' }}>
               <div className="search-wrapper">
                 <Search size={20} className="search-icon" />
                 <input
@@ -325,18 +338,9 @@ function StoreFront({ customSlug }: StoreFrontProps) {
               </div>
             </div>
 
-            {/* ── Category Chips (sticky) ─────────────────────────────── */}
-            {!searchQuery && (
-              <CategoryNav
-                categories={config.categories}
-                activeCategory={activeCategory}
-                onCategoryChange={handleCategoryChange}
-              />
-            )}
-
             {/* ── Featured Products Carousel ─────────────────────────── */}
             {!searchQuery && (
-              <section className="featured-section">
+              <section className="featured-section" style={{ marginBottom: '0.5rem' }}>
                 <div className="section-header-compact">
                   <h2 className="section-title-compact">🔥 Destaques da Casa</h2>
                 </div>
