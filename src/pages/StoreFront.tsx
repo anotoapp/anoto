@@ -325,6 +325,15 @@ function StoreFront({ customSlug }: StoreFrontProps) {
               </div>
             </div>
 
+            {/* ── Category Chips (sticky) ─────────────────────────────── */}
+            {!searchQuery && (
+              <CategoryNav
+                categories={config.categories}
+                activeCategory={activeCategory}
+                onCategoryChange={handleCategoryChange}
+              />
+            )}
+
             {/* ── Featured Products Carousel ─────────────────────────── */}
             {!searchQuery && (
               <section className="featured-section">
@@ -349,15 +358,6 @@ function StoreFront({ customSlug }: StoreFrontProps) {
                   }
                 </div>
               </section>
-            )}
-
-            {/* ── Category Chips (sticky) ─────────────────────────────── */}
-            {!searchQuery && (
-              <CategoryNav
-                categories={config.categories}
-                activeCategory={activeCategory}
-                onCategoryChange={handleCategoryChange}
-              />
             )}
 
             {/* ── Search Results ──────────────────────────────────────── */}

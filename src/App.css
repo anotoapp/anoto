@@ -301,7 +301,7 @@ body {
 
 /* ── Category sections (scroll-linked) ───────────────────── */
 .category-section {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   scroll-margin-top: 70px; /* offset for sticky category nav */
 }
 
@@ -309,7 +309,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 900;
   color: #0f172a;
   margin: 0;
@@ -320,32 +320,36 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #f1f5f9;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .category-count {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #94a3b8;
   background: #f1f5f9;
-  padding: 4px 10px;
+  padding: 2px 8px;
   border-radius: 20px;
   white-space: nowrap;
 }
 
 .category-carousel {
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }
 
 .section-icon {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   line-height: 1;
 }
 
 /* Highlights section */
 .highlights-section {
+  margin-bottom: 0.2rem;
+}
+
+.featured-section {
   margin-bottom: 0.5rem;
 }
 
