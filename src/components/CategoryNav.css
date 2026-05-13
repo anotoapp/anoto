@@ -1,13 +1,35 @@
 .category-nav-container {
-  background: #ffffff;
+  position: relative;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
   padding: 4px 0;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Quando o header sair de tela, a barra fica fixa no topo */
+.category-nav-container.is-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+  animation: navSlideDown 0.2s ease;
+}
+
+@keyframes navSlideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
 }
 
 .category-nav-scroll {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
-  padding: 2px 1rem;
+  padding: 4px 1rem;
   scrollbar-width: none;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
@@ -18,43 +40,41 @@
 }
 
 .category-chip {
-  padding: 10px 22px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 100px;
+  padding: 8px 16px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
   color: #64748b;
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.85rem;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .category-chip.active {
   background: var(--primary, #dc2626);
-  color: white !important; /* Força a cor branca no texto */
+  color: white !important;
   border-color: var(--primary, #dc2626);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
-  transform: scale(1.05);
+  transform: translateY(-1px);
 }
 
 .category-chip:hover:not(.active) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  transform: translateY(-1px);
 }
 
 .cat-icon {
   font-size: 1.1rem;
+  line-height: 1;
 }
 
-.category-chip.active .cat-icon {
-  filter: brightness(0) invert(1);
-}
-
-.cat-icon {
-  font-size: 1rem;
+.cat-name {
   line-height: 1;
 }

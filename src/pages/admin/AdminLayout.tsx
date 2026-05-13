@@ -34,6 +34,7 @@ export interface StoreRow {
   subscription_status?: 'trial' | 'active' | 'expired' | 'canceled';
   plan_type?: string;
   last_payment_at?: string;
+  created_at: string;
 }
 
 
@@ -58,8 +59,29 @@ export default function AdminLayout() {
         supabase.from('stores').select('*').eq('owner_id', userId).single()
       ]);
 
-      if (profileRes.data) setUserProfile(profileRes.data);
-      if (storeRes.data) setStore(storeRes.data);
+      if (profileRes.data) {
+        setUserProfile(profileRes.data);
+        // Atualiza o último acesso de forma silenciosa
+        supabase.from('profiles').update({ last_access_at: new Date().toISOString() }).eq('id', userId).then();
+      }
+      if (storeRes.data) {
+        const storeData = storeRes.data;
+        setStore(storeData);
+
+        // Auto-expiração de trial (30 dias)
+        if (storeData.subscription_status === 'trial') {
+          const createdDate = new Date(storeData.created_at);
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          
+          if (createdDate < thirtyDaysAgo) {
+            // Atualiza no banco de forma silenciosa
+            supabase.from('stores').update({ subscription_status: 'expired' }).eq('id', storeData.id).then();
+            // Atualiza localmente para mostrar o bloqueio imediato
+            setStore({ ...storeData, subscription_status: 'expired' });
+          }
+        }
+      }
       
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -107,6 +129,13 @@ export default function AdminLayout() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, loadAllData]);
+
+  useEffect(() => {
+    // Se terminou de carregar, está logado, mas não tem loja nem é superadmin, manda registrar/criar
+    if (!loading && user && !store && userProfile && userProfile.role !== 'superadmin') {
+      navigate('/admin/register');
+    }
+  }, [loading, user, store, userProfile, navigate]);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

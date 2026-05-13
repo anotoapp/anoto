@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Search, ChevronRight } from 'lucide-react';
+import { ChevronRight, Award } from 'lucide-react';
 import { Header } from '../components/Header';
 import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
@@ -12,6 +12,8 @@ import type { Product, CartItem, ProductOption, RestaurantConfig, CustomerProfil
 import { formatWhatsAppMessage } from '../utils/whatsapp';
 import { isStoreOpen } from '../utils/storeStatus';
 import { CategoryNav } from '../components/CategoryNav';
+import { Toast, type ToastType } from '../components/Toast';
+import { FloatingCart } from '../components/FloatingCart';
 import '../App.css';
 
 interface StoreFrontProps {
@@ -35,6 +37,10 @@ function StoreFront({ customSlug }: StoreFrontProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const [isCategoryNavFixed, setIsCategoryNavFixed] = useState(false);
+  const NAV_HEIGHT = 52; // px — must match CategoryNav padding+content
+  const HEADER_THRESHOLD = 300; // scroll px before the nav sticks
 
   // Ref to track observer and avoid re-creating every render
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -102,11 +108,20 @@ function StoreFront({ customSlug }: StoreFrontProps) {
           theme: storeData.theme || {},
           categories: categoriesData,
           products: productsData.map(p => ({ ...p, category: p.category_id })),
+          subscription_status: storeData.subscription_status,
+          loyalty_enabled: storeData.loyalty_enabled,
+          points_per_real: storeData.points_per_real || 1,
+          points_redeem_ratio: storeData.points_redeem_ratio || 0.05
         };
 
         setConfig(loadedConfig);
         if (categoriesData.length > 0) setActiveCategory(categoriesData[0].id);
         document.title = loadedConfig.name;
+
+        // Verificar expiração na vitrine
+        if (storeData.subscription_status === 'expired') {
+          setError('Esta loja está temporariamente fora do ar por questões de manutenção na assinatura. Por favor, tente novamente mais tarde.');
+        }
       } catch (err) {
         console.error('Error loading data:', err);
         setError('Não foi possível carregar os dados da loja.');
@@ -118,6 +133,15 @@ function StoreFront({ customSlug }: StoreFrontProps) {
     loadData();
   }, [storeSlug]);
 
+  // ─── Scroll listener: fix CategoryNav when header scrolls off screen ────────
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsCategoryNavFixed(window.scrollY > HEADER_THRESHOLD);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // ─── IntersectionObserver: update activeCategory as the user scrolls ───────
   useEffect(() => {
     if (!config || activeTab !== 'inicio') return;
@@ -126,10 +150,11 @@ function StoreFront({ customSlug }: StoreFrontProps) {
     const timer = setTimeout(() => {
       if (observerRef.current) observerRef.current.disconnect();
 
+      const navOffset = isCategoryNavFixed ? `-${NAV_HEIGHT + 8}px` : '-8px';
       const options: IntersectionObserverInit = {
         root: null,
-        // Compensate for sticky category nav (around 60px)
-        rootMargin: '-80px 0px -70% 0px',
+        // Compensate for fixed category nav when it's active
+        rootMargin: `${navOffset} 0px -65% 0px`,
         threshold: 0,
       };
 
@@ -156,7 +181,7 @@ function StoreFront({ customSlug }: StoreFrontProps) {
       clearTimeout(timer);
       observerRef.current?.disconnect();
     };
-  }, [config, activeTab]);
+  }, [config, activeTab, isCategoryNavFixed]);
 
   // Handle category chip click: disable observer briefly, then re-enable
   const handleCategoryChange = useCallback((catId: string) => {
@@ -191,16 +216,20 @@ function StoreFront({ customSlug }: StoreFrontProps) {
     }
   }, [activeTab, customer?.phone]);
 
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('anoto_customer', JSON.stringify(customer));
-    alert('Perfil atualizado com sucesso!');
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2500);
   };
 
   const handleAddToCart = (quantity: number, selectedOptions: ProductOption[], notes: string) => {
     if (selectedProduct) {
       setCart([...cart, { product: selectedProduct, quantity, selectedOptions, notes }]);
       setSelectedProduct(null);
+      setToast({ message: `${selectedProduct.name} adicionado ao carrinho!`, type: 'success' });
     }
   };
 
@@ -220,6 +249,7 @@ function StoreFront({ customSlug }: StoreFrontProps) {
     couponCode?: string;
     discountAmount?: number;
     subtotal?: number;
+    redeemedPoints?: number;
   }) => {
     if (!config || !config.id) return;
     try {
@@ -242,6 +272,7 @@ function StoreFront({ customSlug }: StoreFrontProps) {
           subtotal: customerInfo.subtotal,
           discount_amount: customerInfo.discountAmount,
           coupon_code: customerInfo.couponCode,
+          redeemed_points: customerInfo.redeemedPoints || 0,
           total: total,
           status: 'pending'
         })
@@ -255,6 +286,26 @@ function StoreFront({ customSlug }: StoreFrontProps) {
           p_store_id: config.id, 
           p_code: customerInfo.couponCode 
         });
+      }
+
+      // Deduct loyalty points if used
+      if (customerInfo.redeemedPoints && customerInfo.redeemedPoints > 0 && customer?.id) {
+        const newPoints = Math.max(0, (customer.loyalty_points || 0) - customerInfo.redeemedPoints);
+        await supabase.from('customers').update({ loyalty_points: newPoints }).eq('id', customer.id);
+        
+        // Log transaction
+        await supabase.from('loyalty_transactions').insert({
+          store_id: config.id,
+          customer_id: customer.id,
+          order_id: orderData.id,
+          points_change: -customerInfo.redeemedPoints,
+          type: 'redeem',
+          description: `Resgate de pontos no pedido #${orderData.id.slice(0,5).toUpperCase()}`
+        });
+
+        // Update local state
+        setCustomer({ ...customer, loyalty_points: newPoints });
+        localStorage.setItem('anoto_customer', JSON.stringify({ ...customer, loyalty_points: newPoints }));
       }
 
       const orderItems = cart.map(item => ({
@@ -301,38 +352,13 @@ function StoreFront({ customSlug }: StoreFrontProps) {
         isOpen={isOpen}
       />
 
-      {/* ── Category Chips (FIXED) ─────────────────────────────── */}
-      {activeTab === 'inicio' && !searchQuery && (
-        <>
-          <div style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            zIndex: 1000, 
-            background: '#fff', 
-            borderBottom: '1px solid #f1f5f9',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)' 
-          }}>
-            <div className="container" style={{ padding: '2px 1rem' }}>
-              <CategoryNav
-                categories={config.categories}
-                activeCategory={activeCategory}
-                onCategoryChange={handleCategoryChange}
-              />
-            </div>
-          </div>
-          {/* Espaçador para compensar a barra fixa */}
-          <div style={{ height: '58px' }}></div>
-        </>
-      )}
 
-      <main className="container" style={{ marginTop: '0' }}>
+
+      <main className="container" style={{ marginTop: '0', paddingTop: '0' }}>
         {activeTab === 'inicio' && (
           <>
-            <div className="search-container" style={{ marginBottom: '8px', marginTop: '8px' }}>
+            <div className="search-container" style={{ marginBottom: '4px' }}>
               <div className="search-wrapper">
-                <Search size={20} className="search-icon" />
                 <input
                   type="text"
                   placeholder="O que você está procurando?"
@@ -343,31 +369,55 @@ function StoreFront({ customSlug }: StoreFrontProps) {
               </div>
             </div>
 
-            {/* ── Featured Products Carousel ─────────────────────────── */}
-            {!searchQuery && (
-              <section className="featured-section" style={{ marginBottom: '4px' }}>
-                <div className="section-header-compact">
-                  <h2 className="section-title-compact">🔥 Destaques da Casa</h2>
-                </div>
-                <div className="featured-carousel">
-                  {config.products
-                    .slice(0, 6) // Fallback to first 6 for demo
-                    .map(product => (
+            {/* ── Category Chips (Entre busca e destaques) ─ */}
+            {activeTab === 'inicio' && !searchQuery && (
+              <CategoryNav
+                categories={config.categories}
+                activeCategory={activeCategory}
+                onCategoryChange={handleCategoryChange}
+                isFixed={isCategoryNavFixed}
+                navHeight={NAV_HEIGHT}
+              />
+            )}
+
+            {/* ── Featured Products Carousel (usa is_featured do banco) ── */}
+            {!searchQuery && (() => {
+              const featured = config.products.filter(p => p.is_featured);
+              const items = featured.length > 0 ? featured : config.products.slice(0, 6);
+              if (items.length === 0) return null;
+              return (
+                <section className="featured-section">
+                  <div className="section-header-compact">
+                    <h2 className="section-title-compact">🔥 Destaques da Casa</h2>
+                    {featured.length > 0 && (
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>
+                        {featured.length} em destaque
+                      </span>
+                    )}
+                  </div>
+                  <div className="featured-carousel">
+                    {items.map(product => (
                       <div key={`featured-${product.id}`} className="featured-item" onClick={() => setSelectedProduct(product)}>
                         <div className="featured-img-container">
-                          <img src={product.image} alt={product.name} />
+                          {product.image
+                            ? <img src={product.image} alt={product.name} />
+                            : <div className="featured-img-placeholder">🍽️</div>
+                          }
                           <div className="featured-price-tag">R$ {product.price.toFixed(2)}</div>
+                          {product.is_featured && (
+                            <div className="featured-badge">⭐ Destaque</div>
+                          )}
                         </div>
                         <div className="featured-info">
                           <h3>{product.name}</h3>
                           <p className="featured-desc">{product.description?.slice(0, 45)}{product.description && product.description.length > 45 ? '...' : ''}</p>
                         </div>
                       </div>
-                    ))
-                  }
-                </div>
-              </section>
-            )}
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
 
             {/* ── Search Results ──────────────────────────────────────── */}
             {searchQuery && (
@@ -386,7 +436,7 @@ function StoreFront({ customSlug }: StoreFrontProps) {
 
             {/* ── Category sections (vertical list, IntersectionObserver tracks them) ─ */}
             {!searchQuery && config.categories.map((category) => {
-              const categoryProducts = config.products.filter(p => p.category === category.id);
+              const categoryProducts = config.products.filter(p => p.category_id === category.id);
               if (categoryProducts.length === 0) return null;
               return (
                 <section
@@ -394,8 +444,9 @@ function StoreFront({ customSlug }: StoreFrontProps) {
                   id={`cat-section-${category.id}`}
                   data-category-id={category.id}
                   className="category-section"
+                  style={{ marginTop: '50px' }}
                 >
-                  <div className="category-section-header">
+                  <div className="category-section-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0', paddingBottom: '0', border: 'none' }}>
                     <h2 className="section-title category-section-title">
                       {category.name}
                     </h2>
@@ -464,48 +515,143 @@ function StoreFront({ customSlug }: StoreFrontProps) {
 
         {activeTab === 'perfil' && (
           <section className="profile-section fade-in">
-            <h2 className="section-title">Meu Perfil</h2>
+            {/* Avatar */}
+            <div className="profile-avatar-block">
+              <div className="profile-avatar">
+                {customer?.full_name
+                  ? customer.full_name.charAt(0).toUpperCase()
+                  : '?'}
+              </div>
+              <div className="profile-avatar-info">
+                <h2 className="profile-name">
+                  {customer?.full_name || 'Seu nome aqui'}
+                </h2>
+                {config?.loyalty_enabled && (
+                  <div className="loyalty-badge">
+                    <Award size={14} />
+                    <span>{customer?.loyalty_points || 0} Pontos Fidelidade</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <form className="profile-form" onSubmit={handleUpdateProfile}>
-              <div className="form-group">
-                <label>Nome Completo</label>
-                <input
-                  type="text"
-                  value={customer?.full_name || ''}
-                  onChange={e => setCustomer({ ...customer!, full_name: e.target.value })}
-                  placeholder="Ex: João Silva"
-                />
+
+              {/* ── Seção: Identificação ───────────────────────── */}
+              <div className="profile-section-card">
+                <h3 className="profile-section-label">👤 Identificação</h3>
+
+                <div className="form-group">
+                  <label>Nome Completo</label>
+                  <div className="input-wrapper">
+                    <input
+                      type="text"
+                      value={customer?.full_name || ''}
+                      onChange={e => setCustomer({ ...customer!, full_name: e.target.value })}
+                      placeholder="Ex: João Silva"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>WhatsApp</label>
+                  <div className="input-wrapper">
+                    <span className="input-prefix">📱</span>
+                    <input
+                      type="tel"
+                      value={customer?.phone || ''}
+                      onChange={e => setCustomer({ ...customer!, phone: e.target.value })}
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="form-group">
-                <label>WhatsApp</label>
-                <input
-                  type="text"
-                  value={customer?.phone || ''}
-                  onChange={e => setCustomer({ ...customer!, phone: e.target.value })}
-                  placeholder="55..."
-                />
+
+              {/* ── Seção: Endereço ────────────────────────────── */}
+              <div className="profile-section-card">
+                <h3 className="profile-section-label">📍 Endereço de Entrega</h3>
+
+                <div className="form-group">
+                  <label>CEP</label>
+                  <div className="input-wrapper">
+                    <input
+                      type="text"
+                      value={customer?.cep || ''}
+                      onChange={e => setCustomer({ ...customer!, cep: e.target.value })}
+                      placeholder="00000-000"
+                      maxLength={9}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Rua e Número</label>
+                  <div className="input-wrapper">
+                    <input
+                      type="text"
+                      value={customer?.address || ''}
+                      onChange={e => setCustomer({ ...customer!, address: e.target.value })}
+                      placeholder="Ex: Rua das Flores, 123"
+                    />
+                  </div>
+                </div>
+
+                <div className="profile-row">
+                  <div className="form-group">
+                    <label>Complemento</label>
+                    <div className="input-wrapper">
+                      <input
+                        type="text"
+                        value={customer?.complement || ''}
+                        onChange={e => setCustomer({ ...customer!, complement: e.target.value })}
+                        placeholder="Apto, Bloco..."
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Bairro</label>
+                    <div className="input-wrapper">
+                      <input
+                        type="text"
+                        value={customer?.neighborhood || ''}
+                        onChange={e => setCustomer({ ...customer!, neighborhood: e.target.value })}
+                        placeholder="Ex: Centro"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Ponto de Referência</label>
+                  <div className="input-wrapper">
+                    <span className="input-prefix">🏠</span>
+                    <input
+                      type="text"
+                      value={customer?.reference || ''}
+                      onChange={e => setCustomer({ ...customer!, reference: e.target.value })}
+                      placeholder="Ex: Próximo ao mercado X, casa azul..."
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="form-group">
-                <label>Endereço de Entrega</label>
-                <input
-                  type="text"
-                  value={customer?.address || ''}
-                  onChange={e => setCustomer({ ...customer!, address: e.target.value })}
-                  placeholder="Rua, número, complemento"
-                />
-              </div>
-              <div className="form-group">
-                <label>Bairro</label>
-                <input
-                  type="text"
-                  value={customer?.neighborhood || ''}
-                  onChange={e => setCustomer({ ...customer!, neighborhood: e.target.value })}
-                />
-              </div>
-              <button type="submit" className="save-profile-btn">Salvar Alterações</button>
+
+              <button
+                type="submit"
+                className={`save-profile-btn ${saveSuccess ? 'saved' : ''}`}
+              >
+                {saveSuccess ? '✓ Salvo com sucesso!' : 'Salvar Alterações'}
+              </button>
             </form>
           </section>
         )}
       </main>
+
+      {/* Botão flutuante do carrinho — aparece apenas na aba início */}
+      <FloatingCart
+        cart={cart}
+        onOpen={() => setIsCartOpen(true)}
+        visible={activeTab === 'inicio'}
+      />
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} cartCount={cartCount} />
 
@@ -523,6 +669,14 @@ function StoreFront({ customSlug }: StoreFrontProps) {
         primaryColor={config.theme?.primaryColor} 
         storeName={config.name}
       />
+
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
+      )}
     </div>
   );
 }

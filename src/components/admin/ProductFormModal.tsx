@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
+import { X, Image as ImageIcon, Plus, Trash2, Sparkles } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { optimizeImage } from '../../lib/image-optimizer';
 import type { Product, Category, ProductOptionGroup, ProductOption } from '../../types';
@@ -59,6 +59,45 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
       setOptionGroups([]);
     }
   }, [productToEdit, categories]);
+
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const generateAIDescription = async () => {
+    if (!name) {
+      alert('Por favor, digite o nome do produto primeiro.');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      // Usaremos a Edge Function do Supabase que criaremos a seguir
+      const { data, error } = await supabase.functions.invoke('generate-description', {
+        body: { productName: name }
+      });
+
+      if (error) throw error;
+      if (data?.description) {
+        setDescription(data.description);
+      }
+    } catch (error) {
+      console.error('Erro ao gerar descrição:', error);
+      // Fallback amigável caso a função ainda não esteja pronta ou falhe
+      const mockDescriptions: Record<string, string> = {
+        'Hambúrguer': 'Hambúrguer suculento com blend especial de carnes selecionadas, grelhado no ponto perfeito e servido em um pão brioche macio com ingredientes frescos.',
+        'Pizza': 'Nossa pizza artesanal é preparada com massa de longa fermentação, molho de tomate natural e ingredientes premium que garantem uma explosão de sabor a cada fatia.',
+        'Açaí': 'Açaí super cremoso e refrescante, batido na hora para garantir a textura perfeita e servido com acompanhamentos selecionados que você vai amar.'
+      };
+      
+      const foundKey = Object.keys(mockDescriptions).find(key => name.toLowerCase().includes(key.toLowerCase()));
+      if (foundKey) {
+        setDescription(mockDescriptions[foundKey]);
+      } else {
+        alert('Ops! Não conseguimos conectar com a IA agora, mas tente digitar o nome do produto novamente.');
+      }
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -242,12 +281,38 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
           </div>
 
           <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-              Descrição
-              <span style={{ fontWeight: '400', color: '#94a3b8', fontSize: '0.8rem', marginLeft: '6px' }}>
-                (aparece no card e no modal do produto)
-              </span>
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
+              <label style={{ fontWeight: '500' }}>
+                Descrição
+                <span style={{ fontWeight: '400', color: '#94a3b8', fontSize: '0.8rem', marginLeft: '6px' }}>
+                  (card e modal)
+                </span>
+              </label>
+              <button
+                type="button"
+                onClick={generateAIDescription}
+                disabled={isGeneratingAI}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, #fdf4ff 0%, #fae8ff 100%)',
+                  color: '#a21caf',
+                  border: '1px solid #f0abfc',
+                  padding: '4px 10px',
+                  borderRadius: '20px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: isGeneratingAI ? 0.7 : 1,
+                  boxShadow: '0 2px 4px rgba(162, 28, 175, 0.05)'
+                }}
+              >
+                <Sparkles size={14} className={isGeneratingAI ? 'spin-slow' : ''} />
+                {isGeneratingAI ? 'Escrevendo...' : '✨ Gerar com IA'}
+              </button>
+            </div>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}

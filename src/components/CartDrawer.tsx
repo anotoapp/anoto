@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, MapPin, ShoppingBag } from 'lucide-react';
+import { X, Trash2, MapPin, ShoppingBag, Award } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { CartItem, RestaurantConfig, Product, CustomerProfile } from '../types';
 import { CustomerAuth } from './CustomerAuth';
@@ -22,6 +22,7 @@ interface CartDrawerProps {
     couponCode?: string;
     discountAmount?: number;
     subtotal?: number;
+    redeemedPoints?: number;
   }) => void;
   customer?: CustomerProfile | null;
   onCustomerUpdate?: (profile: CustomerProfile) => void;
@@ -54,6 +55,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [cep, setCep] = useState('');
   const [cepLoading, setCepLoading] = useState(false);
   const [localNeighborhood, setLocalNeighborhood] = useState('');
+  const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(false);
 
 
   async function loadNeighborhoods() {
@@ -202,9 +204,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     }
   };
 
-  const discountAmount = couponDiscount 
-    ? (couponDiscount.type === 'fixed' ? couponDiscount.value : (subtotal * (couponDiscount.value / 100)))
+  const loyaltyDiscount = useLoyaltyPoints && customer?.loyalty_points
+    ? Math.min(subtotal, customer.loyalty_points * (config.points_redeem_ratio || 0.05))
     : 0;
+
+  const discountAmount = (couponDiscount 
+    ? (couponDiscount.type === 'fixed' ? couponDiscount.value : (subtotal * (couponDiscount.value / 100)))
+    : 0) + loyaltyDiscount;
 
   const currentDeliveryFee = type === 'delivery' 
     ? (selectedNeighborhood ? selectedNeighborhood.fee : config.deliveryFee)
@@ -235,7 +241,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       <div className="drawer-overlay" onClick={onClose}>
         <div className={`drawer-content ${isOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
           <div className="drawer-header">
-            <h2>{step === 'cart' ? 'Seu Pedido' : 'Finalizar Pedido'}</h2>
+            <div className="header-title-wrapper">
+              <h2>{step === 'cart' ? 'Seu Pedido' : 'Finalizar Pedido'}</h2>
+              <div className="step-indicator">
+                <div className={`step-dot ${step === 'cart' ? 'active' : 'completed'}`} />
+                <div className={`step-line ${step === 'checkout' ? 'completed' : ''}`} />
+                <div className={`step-dot ${step === 'checkout' ? 'active' : ''}`} />
+              </div>
+            </div>
             <button className="drawer-close" onClick={onClose} aria-label="Fechar">
               <X size={24} />
             </button>
@@ -272,20 +285,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   ))}
                   
                   {upsellProduct && (
-                    <div style={{ background: 'var(--bg)', border: '1px dashed var(--primary)', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <p style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '700' }}>⭐ Que tal adicionar?</p>
-                        <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text)' }}>{upsellProduct.name}</h4>
-                        <p style={{ margin: 0, fontWeight: '600' }}>+ R$ {upsellProduct.price.toFixed(2)}</p>
+                    <div className="upsell-container">
+                      <div className="upsell-info">
+                        <span className="upsell-tag">💡 Dica do Chef</span>
+                        <h4 className="upsell-title">{upsellProduct.name}</h4>
+                        <p className="upsell-price">+ R$ {upsellProduct.price.toFixed(2)}</p>
                       </div>
                       <button 
+                        className="upsell-add-btn"
                         onClick={() => {
                           if (onSelectUpsell) {
                             onClose();
                             onSelectUpsell(upsellProduct);
                           }
                         }}
-                        style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
                       >
                         Adicionar
                       </button>
@@ -318,6 +331,23 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       {couponError && <p className="coupon-error">{couponError}</p>}
                       {couponDiscount && <p className="coupon-success">Cupom aplicado!</p>}
                     </div>
+
+                    {config.loyalty_enabled && customer && (customer.loyalty_points || 0) > 0 && (
+                      <div className="loyalty-redeem-wrapper">
+                        <div className={`loyalty-card ${useLoyaltyPoints ? 'active' : ''}`} onClick={() => setUseLoyaltyPoints(!useLoyaltyPoints)}>
+                          <div className="loyalty-card-info">
+                            <Award size={20} className="loyalty-icon" />
+                            <div>
+                              <span>Usar meus {customer.loyalty_points} pontos?</span>
+                              <p>Desconto de R$ {(customer.loyalty_points! * (config.points_redeem_ratio || 0.05)).toFixed(2)}</p>
+                            </div>
+                          </div>
+                          <div className={`custom-checkbox ${useLoyaltyPoints ? 'checked' : ''}`}>
+                            {useLoyaltyPoints && <div className="inner-check" />}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {discountAmount > 0 && (
                       <div className="summary-line discount">
@@ -487,7 +517,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     cep: customer?.cep || cep,
                     couponCode: couponDiscount ? couponCode : undefined,
                     discountAmount: discountAmount,
-                    subtotal: subtotal
+                    subtotal: subtotal,
+                    redeemedPoints: useLoyaltyPoints ? customer?.loyalty_points : 0
                   })}
                 >
                   Confirmar Pedido

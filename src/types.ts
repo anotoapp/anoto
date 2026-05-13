@@ -85,13 +85,20 @@ export interface RestaurantConfig {
   theme: ThemeConfig;
   categories: Category[];
   products: Product[];
+  subscription_status?: string;
+  loyalty_enabled?: boolean;
+  points_per_real?: number;
+  points_redeem_ratio?: number;
 }
 
 export interface CustomerProfile {
   id?: string;
   full_name?: string;
   address?: string;
+  complement?: string;
+  reference?: string;
   phone?: string;
   neighborhood?: string;
   cep?: string;
+  loyalty_points?: number;
 }

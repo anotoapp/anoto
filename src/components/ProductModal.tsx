@@ -92,50 +92,70 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           {loading ? (
             <div className="loading-options">Carregando opcionais...</div>
           ) : (
-            optionGroups.map((group) => (
-              <div key={group.id} className="option-group">
-                <div className="group-header">
-                  <div>
-                    <h3>{group.name}</h3>
-                    <p className="group-info">
-                      {group.min_options > 0 
-                        ? `Obrigatório • Escolha pelo menos ${group.min_options}` 
-                        : `Opcional • Escolha até ${group.max_options}`}
-                    </p>
+            <>
+              {optionGroups.some(g => g.min_options > 0) && (
+                <div className="required-progress">
+                  <div className="progress-text">
+                    {optionGroups.filter(isGroupValid).length} de {optionGroups.length} grupos selecionados
                   </div>
-                  {isGroupValid(group) && <Check size={18} className="text-success" />}
+                  <div className="progress-bar-container">
+                    <div 
+                      className="progress-bar-fill" 
+                      style={{ width: `${(optionGroups.filter(isGroupValid).length / optionGroups.length) * 100}%` }}
+                    />
+                  </div>
                 </div>
+              )}
 
-                <div className="options-list">
-                  {group.options?.map((option) => {
-                    const isSelected = selectedOptions.some(o => o.id === option.id);
-                    return (
-                      <div 
-                        key={option.id} 
-                        className={`option-item ${isSelected ? 'selected' : ''}`}
-                        onClick={() => toggleOption(group, option)}
-                      >
-                        <div className="option-info">
-                          <span className="option-name">{option.name}</span>
-                          {option.price > 0 && (
-                            <span className="option-price">+ R$ {Number(option.price).toFixed(2)}</span>
-                          )}
+              {optionGroups.map((group) => (
+                <div key={group.id} className="option-group">
+                  <div className="group-header">
+                    <div className="group-title-wrapper">
+                      <h3>{group.name}</h3>
+                      <p className="group-info">
+                        {group.min_options > 0 
+                          ? `Obrigatório • Escolha ${group.min_options === group.max_options ? group.min_options : `${group.min_options} a ${group.max_options}`}` 
+                          : `Opcional • Escolha até ${group.max_options}`}
+                      </p>
+                    </div>
+                    {group.min_options > 0 && (
+                      <span className={`required-badge ${isGroupValid(group) ? 'valid' : ''}`}>
+                        {isGroupValid(group) ? <Check size={14} /> : 'Obrigatório'}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="options-list">
+                    {group.options?.map((option) => {
+                      const isSelected = selectedOptions.some(o => o.id === option.id);
+                      return (
+                        <div 
+                          key={option.id} 
+                          className={`option-item ${isSelected ? 'selected' : ''}`}
+                          onClick={() => toggleOption(group, option)}
+                        >
+                          <div className="option-info">
+                            <span className="option-name">{option.name}</span>
+                            {option.price > 0 && (
+                              <span className="option-price">+ R$ {Number(option.price).toFixed(2)}</span>
+                            )}
+                          </div>
+                          <div className={`selector ${group.max_options === 1 ? 'radio' : 'checkbox'}`}>
+                            {isSelected && <div className="selector-inner" />}
+                          </div>
                         </div>
-                        <div className={`selector ${group.max_options === 1 ? 'radio' : 'checkbox'}`}>
-                          {isSelected && <div className="selector-inner" />}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </>
           )}
 
           <div className="notes-section">
             <h3>Observações</h3>
             <textarea
-              placeholder="Ex: Tirar cebola, ponto da carne..."
+              placeholder="Alguma recomendação? Ex: Tirar cebola, ponto da carne..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />

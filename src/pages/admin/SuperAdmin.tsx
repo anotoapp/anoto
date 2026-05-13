@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Store, Users, DollarSign, ExternalLink, TrendingUp, BarChart2 } from 'lucide-react';
+import {
+  Store, Users, BarChart2,
+  Plus, Trash2, ShieldCheck
+} from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer
@@ -9,18 +12,32 @@ import './Admin.css';
 
 interface StoreData {
   id: string;
+  owner_id: string;
   name: string;
   slug: string;
   whatsapp_number: string;
   created_at: string;
   subscription_status?: string;
   plan_type?: string;
+  email?: string;
+  last_access_at?: string;
 }
 
 interface AuthorizedEmail {
   email: string;
   plan_type: string;
   authorized_at: string;
+  kiwify_order_id?: string;
+}
+
+interface LeadData {
+  id: string;
+  email: string;
+  name: string;
+  created_at: string;
+  last_access_at: string | null;
+  status: string;
+  phone?: string;
 }
 
 interface MonthlyData {
@@ -50,301 +67,506 @@ export default function SuperAdmin() {
     activeSubscribers: 0,
     mrr: 0,
     arr: 0,
-    churnThisMonth: 0,
     newThisMonth: 0,
   });
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Fetch stores and authorized_emails in parallel
-        const [storesRes, emailsRes] = await Promise.all([
-          supabase.from('stores').select('*').order('created_at', { ascending: false }),
-          supabase.from('authorized_emails').select('email, plan_type, authorized_at').order('authorized_at', { ascending: true }),
-        ]);
+  const [authorizedEmails, setAuthorizedEmails] = useState<AuthorizedEmail[]>([]);
+  const [newEmail, setNewEmail] = useState('');
+  const [newPlanType, setNewPlanType] = useState('Mensal');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState<'stats' | 'lojistas' | 'leads' | 'whitelist'>('stats');
+  const [consolidatedLeads, setConsolidatedLeads] = useState<LeadData[]>([]);
 
-        const storesData: StoreData[] = storesRes.data || [];
-        const emailsData: AuthorizedEmail[] = emailsRes.data || [];
-
-        setStores(storesData);
-
-        // Current MRR from active stores
-        const activeMRR = storesData.reduce((acc, store) => {
-          if (store.subscription_status !== 'active') return acc;
-          return acc + (PLAN_PRICES[store.plan_type || 'Mensal'] || 39.90);
-        }, 0);
-
-        const activeCount = storesData.filter(s => s.subscription_status === 'active').length;
-
-        // New subscribers this month
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const newThisMonth = emailsData.filter(e => new Date(e.authorized_at) >= startOfMonth).length;
-
-        // Build monthly chart data from authorized_emails (last 6 months)
-        const monthlyMap: Record<string, { mrr: number; subscribers: number; newSubscribers: number }> = {};
-
-        // Initialize last 6 months
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const key = `${MONTH_NAMES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
-          monthlyMap[key] = { mrr: 0, subscribers: 0, newSubscribers: 0 };
-        }
-
-        // Count subscribers and MRR per month (based on real authorizations)
-        emailsData.forEach(email => {
-          const d = new Date(email.authorized_at);
-          const key = `${MONTH_NAMES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
-          if (monthlyMap[key] !== undefined) {
-            monthlyMap[key].newSubscribers += 1;
-            monthlyMap[key].subscribers += 1; // Real count in that month
-            monthlyMap[key].mrr += PLAN_PRICES[email.plan_type || 'Mensal'] || 39.90;
-          }
-        });
-
-        const chartData: MonthlyData[] = Object.entries(monthlyMap).map(([month, data]) => ({
-          month,
-          ...data
-        }));
-
-        setMonthlyData(chartData);
-        setStats({
-          totalStores: storesData.length,
-          activeSubscribers: activeCount,
-          mrr: activeMRR,
-          arr: activeMRR * 12,
-          churnThisMonth: 0, // Would need a churn log table for real data
-          newThisMonth,
-        });
-      } catch (error) {
-        console.error('Error fetching master data:', error);
-      } finally {
-        setLoading(false);
+  const fetchAuthorizedEmails = async () => {
+    try {
+      const { data: emailsRes } = await supabase
+        .from('authorized_emails')
+        .select('*')
+        .order('authorized_at', { ascending: false });
+      
+      if (emailsRes) {
+        setAuthorizedEmails(emailsRes);
+        return emailsRes;
       }
+      return [];
+    } catch (error) {
+      console.error('Error fetching authorized emails:', error);
+      return [];
     }
+  };
 
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // 1. Fetch Stores and Profiles
+      const [storesRes, profilesRes] = await Promise.all([
+        supabase.from('stores').select('*, profiles(email, last_access_at, full_name)').order('created_at', { ascending: false }),
+        supabase.from('profiles').select('*').order('created_at', { ascending: false })
+      ]);
+
+      const storesData: StoreData[] = (storesRes.data || []).map((s: any) => ({
+        ...s,
+        email: s.profiles?.email || '',
+        last_access_at: s.profiles?.last_access_at || ''
+      }));
+      
+      setStores(storesData);
+      const profiles = profilesRes.data || [];
+      
+      const authEmails = await fetchAuthorizedEmails();
+
+      // Consolidate Leads
+      const leadsMap = new Map<string, LeadData>();
+
+      // A) Add people from Profiles who don't have a store
+      profiles.forEach(p => {
+        if (!storesData.some(s => s.owner_id === p.id)) {
+          leadsMap.set(p.email?.toLowerCase(), {
+            id: p.id,
+            email: p.email,
+            name: p.full_name || 'Usuário do App',
+            created_at: p.created_at,
+            last_access_at: p.last_access_at,
+            status: 'Registrado no App (Pendente de Loja)',
+            phone: p.phone,
+          });
+        }
+      });
+
+      // B) Add people from Authorized Emails who don't have a store yet
+      authEmails.forEach(a => {
+        const email = a.email.toLowerCase();
+        // Check if this email already has a store
+        if (!storesData.some(s => s.email?.toLowerCase() === email)) {
+          if (leadsMap.has(email)) {
+             // Update existing
+             const existing = leadsMap.get(email)!;
+             existing.status = 'Autorizado & Registrado (Pendente de Loja)';
+          } else {
+             // Add new
+             leadsMap.set(email, {
+               id: email, // use email as ID since no profile yet
+               email: a.email,
+               name: 'Email Liberado',
+               created_at: a.authorized_at,
+               last_access_at: null,
+               status: 'Autorizado (Ainda não entrou no app)',
+             });
+          }
+        }
+      });
+
+      const leadsArray = Array.from(leadsMap.values()).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setConsolidatedLeads(leadsArray);
+
+      // Metrics
+      const activeMRR = storesData.reduce((acc, store) => {
+        if (store.subscription_status !== 'active') return acc;
+        return acc + (PLAN_PRICES[store.plan_type || 'Mensal'] || 39.90);
+      }, 0);
+
+      const activeCount = storesData.filter(s => s.subscription_status === 'active').length;
+
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const newThisMonth = storesData.filter(s => new Date(s.created_at) >= startOfMonth).length;
+
+      // Chart Data
+      const monthlyMap: Record<string, { mrr: number; subscribers: number; newSubscribers: number }> = {};
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${MONTH_NAMES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
+        monthlyMap[key] = { mrr: 0, subscribers: 0, newSubscribers: 0 };
+      }
+
+      storesData.forEach(store => {
+        const d = new Date(store.created_at);
+        const key = `${MONTH_NAMES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
+        if (monthlyMap[key] !== undefined) {
+          if (store.subscription_status === 'active') {
+            monthlyMap[key].mrr += PLAN_PRICES[store.plan_type || 'Mensal'] || 39.90;
+            monthlyMap[key].subscribers += 1;
+          }
+          monthlyMap[key].newSubscribers += 1;
+        }
+      });
+
+      setMonthlyData(Object.entries(monthlyMap).map(([month, data]) => ({ month, ...data })));
+      setStats({
+        totalStores: storesData.length,
+        activeSubscribers: activeCount,
+        mrr: activeMRR,
+        arr: activeMRR * 12,
+        newThisMonth,
+      });
+    } catch (error) {
+      console.error('Error fetching master data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
+  const handleAddEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEmail) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from('authorized_emails').upsert({
+        email: newEmail.toLowerCase().trim(),
+        plan_type: newPlanType,
+        authorized_at: new Date().toISOString()
+      }, { onConflict: 'email' });
+      if (error) throw error;
+      alert('E-mail autorizado com sucesso!');
+      setNewEmail('');
+      await fetchData(); // Refresh everything to update Leads tab too
+    } catch (error: any) {
+      alert('Erro ao autorizar: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRemoveEmail = async (email: string) => {
+    if (!confirm(`Remover ${email} da lista de autorizados?`)) return;
+    try {
+      const { error } = await supabase.from('authorized_emails').delete().eq('email', email);
+      if (error) throw error;
+      await fetchData(); // Refresh everything
+    } catch (error: any) {
+      alert('Erro ao remover: ' + error.message);
+    }
+  };
+
+  const handleActivateStore = async (storeId: string, email: string, type: 'active' | 'trial' = 'active') => {
+    const actionName = type === 'active' ? 'ativar' : 'liberar teste para';
+    if (!confirm(`Deseja ${actionName} a loja do e-mail ${email}?`)) return;
+    try {
+      const { error: storeError } = await supabase.from('stores').update({
+        subscription_status: type,
+        plan_type: 'Mensal',
+        last_payment_at: new Date().toISOString()
+      }).eq('id', storeId);
+      if (storeError) throw storeError;
+      
+      if (email) {
+        await supabase.from('authorized_emails').upsert({
+          email: email.toLowerCase().trim(),
+          plan_type: 'Mensal',
+          authorized_at: new Date().toISOString()
+        }, { onConflict: 'email' });
+      }
+      alert('Loja atualizada com sucesso!');
+      fetchData();
+    } catch (error: any) {
+      alert('Erro ao atualizar: ' + error.message);
+    }
+  };
+
+  const handleChangePlan = async (storeId: string, newPlan: string) => {
+    try {
+      const { error } = await supabase.from('stores').update({ plan_type: newPlan }).eq('id', storeId);
+      if (error) throw error;
+      setStores(prev => prev.map(s => s.id === storeId ? { ...s, plan_type: newPlan } : s));
+    } catch (error: any) {
+      alert('Erro ao mudar plano: ' + error.message);
+    }
+  };
+
+  const calculateDaysRemaining = (dateStr: string) => {
+    const created = new Date(dateStr);
+    const expires = new Date(created);
+    expires.setDate(expires.getDate() + 30);
+    const now = new Date();
+    const diffTime = expires.getTime() - now.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ width: '40px', height: '40px', border: '3px solid #f1f5f9', borderTop: '3px solid #dc2626', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-      <p style={{ color: '#64748b' }}>Carregando dados da plataforma...</p>
+      <div className="spinner" />
+      <p style={{ color: '#64748b' }}>Carregando Central Master...</p>
     </div>
   );
 
   const getStatusStyle = (status: string | undefined) => {
     switch (status) {
-      case 'active':  return { background: '#e8f5e9', color: '#2e7d32' };
-      case 'expired': return { background: '#ffebee', color: '#c62828' };
-      case 'trial':   return { background: '#fffde7', color: '#fbc02d' };
-      default:        return { background: '#f5f5f5', color: '#757575' };
+      case 'active':  return { background: '#dcfce7', color: '#166534' };
+      case 'expired': return { background: '#fef2f2', color: '#991b1b' };
+      case 'trial':   return { background: '#fffbeb', color: '#92400e' };
+      default:        return { background: '#f1f5f9', color: '#475569' };
     }
   };
 
-  const conversionRate = stats.totalStores > 0
-    ? Math.round((stats.activeSubscribers / stats.totalStores) * 100)
-    : 0;
+  const getLeadStatusStyle = (status: string) => {
+    if (status.includes('Pendente de Loja')) {
+      return { background: '#fef3c7', color: '#92400e' };
+    } else if (status.includes('Ainda não entrou')) {
+      return { background: '#e0e7ff', color: '#3730a3' };
+    }
+    return { background: '#f1f5f9', color: '#475569' };
+  };
 
   return (
-    <div className="dashboard-container fade-in" style={{ maxWidth: '1300px', margin: '0 auto' }}>
-      <header className="dashboard-header" style={{ marginBottom: '32px' }}>
-        <h1 style={{ color: '#d32f2f', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          Gestão Geral (Master)
-        </h1>
-        <p>Controle global e métricas SaaS do ANOTÔ</p>
+    <div className="dashboard-container fade-in super-admin-container">
+      <header className="dashboard-header super-admin-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div className="super-admin-icon-wrapper">
+            <ShieldCheck size={28} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#0f172a', margin: 0 }}>Central Master</h1>
+            <p style={{ color: '#64748b', margin: '4px 0 0' }}>Controle total da plataforma ANOTÔ</p>
+          </div>
+        </div>
       </header>
 
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '28px' }}>
-
-        <div style={{ background: '#fff', padding: '20px 24px', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderTop: '3px solid #2563eb' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total de Lojas</p>
-              <h2 style={{ margin: '8px 0 0', fontSize: '2rem', fontWeight: '900', color: '#0f172a' }}>{stats.totalStores}</h2>
-            </div>
-            <div style={{ padding: '10px', background: '#eff6ff', color: '#2563eb', borderRadius: '10px' }}><Store size={20} /></div>
-          </div>
-        </div>
-
-        <div style={{ background: '#fff', padding: '20px 24px', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderTop: '3px solid #16a34a' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assinantes Ativos</p>
-              <h2 style={{ margin: '8px 0 4px', fontSize: '2rem', fontWeight: '900', color: '#0f172a' }}>{stats.activeSubscribers}</h2>
-              <p style={{ margin: 0, fontSize: '0.78rem', color: '#16a34a', fontWeight: '600' }}>+{stats.newThisMonth} este mês</p>
-            </div>
-            <div style={{ padding: '10px', background: '#f0fdf4', color: '#16a34a', borderRadius: '10px' }}><Users size={20} /></div>
-          </div>
-        </div>
-
-        <div style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)', padding: '20px 24px', borderRadius: '16px', boxShadow: '0 8px 24px rgba(220,38,38,0.2)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>MRR</p>
-              <h2 style={{ margin: '8px 0 4px', fontSize: '1.7rem', fontWeight: '900', color: '#fff' }}>{formatCurrency(stats.mrr)}</h2>
-              <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)' }}>Receita mensal recorrente</p>
-            </div>
-            <div style={{ padding: '10px', background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: '10px' }}><DollarSign size={20} /></div>
-          </div>
-        </div>
-
-        <div style={{ background: '#fff', padding: '20px 24px', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderTop: '3px solid #7c3aed' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>ARR (Projeção)</p>
-              <h2 style={{ margin: '8px 0 4px', fontSize: '1.7rem', fontWeight: '900', color: '#0f172a' }}>{formatCurrency(stats.arr)}</h2>
-              <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>MRR × 12 meses</p>
-            </div>
-            <div style={{ padding: '10px', background: '#f5f3ff', color: '#7c3aed', borderRadius: '10px' }}><TrendingUp size={20} /></div>
-          </div>
-        </div>
-
-        <div style={{ background: '#fff', padding: '20px 24px', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderTop: '3px solid #f59e0b' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Taxa de Conversão</p>
-              <h2 style={{ margin: '8px 0 4px', fontSize: '2rem', fontWeight: '900', color: '#0f172a' }}>{conversionRate}%</h2>
-              <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>Lojas que assinaram</p>
-            </div>
-            <div style={{ padding: '10px', background: '#fffbeb', color: '#f59e0b', borderRadius: '10px' }}><BarChart2 size={20} /></div>
-          </div>
-        </div>
-
+      {/* Navigation Tabs */}
+      <div className="super-admin-tabs">
+        {[
+          { id: 'stats', label: 'Visão Geral', icon: <BarChart2 size={18} /> },
+          { id: 'lojistas', label: 'Lojistas', icon: <Store size={18} /> },
+          { id: 'leads', label: 'Leads (Sem Loja)', icon: <Users size={18} /> },
+          { id: 'whitelist', label: 'Whitelist', icon: <Plus size={18} /> },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`super-admin-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+          >
+            {tab.icon} {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Charts Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '28px' }}>
-
-        {/* MRR Line Chart */}
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-          <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#0f172a' }}>Crescimento do MRR</h3>
-            <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.82rem' }}>Receita acumulada por mês (últimos 6 meses)</p>
+      {activeTab === 'stats' && (
+        <div className="fade-in">
+          {/* Metrics Grid */}
+          <div className="super-admin-metrics-grid">
+            <div className="super-admin-metric-card mrr-card">
+              <p className="metric-label">Faturamento (MRR)</p>
+              <h2 className="metric-value">{formatCurrency(stats.mrr)}</h2>
+              <div className="metric-progress-bar-bg">
+                <div className="metric-progress-bar-fill" style={{ width: `${Math.min((stats.mrr/10000)*100, 100)}%` }} />
+              </div>
+            </div>
+            <div className="super-admin-metric-card">
+              <p className="metric-label">Lojistas Ativos</p>
+              <h2 className="metric-value">{stats.activeSubscribers}</h2>
+              <p className="metric-subtitle green">de {stats.totalStores} totais</p>
+            </div>
+            <div className="super-admin-metric-card">
+              <p className="metric-label">Novas Lojas (Mês)</p>
+              <h2 className="metric-value">+{stats.newThisMonth}</h2>
+              <p className="metric-subtitle blue">Crescimento orgânico</p>
+            </div>
+            <div className="super-admin-metric-card">
+              <p className="metric-label">Potencial de Leads</p>
+              <h2 className="metric-value">{consolidatedLeads.length}</h2>
+              <p className="metric-subtitle gray">Usuários sem loja</p>
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `R$${v}`} />
-              <Tooltip formatter={(v) => [formatCurrency(Number(v)), 'MRR']} contentStyle={{ borderRadius: '10px', border: '1px solid #f1f5f9' }} />
-              <Line type="monotone" dataKey="mrr" stroke="#dc2626" strokeWidth={3} dot={{ fill: '#dc2626', r: 5 }} activeDot={{ r: 7 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
 
-        {/* New Subscribers Bar Chart */}
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-          <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#0f172a' }}>Novos Assinantes</h3>
-            <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.82rem' }}>Quantidade de novas adesões por mês</p>
+          {/* Charts Row */}
+          <div className="super-admin-charts-grid">
+            <div className="super-admin-chart-card">
+              <h3 className="chart-title">Receita Recorrente</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={v => `R$${v}`} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="mrr" stroke="#dc2626" strokeWidth={4} dot={{ r: 6, fill: '#dc2626' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="super-admin-chart-card">
+              <h3 className="chart-title">Adesão de Novos Lojistas</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                  <Tooltip />
+                  <Bar dataKey="newSubscribers" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip formatter={(v) => [Number(v), 'Novos assinantes']} contentStyle={{ borderRadius: '10px', border: '1px solid #f1f5f9' }} />
-              <Bar dataKey="newSubscribers" fill="#2563eb" radius={[6, 6, 0, 0]} name="Novos" />
-            </BarChart>
-          </ResponsiveContainer>
         </div>
+      )}
 
-      </div>
-
-      {/* Meta progress */}
-      <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '28px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div>
-            <h3 style={{ margin: 0, fontWeight: '700', color: '#0f172a' }}>Meta: R$ 10.000,00 MRR</h3>
-            <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.85rem' }}>
-              {formatCurrency(stats.mrr)} de R$ 10.000,00 — faltam {formatCurrency(Math.max(0, 10000 - stats.mrr))}
-            </p>
+      {activeTab === 'lojistas' && (
+        <div className="fade-in super-admin-panel">
+          <div className="super-admin-panel-header">
+            <h2>Gestão de Lojistas</h2>
           </div>
-          <span style={{ fontWeight: '900', fontSize: '1.5rem', color: '#dc2626' }}>
-            {Math.round((stats.mrr / 10000) * 100)}%
-          </span>
+          <div className="responsive-table-wrapper">
+            <table className="super-admin-table">
+              <thead>
+                <tr>
+                  <th>Loja</th>
+                  <th>Status</th>
+                  <th>Plano</th>
+                  <th>MRR</th>
+                  <th>Último Acesso</th>
+                  <th>Vencimento</th>
+                  <th style={{ textAlign: 'right' }}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stores.map(store => {
+                  const daysLeft = calculateDaysRemaining(store.created_at);
+                  return (
+                    <tr key={store.id}>
+                      <td data-label="Loja">
+                        <div className="store-name">{store.name}</div>
+                        <div className="store-email">{store.email || 'Email não vinculado'}</div>
+                      </td>
+                      <td data-label="Status">
+                        <span className="status-badge" style={getStatusStyle(store.subscription_status)}>
+                          {store.subscription_status === 'trial' ? `TESTE (${daysLeft}d)` : store.subscription_status}
+                        </span>
+                      </td>
+                      <td data-label="Plano">
+                        <select 
+                          className="plan-select"
+                          value={store.plan_type || 'Mensal'}
+                          onChange={(e) => handleChangePlan(store.id, e.target.value)}
+                        >
+                          <option value="Mensal">Mensal</option>
+                          <option value="Anual">Anual</option>
+                        </select>
+                      </td>
+                      <td data-label="MRR" className={`mrr-value ${store.subscription_status === 'active' ? 'active' : ''}`}>
+                        {store.subscription_status === 'active' ? formatCurrency(PLAN_PRICES[store.plan_type || 'Mensal']) : '—'}
+                      </td>
+                      <td data-label="Último Acesso" className="last-access-value">
+                        {store.last_access_at ? new Date(store.last_access_at).toLocaleString('pt-BR') : 'Sem acesso'}
+                      </td>
+                      <td data-label="Vencimento">
+                        {store.subscription_status === 'trial' ? (
+                          <div className={`days-left ${daysLeft < 5 ? 'urgent' : ''}`}>{daysLeft} dias</div>
+                        ) : 'Vitalício'}
+                      </td>
+                      <td data-label="Ações" className="actions-cell">
+                        <div className="actions-wrapper">
+                          <button onClick={() => handleActivateStore(store.id, store.email || '', 'active')} className="btn-activate">Ativar</button>
+                          <a href={`/${store.slug}`} target="_blank" className="secondary-action btn-view">Ver Loja</a>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div style={{ width: '100%', height: '12px', background: '#f1f5f9', borderRadius: '6px', overflow: 'hidden' }}>
-          <div style={{
-            height: '100%',
-            borderRadius: '6px',
-            background: 'linear-gradient(90deg, #dc2626, #f59e0b)',
-            width: `${Math.min((stats.mrr / 10000) * 100, 100)}%`,
-            transition: 'width 1s ease'
-          }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '0.75rem', color: '#94a3b8' }}>
-          <span>R$ 0</span>
-          <span>Próximo marco: 250 clientes ativos</span>
-          <span>R$ 10.000</span>
-        </div>
-      </div>
+      )}
 
-      {/* Stores Table */}
-      <div style={{ background: '#fff', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0, fontWeight: '700' }}>Lojas Cadastradas</h3>
-          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{stores.length} lojas</span>
+      {activeTab === 'leads' && (
+        <div className="fade-in super-admin-panel">
+          <div className="super-admin-panel-header leads-header">
+            <h2>Leads Consolidados</h2>
+            <span className="leads-badge">
+              {consolidatedLeads.length} Oportunidades
+            </span>
+          </div>
+          <div className="leads-grid">
+            {consolidatedLeads.map(lead => (
+              <div key={lead.id} className="lead-card">
+                <div className="lead-card-header">
+                  <div className="lead-avatar">
+                    {lead.email?.[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="lead-name">{lead.name}</div>
+                    <div className="lead-email">{lead.email}</div>
+                  </div>
+                </div>
+                <div className="lead-status-badge" style={getLeadStatusStyle(lead.status)}>
+                  {lead.status}
+                </div>
+                <div className="lead-details">
+                  <span>Criado: {new Date(lead.created_at).toLocaleDateString('pt-BR')}</span>
+                  <span>Acesso: {lead.last_access_at ? new Date(lead.last_access_at).toLocaleDateString('pt-BR') : 'Nunca'}</span>
+                </div>
+                {lead.phone ? (
+                  <a href={`https://wa.me/${lead.phone}`} target="_blank" className="btn-whatsapp">
+                     Chamar no WhatsApp
+                  </a>
+                ) : (
+                  <a href={`mailto:${lead.email}`} className="btn-email">
+                     Enviar E-mail
+                  </a>
+                )}
+              </div>
+            ))}
+            {consolidatedLeads.length === 0 && (
+              <div style={{ padding: '20px', color: '#64748b' }}>Nenhum lead encontrado.</div>
+            )}
+          </div>
         </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ background: '#f8fafc' }}>
-                <th style={{ padding: '14px 24px', color: '#64748b', fontWeight: '600', fontSize: '0.85rem' }}>Loja</th>
-                <th style={{ padding: '14px 24px', color: '#64748b', fontWeight: '600', fontSize: '0.85rem' }}>WhatsApp</th>
-                <th style={{ padding: '14px 24px', color: '#64748b', fontWeight: '600', fontSize: '0.85rem' }}>Plano</th>
-                <th style={{ padding: '14px 24px', color: '#64748b', fontWeight: '600', fontSize: '0.85rem' }}>MRR</th>
-                <th style={{ padding: '14px 24px', color: '#64748b', fontWeight: '600', fontSize: '0.85rem' }}>Status</th>
-                <th style={{ padding: '14px 24px', color: '#64748b', fontWeight: '600', fontSize: '0.85rem' }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stores.map(store => {
-                const statusStyle = getStatusStyle(store.subscription_status);
-                const storeMRR = store.subscription_status === 'active'
-                  ? PLAN_PRICES[store.plan_type || 'Mensal'] || 39.90
-                  : 0;
-                return (
-                  <tr key={store.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '14px 24px' }}>
-                      <div style={{ fontWeight: '600', color: '#0f172a' }}>{store.name}</div>
-                      <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>/{store.slug}</div>
-                    </td>
-                    <td style={{ padding: '14px 24px' }}>
-                      <a href={`https://wa.me/${store.whatsapp_number}`} target="_blank" rel="noreferrer"
-                        style={{ color: '#16a34a', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem' }}>
-                        {store.whatsapp_number} <ExternalLink size={12} />
-                      </a>
-                    </td>
-                    <td style={{ padding: '14px 24px' }}>
-                      <span style={{ fontWeight: '700', fontSize: '0.9rem', color: '#0f172a' }}>{store.plan_type || 'Starter'}</span>
-                    </td>
-                    <td style={{ padding: '14px 24px' }}>
-                      <span style={{ fontWeight: '700', color: storeMRR > 0 ? '#16a34a' : '#94a3b8', fontSize: '0.9rem' }}>
-                        {storeMRR > 0 ? formatCurrency(storeMRR) : '—'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '14px 24px' }}>
-                      <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', ...statusStyle }}>
-                        {store.subscription_status || 'trial'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '14px 24px' }}>
-                      <a href={`/${store.slug}`} target="_blank" rel="noreferrer"
-                        style={{ color: '#2563eb', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'none' }}>
-                        Ver Cardápio
-                      </a>
-                    </td>
+      )}
+
+      {activeTab === 'whitelist' && (
+        <div className="fade-in whitelist-grid">
+          <div className="super-admin-panel whitelist-form-panel">
+            <h3 className="panel-title">Liberar Acesso Manual</h3>
+            <form onSubmit={handleAddEmail}>
+              <div className="form-group">
+                <label>E-mail</label>
+                <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="cliente@email.com" required />
+              </div>
+              <div className="form-group">
+                <label>Plano</label>
+                <select value={newPlanType} onChange={e => setNewPlanType(e.target.value)}>
+                  <option value="Mensal">Mensal</option>
+                  <option value="Anual">Anual</option>
+                </select>
+              </div>
+              <button type="submit" disabled={isSubmitting} className="primary-action btn-full">
+                {isSubmitting ? 'Processando...' : 'Autorizar Acesso'}
+              </button>
+            </form>
+          </div>
+          <div className="super-admin-panel whitelist-table-panel">
+            <div className="super-admin-panel-header">
+              <h3 className="panel-title">E-mails na Whitelist</h3>
+            </div>
+            <div className="responsive-table-wrapper">
+              <table className="super-admin-table">
+                <thead>
+                  <tr>
+                    <th>E-mail</th>
+                    <th>Plano</th>
+                    <th style={{ textAlign: 'right' }}>Ações</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {authorizedEmails.map(item => (
+                    <tr key={item.email}>
+                      <td data-label="E-mail" className="fw-700">{item.email}</td>
+                      <td data-label="Plano">{item.plan_type}</td>
+                      <td data-label="Ações" className="actions-cell">
+                        <button onClick={() => handleRemoveEmail(item.email)} className="btn-delete"><Trash2 size={18} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                  {authorizedEmails.length === 0 && (
+                    <tr><td colSpan={3} style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Nenhum email na whitelist.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
-
+      )}
     </div>
   );
 }

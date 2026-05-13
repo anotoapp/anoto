@@ -68,8 +68,9 @@ export default function OrderTracking() {
 
   const steps = [
     { id: 'pending', label: 'Recebido', icon: <Clock />, desc: 'Aguardando confirmação da loja' },
+    { id: 'confirmed', label: 'Confirmado', icon: <CheckCircle />, desc: 'Loja confirmou seu pedido' },
     { id: 'preparing', label: 'Em Preparo', icon: <Package />, desc: 'Seu pedido está sendo preparado' },
-    { id: 'delivering', label: 'Saiu para Entrega', icon: <Truck />, desc: 'O motoboy já está a caminho' },
+    { id: 'ready', label: 'Saiu para Entrega', icon: <Truck />, desc: 'O motoboy já está a caminho' },
     { id: 'delivered', label: 'Entregue', icon: <CheckCircle />, desc: 'Bom apetite!' }
   ];
 

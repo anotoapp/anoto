@@ -1,0 +1,33 @@
+-- Add loyalty points to customers
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS loyalty_points INTEGER DEFAULT 0;
+
+-- Add loyalty settings to stores
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS loyalty_enabled BOOLEAN DEFAULT TRUE;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS points_per_real NUMERIC DEFAULT 1;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS points_redeem_ratio NUMERIC DEFAULT 0.05; -- 1 point = R$ 0.05 (20 points = R$ 1.00)
+
+-- Create loyalty transactions table
+CREATE TABLE IF NOT EXISTS loyalty_transactions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
+  customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+  order_id UUID REFERENCES orders(id) ON DELETE SET NULL,
+  points_change INTEGER NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('earn', 'redeem', 'admin_adjustment')),
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- RLS for loyalty transactions
+ALTER TABLE loyalty_transactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Loyalty transactions are viewable by the customer"
+  ON loyalty_transactions FOR SELECT
+  USING (auth.uid() = customer_id);
+
+CREATE POLICY "Loyalty transactions are viewable by the store admin"
+  ON loyalty_transactions FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM stores s
+    WHERE s.id = store_id AND s.owner_id = auth.uid()
+  ));

@@ -12,7 +12,17 @@ export default function RegisterStore() {
   const [whatsapp, setWhatsapp] = useState('');
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionUser, setSessionUser] = useState<any>(null);
   const navigate = useNavigate();
+
+  useState(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setSessionUser(data.user);
+        setEmail(data.user.email || '');
+      }
+    });
+  });
 
   const handleStoreNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
@@ -31,38 +41,31 @@ export default function RegisterStore() {
     e.preventDefault();
     setLoading(true);
     try {
-      // 0. Verificar se o email está na whitelist da Kiwify
-      const { data: authResult, error: authCheckError } = await supabase
-        .rpc('check_email_subscription', { check_email: email });
+      // Removido check de whitelist para permitir cadastro aberto
+      const plan = 'Mensal'; // Plano padrão após trial
 
-      if (authCheckError) throw authCheckError;
+      // 1. Create/Identify User
+      let userId = sessionUser?.id;
 
-      const { authorized, plan } = (authResult as any)?.[0] || { authorized: false, plan: 'Mensal' };
-
-      if (!authorized) {
-        alert(
-          `❌ Este e-mail (${email}) não possui uma assinatura ativa no ANOTÔ.\n\n` +
-          `Para criar sua loja, adquira uma assinatura em:\nhttps://pay.kiwify.com.br/8cR0dlH\n\n` +
-          `Após a compra, volte aqui e cadastre-se com o mesmo e-mail usado na Kiwify.`
-        );
-        setLoading(false);
-        return;
+      if (!sessionUser) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+        if (authError) throw authError;
+        if (!authData.user) throw new Error('Falha ao criar usuário');
+        userId = authData.user.id;
       }
 
-      // 1. Create User
-
-      const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Falha ao criar usuário');
-
-      // 2. Create Profile
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: authData.user.id,
-        role: 'admin',
-        full_name: fullName,
-        email: email
-      });
-      if (profileError) throw profileError;
+      // 2. Create Profile (if not exists)
+      const { data: existingProfile } = await supabase.from('profiles').select('id').eq('id', userId).single();
+      
+      if (!existingProfile) {
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: userId,
+          role: 'admin',
+          full_name: fullName || email.split('@')[0],
+          email: email
+        });
+        if (profileError) throw profileError;
+      }
 
       const defaultOpeningHours = {
         monday: { isOpen: true, open: '18:00', close: '23:00' },
@@ -76,7 +79,7 @@ export default function RegisterStore() {
 
       // 3. Create Store
       const { error: storeError } = await supabase.from('stores').insert({
-        owner_id: authData.user.id,
+        owner_id: userId,
         name: storeName,
         slug: slug,
         whatsapp_number: whatsapp,
@@ -90,8 +93,12 @@ export default function RegisterStore() {
       });
       if (storeError) throw storeError;
 
-      alert('Sua loja foi criada com sucesso! Faça login para continuar.');
-      navigate('/admin/login');
+      alert('Sua loja foi criada com sucesso!');
+      if (!sessionUser) {
+        navigate('/admin/login');
+      } else {
+        window.location.href = '/admin'; // Force reload to refresh context
+      }
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Erro ao criar loja. Tente novamente.';
       alert(msg);
@@ -107,14 +114,14 @@ export default function RegisterStore() {
           <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" />
         </div>
         <div className="auth-header">
-          <h2>Crie sua Loja Virtual</h2>
-          <p>Configure seu cardápio digital em minutos</p>
+          <h2>{sessionUser ? 'Configure sua Loja' : 'Crie sua Loja Virtual'}</h2>
+          <p>{sessionUser ? 'Complete os dados da sua nova loja' : 'Configure seu cardápio digital em minutos'}</p>
         </div>
 
-        {/* Notice: requires purchase */}
+        {/* Informação sobre o Teste Grátis */}
         <div style={{
-          background: '#fffbeb',
-          border: '1px solid #fde68a',
+          background: '#f0fdf4',
+          border: '1px solid #bbf7d0',
           borderRadius: '12px',
           padding: '14px 16px',
           marginBottom: '20px',
@@ -123,43 +130,40 @@ export default function RegisterStore() {
           gap: '10px',
           fontSize: '0.85rem'
         }}>
-          <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🔑</span>
+          <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🚀</span>
           <div>
-            <strong style={{ color: '#92400e', display: 'block', marginBottom: '4px' }}>
-              Assinatura necessária
+            <strong style={{ color: '#166534', display: 'block', marginBottom: '4px' }}>
+              30 Dias de Teste Grátis
             </strong>
-            <span style={{ color: '#78350f', lineHeight: '1.5' }}>
-              Use o <strong>mesmo e-mail</strong> da sua compra na Kiwify.
-              Ainda não assinou?{' '}
-              <a
-                href="https://pay.kiwify.com.br/8cR0dlH"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#d97706', fontWeight: '700', textDecoration: 'underline' }}
-              >
-                Clique aqui para assinar →
-              </a>
+            <span style={{ color: '#15803d', lineHeight: '1.5' }}>
+              Crie sua loja agora e aproveite todos os recursos por 30 dias sem compromisso.
             </span>
           </div>
         </div>
 
-        <div className="form-group">
-          <label>Seu Nome Completo</label>
-          <input type="text" placeholder="João da Silva" value={fullName} onChange={e => setFullName(e.target.value)} required />
-        </div>
+        {!sessionUser && (
+          <>
+            <div className="form-group">
+              <label>Seu Nome Completo</label>
+              <input type="text" placeholder="João da Silva" value={fullName} onChange={e => setFullName(e.target.value)} required />
+            </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>E-mail (o mesmo da compra)</label>
-            <input type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label>Crie uma Senha</label>
-            <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} minLength={6} required />
-          </div>
-        </div>
+            <div className="form-group">
+              <label>Seu melhor E-mail</label>
+              <input type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
+            </div>
 
-        <div className="form-divider"></div>
+            <div className="form-group">
+              <label>Crie uma Senha</label>
+              <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} minLength={6} required />
+              <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px', fontStyle: 'italic' }}>
+                * Você precisará confirmar seu e-mail clicando no link que enviaremos.
+              </p>
+            </div>
+
+            <div className="form-divider"></div>
+          </>
+        )}
 
         <div className="form-group">
           <label>Nome da sua Loja</label>
@@ -178,7 +182,7 @@ export default function RegisterStore() {
         </div>
 
         <button type="submit" className="primary-action" disabled={loading}>
-          {loading ? 'Verificando assinatura...' : 'Criar Minha Loja'}
+          {loading ? 'Criando loja...' : 'Criar Minha Loja (30 dias grátis)'}
         </button>
 
         <div className="auth-footer">

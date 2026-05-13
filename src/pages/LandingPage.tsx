@@ -126,6 +126,64 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ROI / Comparison Section */}
+      <section className="lp-roi">
+        <div className="landing-container">
+          <div className="roi-grid">
+            <div className="roi-content">
+              <div className="roi-tag">POR QUE A ANOTÔ?</div>
+              <h2 className="lp-section-title" style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
+                No delivery, <span className="text-primary">cada centavo</span> conta na sua operação.
+              </h2>
+              <p className="subheadline" style={{ textAlign: 'left', fontSize: '1.1rem', lineHeight: '1.6' }}>
+                Você acorda cedo, escolhe os melhores ingredientes e cuida de cada detalhe. Por que deixar 27% do seu faturamento nas mãos de grandes aplicativos? 
+                <br /><br />
+                Nós valorizamos o seu trabalho. Criamos o ANOTÔ para ser o seu <strong>Escudo de Lucro</strong>. Aqui você paga um valor fixo justo e o restante do dinheiro fica onde deveria estar: <strong>no seu bolso.</strong>
+              </p>
+              
+              <div className="roi-stats-mini">
+                <div className="roi-stat-item">
+                  <span className="roi-stat-value">ZERO</span>
+                  <span className="roi-stat-label">Taxas sobre vendas</span>
+                </div>
+                <div className="roi-stat-item">
+                  <span className="roi-stat-value">100%</span>
+                  <span className="roi-stat-label">Lucro é seu</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="roi-card-comparison">
+              <div className="comparison-header">Comparativo Mensal (Ex: R$ 10k em vendas)</div>
+              
+              <div className="comparison-item item-bad">
+                <div className="comp-info">
+                  <span className="comp-name">Marketplaces (iFood/Outros)</span>
+                  <span className="comp-tax">27% de comissão</span>
+                </div>
+                <div className="comp-cost">- R$ 2.700,00</div>
+              </div>
+
+              <div className="comparison-divider">VS</div>
+
+              <div className="comparison-item item-good">
+                <div className="comp-info">
+                  <span className="comp-name">ANOTÔ Premium</span>
+                  <span className="comp-tax">Mensalidade fixa</span>
+                </div>
+                <div className="comp-cost">+ R$ 39,90</div>
+              </div>
+
+              <div className="comparison-footer">
+                <div className="savings-label">Economia real de:</div>
+                <div className="savings-value">R$ 2.660,10 /mês</div>
+                <p>Dinheiro que você poderia usar para reformar sua cozinha ou contratar mais um motoboy.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pain Section */}
       <section className="lp-pain">
         <div className="landing-container">
