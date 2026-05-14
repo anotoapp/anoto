@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import {
-  Store, Users, BarChart2, ShieldCheck
+  Store, Users, BarChart2, ShieldCheck, Trash2
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -121,24 +121,26 @@ export default function SuperAdmin() {
         }
       });
 
-      // 2) Add people from Authorized Emails (Kiwify buyers) who don't have a store yet
+      // 2) Add people from Authorized Emails (Kiwify buyers or old Manual entries) who don't have a store yet
       authEmails.forEach(a => {
         const email = a.email.toLowerCase();
         const hasStore = storesData.some(s => s.email?.toLowerCase() === email);
 
         if (!hasStore) {
+          const isKiwify = !!a.kiwify_order_id;
           if (leadsMap.has(email)) {
              const existing = leadsMap.get(email)!;
-             existing.status = 'Pagamento Confirmado (Pendente de Loja)';
+             existing.status = isKiwify ? 'Pagamento Confirmado (Pendente de Loja)' : 'Acesso VIP (Pendente de Loja)';
+             existing.isManual = !isKiwify;
           } else {
              leadsMap.set(email, {
                id: email,
                email: a.email,
-               name: 'Cliente Kiwify',
+               name: isKiwify ? 'Cliente Kiwify' : 'Acesso VIP (Manual)',
                created_at: a.authorized_at || new Date().toISOString(),
                last_access_at: null,
-               status: 'Pagamento Confirmado (Ainda não entrou)',
-               isManual: false
+               status: isKiwify ? 'Pagamento Confirmado (Ainda não entrou)' : 'Acesso VIP (Ainda não entrou)',
+               isManual: !isKiwify
              });
           }
         }
@@ -197,6 +199,17 @@ export default function SuperAdmin() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleRemoveEmail = async (email: string) => {
+    if (!confirm(`Tem certeza que deseja revogar o acesso/remover o e-mail ${email}?`)) return;
+    try {
+      const { error } = await supabase.from('authorized_emails').delete().eq('email', email);
+      if (error) throw error;
+      await fetchData(); // Refresh everything
+    } catch (error: any) {
+      alert('Erro ao remover: ' + error.message);
+    }
+  };
 
   const handleActivateStore = async (storeId: string, email: string, type: 'active' | 'trial' = 'active') => {
     const actionName = type === 'active' ? 'ativar' : 'liberar teste para';
@@ -461,6 +474,16 @@ export default function SuperAdmin() {
                       <a href={`mailto:${lead.email}`} className="btn-email" style={{ flex: 1, textAlign: 'center' }}>
                          E-mail
                       </a>
+                    )}
+                    {lead.isManual && (
+                      <button 
+                         onClick={() => handleRemoveEmail(lead.email)} 
+                         className="secondary-action" 
+                         style={{ padding: '8px', color: '#ef4444', border: '1px solid #fecaca', background: '#fef2f2' }}
+                         title="Remover Lead Manual"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     )}
                   </div>
                 </div>
