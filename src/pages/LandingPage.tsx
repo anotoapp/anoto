@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ArrowRight, CheckCircle2, XCircle, TrendingUp, 
-  Clock, Zap, MessageSquare, Printer, BarChart
+  Clock, Zap, MessageSquare, Printer, BarChart, Star
 } from 'lucide-react';
 import './LandingPage.css';
 
@@ -191,37 +191,75 @@ export default function LandingPage() {
             <div className="phone-demo-wrapper">
               <div className="phone-notch"></div>
               <div className="phone-body-content">
-                <div className="demo-header" style={{ background: activeTab === 'burger' ? '#18181b' : activeTab === 'pizza' ? '#7f1d1d' : '#4c1d95' }}>
-                  <div className="demo-logo-circle">
+                <div className="demo-cover" style={{ background: activeTab === 'burger' ? 'url(https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&q=80&w=400) center/cover' : activeTab === 'pizza' ? 'url(https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=400) center/cover' : 'url(https://images.unsplash.com/photo-1590005354167-6da97ce23155?auto=format&fit=crop&q=80&w=400) center/cover' }}>
+                  <div className="demo-overlay"></div>
+                </div>
+                
+                <div className="demo-details" key={activeTab} style={{ animation: 'fadeInUpDemo 0.4s ease' }}>
+                  <div className="demo-logo-float">
                     {activeTab === 'burger' ? '🍔' : activeTab === 'pizza' ? '🍕' : '🍧'}
                   </div>
-                </div>
-                <div className="demo-details">
+                  
                   <h3 className="demo-title">
                     {activeTab === 'burger' ? 'Smash Premium' : activeTab === 'pizza' ? 'Pizzaria Napoli' : 'Açaí Tropical'}
                   </h3>
-                  <p className="demo-meta">Aberto agora • 30-40 min</p>
+                  <div className="demo-meta-tags">
+                    <span className="demo-tag"><CheckCircle2 size={12} color="#10b981"/> Aberto</span>
+                    <span className="demo-tag"><Clock size={12}/> 30-45 min</span>
+                    <span className="demo-tag"><Star size={12} fill="#eab308" color="#eab308"/> 4.9</span>
+                  </div>
                   
-                  <div className="demo-cats">
+                  <div className="demo-cats-scroll">
                     <div className="cat-badge active">Destaques</div>
                     <div className="cat-badge">Combos</div>
+                    <div className="cat-badge">Bebidas</div>
+                    <div className="cat-badge">Sobremesas</div>
                   </div>
 
                   <div className="demo-product-card">
                      <div className="product-info">
                         <h4 className="product-title">
-                          {activeTab === 'burger' ? 'Duplo Smash Bacon' : activeTab === 'pizza' ? 'Pizza Calabresa (G)' : 'Barca de Açaí 1L'}
+                          {activeTab === 'burger' ? 'Smash Bacon Duplo' : activeTab === 'pizza' ? 'Pizza Calabresa (G)' : 'Barca de Açaí 1L'}
                         </h4>
                         <p className="product-desc">
-                          {activeTab === 'burger' ? '2 blends de 90g, cheddar, bacon.' : activeTab === 'pizza' ? 'Calabresa fatiada e mussarela.' : 'Açaí puro com acompanhamentos.'}
+                          {activeTab === 'burger' ? 'Pão brioche, 2 blends 90g, cheddar inglês e bacon artesanal.' : activeTab === 'pizza' ? 'Massa de longa fermentação, calabresa defumada e cebola.' : 'Açaí puro batido com xarope de guaraná e muito leite em pó.'}
                         </p>
                         <div className="product-price">
                           R$ {activeTab === 'burger' ? '34,90' : activeTab === 'pizza' ? '55,00' : '45,90'}
                         </div>
                      </div>
-                     <div className="product-img-skeleton">
+                     <div className="product-img-rich">
                         {activeTab === 'burger' ? '🍔' : activeTab === 'pizza' ? '🍕' : '🍧'}
                      </div>
+                  </div>
+
+                  <div className="demo-options-section">
+                    <div className="demo-options-title">
+                       Adicionais <span className="demo-required">Opcional</span>
+                    </div>
+                    <div className="demo-option-item">
+                      <div className="opt-left">
+                        <span className="opt-name">{activeTab === 'burger' ? '+ Bacon Extra' : activeTab === 'pizza' ? '+ Borda Recheada' : '+ Leite Ninho'}</span>
+                        <span className="opt-price">+ R$ {activeTab === 'burger' ? '4,50' : activeTab === 'pizza' ? '12,00' : '3,00'}</span>
+                      </div>
+                      <div className="opt-checkbox"></div>
+                    </div>
+                    <div className="demo-option-item">
+                      <div className="opt-left">
+                        <span className="opt-name">{activeTab === 'burger' ? '+ Hambúrguer' : activeTab === 'pizza' ? '+ Queijo Extra' : '+ Nutella'}</span>
+                        <span className="opt-price">+ R$ {activeTab === 'burger' ? '8,00' : activeTab === 'pizza' ? '8,00' : '6,00'}</span>
+                      </div>
+                      <div className="opt-checkbox active"><CheckCircle2 size={12} color="white" /></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="demo-bottom-bar">
+                  <div className="demo-qty">
+                    <span>-</span> 1 <span>+</span>
+                  </div>
+                  <div className="demo-add-btn">
+                    Adicionar <span>R$ {activeTab === 'burger' ? '42,90' : activeTab === 'pizza' ? '63,00' : '51,90'}</span>
                   </div>
                 </div>
               </div>
