@@ -89,8 +89,8 @@ html, body {
 
 .lp-hero-content {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 4rem;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 2rem;
   align-items: center;
 }
 
@@ -116,9 +116,9 @@ html, body {
 
 .hero-3d-image-container {
   perspective: 1200px;
-  width: 100%;
-  max-width: 650px;
-  margin: 0 auto;
+  width: 110%;
+  max-width: 850px;
+  margin-left: -5%;
 }
 
 .hero-3d-image {
