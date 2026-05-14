@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import {
-  Store, Users, BarChart2,
-  Trash2, ShieldCheck, PlusCircle
+  Store, Users, BarChart2, ShieldCheck
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -66,28 +65,10 @@ export default function SuperAdmin() {
     newThisMonth: 0,
   });
 
-  const [newEmail, setNewEmail] = useState('');
-  const [newPlanType, setNewPlanType] = useState('Mensal');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<'stats' | 'lojistas' | 'leads'>('stats');
   const [consolidatedLeads, setConsolidatedLeads] = useState<LeadData[]>([]);
 
-  const fetchAuthorizedEmails = async () => {
-    try {
-      const { data: emailsRes } = await supabase
-        .from('authorized_emails')
-        .select('*')
-        .order('authorized_at', { ascending: false });
-      
-      if (emailsRes) {
-        return emailsRes;
-      }
-      return [];
-    } catch (error) {
-      console.error('Error fetching authorized emails:', error);
-      return [];
-    }
-  };
+
 
   const fetchData = async () => {
     setLoading(true);
@@ -107,8 +88,6 @@ export default function SuperAdmin() {
       setStores(storesData);
       const profiles = profilesRes.data || [];
       
-      const authEmails = await fetchAuthorizedEmails();
-
       // Consolidate Leads
       const leadsMap = new Map<string, LeadData>();
 
@@ -128,37 +107,10 @@ export default function SuperAdmin() {
             name: p.full_name || 'Usuário do App',
             created_at: p.created_at,
             last_access_at: p.last_access_at,
-            status: 'Registrado no App (Pendente de Loja)',
+            status: 'Pendente de Loja',
             phone: p.phone,
             isManual: false
           });
-        }
-      });
-
-      // B) Add people from Authorized Emails who don't have a store yet
-      authEmails.forEach(a => {
-        const email = a.email.toLowerCase();
-        // Check if this email already has a store
-        const hasStore = storesData.some(s => s.email?.toLowerCase() === email);
-
-        if (!hasStore) {
-          if (leadsMap.has(email)) {
-             // Update existing
-             const existing = leadsMap.get(email)!;
-             existing.status = 'Autorizado & Registrado (Pendente de Loja)';
-             existing.isManual = true; // Mark as authorized so it can be revoked
-          } else {
-             // Add new
-             leadsMap.set(email, {
-               id: email, // use email as ID since no profile yet
-               email: a.email,
-               name: 'Email Liberado',
-               created_at: a.authorized_at,
-               last_access_at: null,
-               status: 'Autorizado (Ainda não entrou no app)',
-               isManual: true // Mark as authorized so it can be revoked
-             });
-          }
         }
       });
 
@@ -215,38 +167,6 @@ export default function SuperAdmin() {
   useEffect(() => {
     fetchData();
   }, []);
-
-  const handleAddEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newEmail) return;
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase.from('authorized_emails').upsert({
-        email: newEmail.toLowerCase().trim(),
-        plan_type: newPlanType,
-        authorized_at: new Date().toISOString()
-      }, { onConflict: 'email' });
-      if (error) throw error;
-      alert('E-mail autorizado com sucesso!');
-      setNewEmail('');
-      await fetchData(); // Refresh everything to update Leads tab too
-    } catch (error: any) {
-      alert('Erro ao autorizar: ' + error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleRemoveEmail = async (email: string) => {
-    if (!confirm(`Tem certeza que deseja revogar o acesso do e-mail ${email}?`)) return;
-    try {
-      const { error } = await supabase.from('authorized_emails').delete().eq('email', email);
-      if (error) throw error;
-      await fetchData(); // Refresh everything
-    } catch (error: any) {
-      alert('Erro ao remover: ' + error.message);
-    }
-  };
 
   const handleActivateStore = async (storeId: string, email: string, type: 'active' | 'trial' = 'active') => {
     const actionName = type === 'active' ? 'ativar' : 'liberar teste para';
@@ -476,34 +396,6 @@ export default function SuperAdmin() {
 
       {activeTab === 'leads' && (
         <div className="fade-in">
-          <div className="super-admin-panel whitelist-form-panel" style={{ marginBottom: '24px' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                <div style={{ padding: '8px', background: '#ecfdf5', borderRadius: '8px', color: '#10b981' }}>
-                  <PlusCircle size={20} />
-                </div>
-                <div>
-                  <h3 className="panel-title" style={{ margin: 0 }}>Conceder Acesso VIP</h3>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>Adicione e-mails para liberar o uso da plataforma gratuitamente.</p>
-                </div>
-             </div>
-             <form onSubmit={handleAddEmail} style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-               <div className="form-group" style={{ flex: '1', minWidth: '200px', marginBottom: 0 }}>
-                 <label>E-mail do Lojista</label>
-                 <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="cliente@email.com" required style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }} />
-               </div>
-               <div className="form-group" style={{ width: '150px', marginBottom: 0 }}>
-                 <label>Plano Liberado</label>
-                 <select value={newPlanType} onChange={e => setNewPlanType(e.target.value)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                   <option value="Mensal">Mensal</option>
-                   <option value="Anual">Anual</option>
-                 </select>
-               </div>
-               <button type="submit" disabled={isSubmitting} className="primary-action" style={{ height: '42px', padding: '0 24px', background: '#10b981', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}>
-                 {isSubmitting ? '...' : 'Liberar Acesso'}
-               </button>
-             </form>
-          </div>
-
           <div className="super-admin-panel">
             <div className="super-admin-panel-header leads-header">
               <h2>Leads & Acessos Pendentes</h2>
@@ -539,16 +431,6 @@ export default function SuperAdmin() {
                       <a href={`mailto:${lead.email}`} className="btn-email" style={{ flex: 1, textAlign: 'center' }}>
                          E-mail
                       </a>
-                    )}
-                    {lead.isManual && (
-                      <button 
-                         onClick={() => handleRemoveEmail(lead.email)} 
-                         className="secondary-action" 
-                         style={{ padding: '8px', color: '#ef4444', border: '1px solid #fecaca', background: '#fef2f2' }}
-                         title="Revogar Acesso"
-                      >
-                        <Trash2 size={16} />
-                      </button>
                     )}
                   </div>
                 </div>
