@@ -59,9 +59,12 @@ export default function LandingPage() {
             <p className="subheadline">
               Transforme seu delivery em uma operação profissional com cardápio digital, pedidos automáticos e gestão completa em um só lugar. Pare de depender de atendente para faturar.
             </p>
-            <div className="lp-hero-buttons">
-              <a href="https://pay.kiwify.com.br/8cR0dlH" target="_blank" rel="noopener noreferrer" className="btn-lp btn-lp-primary">
-                Começar a Vender Agora <ArrowRight size={18} style={{ marginLeft: '8px' }} />
+            <div className="lp-hero-buttons" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <Link to="/admin/register" className="btn-lp btn-lp-primary">
+                Começar Teste Grátis <ArrowRight size={18} style={{ marginLeft: '8px' }} />
+              </Link>
+              <a href="#pricing" className="btn-lp btn-lp-secondary" style={{ background: 'transparent', border: '2px solid rgba(255,255,255,0.2)', color: 'white' }}>
+                Ver Planos
               </a>
             </div>
             <p className="hero-trust-tag">
@@ -398,9 +401,12 @@ export default function LandingPage() {
         <div className="landing-container">
           <h2 className="headline" style={{ color: 'white' }}>Quantos pedidos você perdeu hoje?</h2>
           <p className="subheadline center-text" style={{ color: 'white', marginBottom: '3rem' }}>Pare de digitar preços e comece a receber pedidos automáticos.</p>
-          <div className="center-content">
-            <a href="https://pay.kiwify.com.br/8cR0dlH" target="_blank" rel="noopener noreferrer" className="btn-lp btn-lp-white">
-              Quero Profissionalizar Meu Delivery
+          <div className="center-content" style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/admin/register" className="btn-lp btn-lp-white">
+              Criar Conta Grátis
+            </Link>
+            <a href="https://pay.kiwify.com.br/8cR0dlH" target="_blank" rel="noopener noreferrer" className="btn-lp btn-lp-primary" style={{ background: 'transparent', border: '2px solid rgba(255,255,255,0.3)', color: 'white' }}>
+              Assinar Premium
             </a>
           </div>
         </div>
