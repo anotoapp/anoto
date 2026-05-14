@@ -150,23 +150,23 @@ export default function LandingPage() {
             <div className="split-side split-bad">
               <h3 className="split-title"><MessageSquare size={24} /> A Bagunça do WhatsApp</h3>
               <ul className="split-list">
-                <li><XCircle size={20} /> 38 mensagens acumuladas</li>
-                <li><XCircle size={20} /> Cliente perguntando "qual o cardápio?"</li>
-                <li><XCircle size={20} /> Áudios longos e confusos</li>
-                <li><XCircle size={20} /> Pedido anotado errado ou esquecido</li>
-                <li><XCircle size={20} /> Print de PIX falso ou perdido</li>
-                <li><XCircle size={20} /> Atendente sobrecarregado</li>
+                <li><XCircle size={20} className="icon-bad" /> 38 mensagens acumuladas</li>
+                <li><XCircle size={20} className="icon-bad" /> Cliente perguntando "qual o cardápio?"</li>
+                <li><XCircle size={20} className="icon-bad" /> Áudios longos e confusos</li>
+                <li><XCircle size={20} className="icon-bad" /> Pedido anotado errado ou esquecido</li>
+                <li><XCircle size={20} className="icon-bad" /> Print de PIX falso ou perdido</li>
+                <li><XCircle size={20} className="icon-bad" /> Atendente sobrecarregado</li>
               </ul>
             </div>
             <div className="split-side split-good">
               <h3 className="split-title"><Zap size={24} /> O Profissionalismo ANOTÔ</h3>
               <ul className="split-list">
-                <li><CheckCircle2 size={20} /> Pedido cai pronto e pago</li>
-                <li><CheckCircle2 size={20} /> Cliente escolhe sozinho em segundos</li>
-                <li><CheckCircle2 size={20} /> Cardápio sempre atualizado</li>
-                <li><CheckCircle2 size={20} /> Impressão direta para a cozinha</li>
-                <li><CheckCircle2 size={20} /> Histórico de clientes (Remarketing)</li>
-                <li><CheckCircle2 size={20} /> Atendimento instantâneo 24h</li>
+                <li><CheckCircle2 size={20} className="icon-good" /> Pedido cai pronto e pago</li>
+                <li><CheckCircle2 size={20} className="icon-good" /> Cliente escolhe sozinho em segundos</li>
+                <li><CheckCircle2 size={20} className="icon-good" /> Cardápio sempre atualizado</li>
+                <li><CheckCircle2 size={20} className="icon-good" /> Impressão direta para a cozinha</li>
+                <li><CheckCircle2 size={20} className="icon-good" /> Histórico de clientes (Remarketing)</li>
+                <li><CheckCircle2 size={20} className="icon-good" /> Atendimento instantâneo 24h</li>
               </ul>
             </div>
           </div>
