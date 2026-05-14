@@ -38,7 +38,7 @@ export default function LandingPage() {
       <nav className="lp-nav">
         <div className="landing-container nav-flex">
           <Link to="/" className="lp-logo">
-            <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" className="logo-img" />
+            <img src="/assets/LOGO ANOTO.webp" alt="ANOTÔ Logo" className="logo-img" />
           </Link>
           <div className="nav-actions">
             <Link to="/admin" className="btn-lp btn-lp-secondary login-btn">
@@ -74,7 +74,7 @@ export default function LandingPage() {
 
           <div className={`mockup-composition fade-up delay-1 ${isVisible ? '' : 'hidden'}`}>
             <div className="hero-3d-image-container">
-              <img src="/assets/LP IMG 1.png" alt="Painel Administrativo Anotô" className="hero-3d-image" />
+              <img src="/assets/hero-mockup.webp" alt="Painel Administrativo Anotô" className="hero-3d-image" />
             </div>
           </div>
         </div>
@@ -474,7 +474,7 @@ export default function LandingPage() {
       <footer className="landing-footer">
         <div className="landing-container footer-grid">
           <div className="footer-brand">
-            <img src="/assets/logo-anoto.png" alt="ANOTÔ Logo" className="footer-logo" />
+            <img src="/assets/LOGO ANOTO.webp" alt="ANOTÔ Logo" className="footer-logo" loading="lazy" />
             <p className="footer-tagline">Escalando o seu delivery sem depender de taxas abusivas.</p>
           </div>
           
@@ -507,7 +507,7 @@ export default function LandingPage() {
         target="_blank" 
         rel="noopener noreferrer"
       >
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" loading="lazy" />
       </a>
     </div>
   );
