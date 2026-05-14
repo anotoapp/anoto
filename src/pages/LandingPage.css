@@ -194,8 +194,49 @@ html, body {
 .demo-tab { padding: 0.75rem 1.5rem; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #a1a1aa; border-radius: 100px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
 .demo-tab.active { background: white; color: black !important; border-color: white; }
 
+.demo-content {
+  perspective: 1500px;
+  padding: 2rem 0 4rem;
+}
+
 .phone-demo-wrapper {
-  width: 310px; height: 580px; background: white; border-radius: 40px; border: 12px solid #3d1414; margin: 0 auto; overflow: hidden; position: relative; color: black;
+  width: 320px; 
+  height: 600px; 
+  background: white; 
+  border-radius: 45px; 
+  border: 14px solid #1a0505; 
+  margin: 0 auto; 
+  overflow: hidden; 
+  position: relative; 
+  color: black;
+  transform: rotateY(-15deg) rotateX(10deg);
+  box-shadow: 
+    inset 0 0 0 2px rgba(255,255,255,0.2),
+    -30px 40px 60px rgba(0,0,0,0.6),
+    0 0 40px rgba(200, 29, 37, 0.2);
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.6s ease;
+  transform-style: preserve-3d;
+}
+
+.phone-demo-wrapper:hover {
+  transform: rotateY(-5deg) rotateX(5deg) scale(1.05);
+  box-shadow: 
+    inset 0 0 0 2px rgba(255,255,255,0.2),
+    -15px 20px 40px rgba(0,0,0,0.7),
+    0 0 50px rgba(200, 29, 37, 0.4);
+}
+
+.phone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 28px;
+  background: #1a0505;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  z-index: 50;
 }
 
 .demo-header { height: 140px; position: relative; }
@@ -271,6 +312,8 @@ html, body {
   .lp-hero-buttons { justify-content: center; }
   .mockup-composition { margin-top: 4rem; height: auto; }
   .hero-3d-image { transform: rotateY(0deg) rotateX(0deg); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+  .phone-demo-wrapper { transform: rotateY(0deg) rotateX(0deg); }
+  .phone-demo-wrapper:hover { transform: translateY(-10px) scale(1.02); }
   .split-comparison { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; gap: 4rem; }
   .footer-links-group { gap: 2rem; }
