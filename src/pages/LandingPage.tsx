@@ -73,57 +73,8 @@ export default function LandingPage() {
           </div>
 
           <div className={`mockup-composition fade-up delay-1 ${isVisible ? '' : 'hidden'}`}>
-            <div className="laptop-mockup">
-              <div className="laptop-header">
-                <div className="laptop-dot dot-red"></div>
-                <div className="laptop-dot dot-orange"></div>
-                <div className="laptop-dot dot-green"></div>
-              </div>
-              <div className="laptop-body">
-                <div className="laptop-sidebar">
-                  <div className="laptop-skeleton-line" style={{width: '60%', marginBottom: '20px'}}></div>
-                  <div className="laptop-skeleton-line" style={{width: '100%'}}></div>
-                  <div className="laptop-skeleton-line" style={{width: '80%'}}></div>
-                  <div className="laptop-skeleton-line" style={{width: '90%'}}></div>
-                </div>
-                <div className="laptop-main-content">
-                  <div className="laptop-top-cards">
-                    <div className="laptop-mini-card">
-                      <div className="laptop-skeleton-line card-label"></div>
-                      <div className="laptop-skeleton-line card-value-red"></div>
-                    </div>
-                    <div className="laptop-mini-card">
-                       <div className="laptop-skeleton-line card-label"></div>
-                       <div className="laptop-skeleton-line card-value-green"></div>
-                    </div>
-                  </div>
-                  <div className="laptop-table-box">
-                    <div className="table-header-skeleton">
-                       <div className="laptop-skeleton-line" style={{width: '20%'}}></div>
-                       <div className="laptop-skeleton-line" style={{width: '10%'}}></div>
-                    </div>
-                    <div className="table-row-skeleton">
-                       <div className="laptop-skeleton-line" style={{width: '30%'}}></div>
-                       <div className="laptop-skeleton-line" style={{width: '15%'}}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="phone-mockup">
-              <div className="phone-notch"></div>
-              <div className="phone-body">
-                <div className="phone-header-skeleton"></div>
-                <div className="phone-line-long"></div>
-                <div className="phone-line-short"></div>
-                <div className="phone-item-card">
-                   <div className="item-image-skeleton"></div>
-                   <div className="item-details-skeleton">
-                      <div className="line-long"></div>
-                      <div className="line-price"></div>
-                   </div>
-                </div>
-              </div>
+            <div className="hero-3d-image-container">
+              <img src="/assets/LP IMG 1.png" alt="Painel Administrativo Anotô" className="hero-3d-image" />
             </div>
           </div>
         </div>
