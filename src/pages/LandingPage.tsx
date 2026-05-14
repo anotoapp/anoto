@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ArrowRight, CheckCircle2, XCircle, TrendingUp, 
-  Clock, Zap, MessageSquare, Printer, BarChart, Star
+  Clock, Zap, MessageSquare, Printer, BarChart, Star, UserCheck
 } from 'lucide-react';
 import './LandingPage.css';
 
@@ -262,6 +262,76 @@ export default function LandingPage() {
                     Adicionar <span>R$ {activeTab === 'burger' ? '42,90' : activeTab === 'pizza' ? '63,00' : '51,90'}</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CRM Section */}
+      <section className="lp-crm">
+        <div className="landing-container">
+          <div className="crm-grid">
+            <div className="crm-content">
+              <div className="crm-tag">CRM & MÁQUINA DE VENDAS</div>
+              <h2 className="crm-headline">
+                Conheça seu cliente. <br /><span className="text-primary">Venda o dobro.</span>
+              </h2>
+              <p className="crm-desc">
+                Você sabe quem comprou de você na semana passada e não voltou mais? O <strong>ANOTÔ</strong> possui um CRM integrado que mapeia o comportamento de compra de cada cliente.
+                <br /><br />
+                Saiba exatamente o que eles gostam, quando costumam pedir e dispare mensagens automáticas no WhatsApp com cupons focados para resgatar clientes ausentes.
+              </p>
+              
+              <ul className="crm-features">
+                <li><UserCheck size={20} className="icon-primary" /> Histórico completo de pedidos por cliente</li>
+                <li><MessageSquare size={20} className="icon-primary" /> Remarketing no WhatsApp com 1 clique</li>
+                <li><Star size={20} className="icon-primary" /> Pesquisa de satisfação (NPS) no rastreio</li>
+                <li><TrendingUp size={20} className="icon-primary" /> Filtro de clientes inativos (+30 dias)</li>
+              </ul>
+            </div>
+
+            <div className="crm-visual">
+              <div className="crm-dashboard-card">
+                <div className="crm-card-header">
+                  <div className="crm-user-info">
+                    <div className="crm-avatar">JS</div>
+                    <div>
+                      <h4 className="crm-user-name">João Silva</h4>
+                      <p className="crm-user-meta">Cliente VIP • 12 pedidos</p>
+                    </div>
+                  </div>
+                  <div className="crm-status-badge">Ausente (+35 dias)</div>
+                </div>
+                
+                <div className="crm-stats-row">
+                  <div className="crm-mini-stat">
+                    <span>Ticket Médio</span>
+                    <strong>R$ 85,50</strong>
+                  </div>
+                  <div className="crm-mini-stat">
+                    <span>Favorito</span>
+                    <strong>Smash Bacon</strong>
+                  </div>
+                </div>
+
+                <div className="crm-action-box">
+                  <p>Recupere este cliente agora mesmo:</p>
+                  <button className="crm-btn-recover">
+                    <MessageSquare size={16} /> Enviar Cupom "VOLTA10"
+                  </button>
+                </div>
+              </div>
+              
+              <div className="crm-float-card fade-up delay-2">
+                <div className="float-stars">
+                  <Star size={16} fill="#eab308" color="#eab308" />
+                  <Star size={16} fill="#eab308" color="#eab308" />
+                  <Star size={16} fill="#eab308" color="#eab308" />
+                  <Star size={16} fill="#eab308" color="#eab308" />
+                  <Star size={16} fill="#eab308" color="#eab308" />
+                </div>
+                <p className="float-nps-text">"Melhor lanche da região! Chegou quentinho e no prazo."</p>
               </div>
             </div>
           </div>
