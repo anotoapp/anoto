@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Clock, Package, Truck, CheckCircle, ArrowLeft, MessageCircle, XCircle } from 'lucide-react';
+import { Clock, Package, Truck, CheckCircle, ArrowLeft, MessageCircle, XCircle, Star } from 'lucide-react';
 import './OrderTracking.css';
 
 interface Order {
   id: string;
+  store_id: string;
   status: string;
   customer_name: string;
+  customer_phone: string;
   total: number;
   created_at: string;
   order_type: string;
@@ -22,6 +24,11 @@ export default function OrderTracking() {
   const { storeSlug, orderId } = useParams<{ storeSlug: string; orderId: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rating, setRating] = useState<number>(0);
+  const [hoveredRating, setHoveredRating] = useState<number>(0);
+  const [comment, setComment] = useState('');
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     async function fetchOrder() {
@@ -62,6 +69,43 @@ export default function OrderTracking() {
       supabase.removeChannel(channel);
     };
   }, [orderId]);
+
+  useEffect(() => {
+    // Check if review was already submitted when order is loaded
+    async function checkExistingReview() {
+      if (order && order.status === 'delivered') {
+        const { data } = await supabase
+          .from('order_reviews')
+          .select('id')
+          .eq('order_id', order.id)
+          .maybeSingle();
+        if (data) {
+          setReviewSubmitted(true);
+        }
+      }
+    }
+    checkExistingReview();
+  }, [order]);
+
+  const submitReview = async () => {
+    if (rating === 0 || !order) return;
+    setIsSubmittingReview(true);
+    try {
+      const { error } = await supabase.from('order_reviews').insert({
+        store_id: order.store_id,
+        order_id: order.id,
+        customer_phone: order.customer_phone || 'unknown',
+        rating,
+        comment
+      });
+      if (error) throw error;
+      setReviewSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   if (loading) return <div className="tracking-loading">Carregando status do pedido...</div>;
   if (!order) return <div className="tracking-error">Pedido não encontrado.</div>;
@@ -131,6 +175,64 @@ export default function OrderTracking() {
             <MessageCircle size={20} /> Falar com a loja
           </a>
         </div>
+        
+        {order.status === 'delivered' && (
+          <div className="review-section" style={{ marginTop: '32px', background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', textAlign: 'center' }}>
+            {reviewSubmitted ? (
+              <div>
+                <div style={{ color: '#10b981', marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+                  <CheckCircle size={40} />
+                </div>
+                <h3 style={{ margin: '0 0 8px', color: '#0f172a' }}>Obrigado pelo feedback!</h3>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>Sua avaliação ajuda a loja a melhorar sempre.</p>
+              </div>
+            ) : (
+              <div>
+                <h3 style={{ margin: '0 0 8px', color: '#0f172a' }}>Como foi seu pedido?</h3>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 16px' }}>Toque nas estrelas para avaliar a qualidade e entrega.</p>
+                
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHoveredRating(star)}
+                      onMouseLeave={() => setHoveredRating(0)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', transition: 'transform 0.1s' }}
+                      className={(hoveredRating || rating) >= star ? 'star-active' : ''}
+                    >
+                      <Star 
+                        size={32} 
+                        fill={(hoveredRating || rating) >= star ? '#f59e0b' : 'transparent'} 
+                        color={(hoveredRating || rating) >= star ? '#f59e0b' : '#cbd5e1'} 
+                        style={{ transform: (hoveredRating || rating) === star ? 'scale(1.1)' : 'scale(1)' }}
+                      />
+                    </button>
+                  ))}
+                </div>
+
+                {rating > 0 && (
+                  <div style={{ animation: 'fadeIn 0.3s' }}>
+                    <textarea 
+                      placeholder="Deixe um comentário (opcional)..."
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '16px', minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' }}
+                    />
+                    <button 
+                      onClick={submitReview}
+                      disabled={isSubmittingReview}
+                      style={{ width: '100%', padding: '14px', background: 'var(--brand-red, #dc2626)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', opacity: isSubmittingReview ? 0.7 : 1 }}
+                    >
+                      {isSubmittingReview ? 'Enviando...' : 'Enviar Avaliação'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       <footer className="tracking-footer">
