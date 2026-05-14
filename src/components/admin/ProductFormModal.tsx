@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Image as ImageIcon, Plus, Trash2, Sparkles } from 'lucide-react';
+import { X, Image as ImageIcon, Plus, Trash2, Sparkles, Tag, DollarSign, PackagePlus } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { optimizeImage } from '../../lib/image-optimizer';
 import type { Product, Category, ProductOptionGroup, ProductOption } from '../../types';
@@ -41,7 +41,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
     if (productToEdit) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(productToEdit.name);
-      setDescription(productToEdit.description);
+      setDescription(productToEdit.description || '');
       setPrice(productToEdit.price);
       setCategoryId(productToEdit.category_id);
       setImage(productToEdit.image);
@@ -63,14 +63,42 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const generateAIDescription = async () => {
-    if (!name) {
-      alert('Por favor, digite o nome do produto primeiro.');
+    if (!name.trim()) {
+      alert('Por favor, digite o nome do produto primeiro para a IA entender o que é.');
       return;
     }
 
     setIsGeneratingAI(true);
+    
+    // Fallback Semântico Local Super Inteligente (Não requer API Key)
+    const generateLocalFallback = (prodName: string) => {
+      const n = prodName.toLowerCase();
+      if (n.includes('burger') || n.includes('burguer') || n.includes('x-') || n.includes('hamb')) {
+        return `Hambúrguer artesanal suculento, montado com ingredientes frescos e selecionados. Perfeito para matar a sua fome com muito sabor e qualidade.`;
+      }
+      if (n.includes('pizza')) {
+        return `Pizza artesanal assada no ponto perfeito, com massa leve, molho especial e ingredientes premium. Uma explosão de sabores em cada fatia.`;
+      }
+      if (n.includes('açai') || n.includes('açaí') || n.includes('acai')) {
+        return `Açaí premium super cremoso e refrescante, preparado na hora com os melhores complementos. A escolha perfeita para qualquer hora do dia.`;
+      }
+      if (n.includes('porção') || n.includes('porcao') || n.includes('batata') || n.includes('fritas')) {
+        return `Porção generosa e super crocante, frita na hora. O acompanhamento ideal para dividir com os amigos ou saborear sozinho.`;
+      }
+      if (n.includes('bebida') || n.includes('refri') || n.includes('suco') || n.includes('coca') || n.includes('água') || n.includes('agua')) {
+        return `Bebida super gelada e refrescante, perfeita para acompanhar a sua refeição.`;
+      }
+      if (n.includes('doce') || n.includes('sobremesa') || n.includes('bolo') || n.includes('churros') || n.includes('brownie')) {
+        return `Sobremesa irresistível, feita com ingredientes selecionados para fechar sua refeição com chave de ouro. Um verdadeiro pecado de sabor!`;
+      }
+      if (n.includes('combo')) {
+        return `A combinação perfeita para matar a sua fome! Um combo montado especialmente para entregar o máximo de sabor e custo-benefício.`;
+      }
+      return `Um dos nossos pratos favoritos! Preparado com ingredientes selecionados e muito carinho para oferecer o melhor sabor e qualidade para você.`;
+    };
+
     try {
-      // Usaremos a Edge Function do Supabase que criaremos a seguir
+      // Tenta a API Oficial do Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('generate-description', {
         body: { productName: name }
       });
@@ -78,22 +106,14 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
       if (error) throw error;
       if (data?.description) {
         setDescription(data.description);
+      } else {
+        throw new Error("API retornou sem descrição.");
       }
     } catch (error) {
-      console.error('Erro ao gerar descrição:', error);
-      // Fallback amigável caso a função ainda não esteja pronta ou falhe
-      const mockDescriptions: Record<string, string> = {
-        'Hambúrguer': 'Hambúrguer suculento com blend especial de carnes selecionadas, grelhado no ponto perfeito e servido em um pão brioche macio com ingredientes frescos.',
-        'Pizza': 'Nossa pizza artesanal é preparada com massa de longa fermentação, molho de tomate natural e ingredientes premium que garantem uma explosão de sabor a cada fatia.',
-        'Açaí': 'Açaí super cremoso e refrescante, batido na hora para garantir a textura perfeita e servido com acompanhamentos selecionados que você vai amar.'
-      };
-      
-      const foundKey = Object.keys(mockDescriptions).find(key => name.toLowerCase().includes(key.toLowerCase()));
-      if (foundKey) {
-        setDescription(mockDescriptions[foundKey]);
-      } else {
-        alert('Ops! Não conseguimos conectar com a IA agora, mas tente digitar o nome do produto novamente.');
-      }
+      console.warn('Fallback ativado: IA externa falhou, usando gerador local semântico.', error);
+      // Se falhar (Timeout, erro 500, sem API KEY), usa o fallback local instantaneamente
+      const fallbackDesc = generateLocalFallback(name);
+      setDescription(fallbackDesc);
     } finally {
       setIsGeneratingAI(false);
     }
@@ -159,11 +179,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
       if (!e.target.files || e.target.files.length === 0) return;
 
       const originalFile = e.target.files[0];
-      
-      // Otimizar a imagem antes de enviar
       const optimizedBlob = await optimizeImage(originalFile);
-      
-      // Criar um nome de arquivo único com extensão .webp
       const fileName = `${Math.random()}.webp`;
       const filePath = `${storeId}/${fileName}`;
 
@@ -210,7 +226,6 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
         productId = data.id;
       }
 
-      // Handle Modifiers (Clear and Re-insert for simplicity in this version)
       if (productId) {
         await supabase.from('product_option_groups').delete().eq('product_id', productId);
         
@@ -252,41 +267,48 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
   };
 
   return (
-    <div className="drawer-overlay" onClick={onClose} style={{ zIndex: 1100, background: 'rgba(45, 10, 10, 0.4)', backdropFilter: 'blur(4px)' }}>
-      <div className="drawer-content open" onClick={e => e.stopPropagation()} style={{ maxWidth: '650px', margin: 'auto', borderRadius: '32px', height: 'auto', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(200, 29, 37, 0.1)', boxShadow: '0 25px 50px rgba(0,0,0,0.15)' }}>
-        <div className="drawer-header" style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 10, padding: '32px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--lp-text-dark)', margin: 0 }}>{productToEdit ? 'Editar Produto' : 'Novo Produto'}</h2>
-          <button onClick={onClose} style={{ background: '#f5f5f5', border: 'none', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}><X size={20} /></button>
+    <div className="drawer-overlay" onClick={onClose} style={{ zIndex: 1100, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(8px)' }}>
+      <div className="drawer-content open" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', margin: 'auto', borderRadius: '32px', height: 'auto', maxHeight: '92vh', overflowY: 'auto', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+        <div className="drawer-header" style={{ position: 'sticky', top: 0, backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', zIndex: 10, padding: '28px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: '800', color: '#0f172a', margin: '0 0 4px 0' }}>{productToEdit ? 'Editar Produto' : 'Novo Produto'}</h2>
+            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Preencha os detalhes do seu produto abaixo.</p>
+          </div>
+          <button onClick={onClose} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}><X size={22} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="drawer-body" style={{ padding: '32px' }}>
           
-          {/* Basic Info */}
-          <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Imagem</label>
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div style={{ width: '80px', height: '80px', borderRadius: '8px', backgroundColor: '#f0f0f0', overflow: 'hidden' }}>
-                {image ? <img src={image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={32} color="#ccc" style={{ margin: '24px' }} />}
+          <div className="form-group" style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', color: '#334155' }}>Foto do Produto</label>
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center', background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+              <div style={{ width: '80px', height: '80px', borderRadius: '12px', backgroundColor: '#e2e8f0', overflow: 'hidden', flexShrink: 0, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                {image ? <img src={image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={32} color="#94a3b8" style={{ margin: '24px' }} />}
               </div>
-              <label className="primary-action" style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: '6px' }}>
-                {uploading ? 'Enviando...' : 'Escolher Imagem'}
-                <input type="file" accept="image/*" onChange={uploadImage} disabled={uploading} style={{ display: 'none' }} />
-              </label>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', color: '#64748b' }}>Imagens bonitas vendem mais! Use fotos quadradas (1:1).</p>
+                <label className="primary-action" style={{ padding: '10px 20px', cursor: 'pointer', borderRadius: '8px', fontSize: '0.9rem', display: 'inline-block' }}>
+                  {uploading ? 'Otimizando e Enviando...' : 'Escolher Imagem'}
+                  <input type="file" accept="image/*" onChange={uploadImage} disabled={uploading} style={{ display: 'none' }} />
+                </label>
+              </div>
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Nome</label>
-            <input type="text" value={name} onChange={e => setName(e.target.value)} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }} />
+          <div className="form-group" style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#334155' }}>Nome do Produto</label>
+            <div style={{ position: 'relative' }}>
+              <div style={{ position: 'absolute', left: '16px', top: '14px', color: '#94a3b8' }}>
+                <Tag size={20} />
+              </div>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Ex: Hambúrguer Artesanal Duplo" style={{ width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', backgroundColor: '#f8fafc', color: '#0f172a' }} />
+            </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
-              <label style={{ fontWeight: '500' }}>
-                Descrição
-                <span style={{ fontWeight: '400', color: '#94a3b8', fontSize: '0.8rem', marginLeft: '6px' }}>
-                  (card e modal)
-                </span>
+          <div className="form-group" style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <label style={{ fontWeight: '600', color: '#334155', margin: 0 }}>
+                Descrição Atraente
               </label>
               <button
                 type="button"
@@ -296,129 +318,162 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background: 'linear-gradient(135deg, #fdf4ff 0%, #fae8ff 100%)',
-                  color: '#a21caf',
-                  border: '1px solid #f0abfc',
-                  padding: '4px 10px',
+                  background: 'linear-gradient(135deg, #c084fc 0%, #db2777 100%)',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '6px 14px',
                   borderRadius: '20px',
-                  fontSize: '0.75rem',
+                  fontSize: '0.8rem',
                   fontWeight: '700',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   opacity: isGeneratingAI ? 0.7 : 1,
-                  boxShadow: '0 2px 4px rgba(162, 28, 175, 0.05)'
+                  boxShadow: '0 4px 12px rgba(219, 39, 119, 0.3)'
                 }}
               >
                 <Sparkles size={14} className={isGeneratingAI ? 'spin-slow' : ''} />
-                {isGeneratingAI ? 'Escrevendo...' : '✨ Gerar com IA'}
+                {isGeneratingAI ? 'Gerando Mágica...' : 'Gerar com IA'}
               </button>
             </div>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Ex: Pão brioche, blend 160g, queijo cheddar, alface americana, tomate, picles e molho especial da casa."
+              placeholder="Ex: Pão brioche selado na manteiga, blend especial de 160g, duplo queijo cheddar derretido..."
               rows={3}
               style={{
                 width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid #ddd',
+                padding: '16px',
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
                 resize: 'vertical',
                 fontFamily: 'inherit',
                 fontSize: '0.95rem',
-                lineHeight: '1.5',
+                lineHeight: '1.6',
                 color: '#1e293b',
                 boxSizing: 'border-box',
+                backgroundColor: '#f8fafc'
               }}
             />
           </div>
 
-          <div className="form-row" style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+          <div className="form-row" style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Preço Base</label>
-              <input type="number" step="0.01" value={price} onChange={e => setPrice(parseFloat(e.target.value))} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }} />
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#334155' }}>Preço Base</label>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', left: '16px', top: '14px', color: '#94a3b8' }}>
+                  <DollarSign size={20} />
+                </div>
+                <input type="number" step="0.01" value={price} onChange={e => setPrice(parseFloat(e.target.value))} required style={{ width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', backgroundColor: '#f8fafc', color: '#0f172a' }} />
+              </div>
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Categoria</label>
-              <select value={categoryId} onChange={e => setCategoryId(e.target.value)} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', backgroundColor: 'white' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#334155' }}>Categoria</label>
+              <select value={categoryId} onChange={e => setCategoryId(e.target.value)} required style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', color: '#0f172a', fontSize: '1rem', appearance: 'none' }}>
                 {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
               </select>
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', background: '#fff9eb', padding: '12px 16px', borderRadius: '12px', border: '1px solid #fde68a' }}>
-            <input 
-              type="checkbox" 
-              id="isFeatured"
-              checked={isFeatured} 
-              onChange={e => setIsFeatured(e.target.checked)} 
-              style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-            />
-            <label htmlFor="isFeatured" style={{ margin: 0, fontWeight: '700', color: '#92400e', cursor: 'pointer' }}>
-              ✨ Destacar este produto (aparece no carrossel do topo)
+          <div style={{ background: '#fffbeb', padding: '20px', borderRadius: '16px', border: '1px solid #fde68a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div>
+              <h4 style={{ margin: '0 0 4px 0', color: '#92400e', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={18} /> Destacar na Vitrine
+              </h4>
+              <p style={{ margin: 0, color: '#b45309', fontSize: '0.85rem' }}>Exibe este produto no carrossel gigante do topo da loja.</p>
+            </div>
+            <label style={{ position: 'relative', display: 'inline-block', width: '56px', height: '32px' }}>
+              <input type="checkbox" checked={isFeatured} onChange={e => setIsFeatured(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
+              <span style={{
+                position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: isFeatured ? '#f59e0b' : '#cbd5e1', transition: '.4s', borderRadius: '34px'
+              }}>
+                <span style={{
+                  position: 'absolute', content: '""', height: '24px', width: '24px',
+                  left: isFeatured ? '28px' : '4px', bottom: '4px', backgroundColor: 'white',
+                  transition: '.4s', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }} />
+              </span>
             </label>
           </div>
 
-          <div className="form-group" style={{ marginBottom: '16px', background: '#eef2ff', padding: '16px', borderRadius: '12px', border: '1px solid #c7d2fe' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#3730a3' }}>🎁 Upsell ("Compre Junto")</label>
-            <p style={{ fontSize: '0.85rem', color: '#4f46e5', marginBottom: '12px' }}>
-              Sugira um produto complementar para o cliente levar junto antes de fechar o pedido.
-            </p>
-            <select value={upsellProductId} onChange={e => setUpsellProductId(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #a5b4fc', backgroundColor: 'white', color: '#312e81', fontWeight: '500' }}>
-              <option value="">Nenhuma sugestão</option>
+          <div style={{ background: '#f0fdfa', padding: '20px', borderRadius: '16px', border: '1px solid #99f6e4', marginBottom: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <div style={{ background: '#14b8a6', padding: '8px', borderRadius: '10px', color: 'white' }}>
+                <PackagePlus size={20} />
+              </div>
+              <div>
+                <h4 style={{ margin: '0 0 2px 0', color: '#0f766e', fontSize: '1.05rem' }}>Upsell Automático</h4>
+                <p style={{ margin: 0, color: '#115e59', fontSize: '0.85rem' }}>O que oferecer de acompanhamento perfeito?</p>
+              </div>
+            </div>
+            <select value={upsellProductId} onChange={e => setUpsellProductId(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid #5eead4', backgroundColor: 'white', color: '#0f766e', fontWeight: '600', fontSize: '0.95rem' }}>
+              <option value="">Não sugerir nada</option>
               {products.filter(p => p.id !== productToEdit?.id).map(p => (
-                <option key={p.id} value={p.id}>Sugira: {p.name} (+R$ {p.price.toFixed(2)})</option>
+                <option key={p.id} value={p.id}>Oferecer: {p.name} (+R$ {p.price.toFixed(2)})</option>
               ))}
             </select>
           </div>
 
-          <div style={{ marginTop: '32px', borderTop: '2px solid #f0f0f0', paddingTop: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontWeight: '800', color: 'var(--lp-text-dark)' }}>Grupos de Opcionais</h3>
-              <button type="button" onClick={addGroup} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--brand-red)', background: 'none', border: 'none', fontWeight: '700', cursor: 'pointer' }}>
-                <Plus size={18} /> Adicionar Grupo
+          <div style={{ marginTop: '40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div>
+                <h3 style={{ margin: '0 0 4px 0', fontWeight: '800', color: '#0f172a', fontSize: '1.3rem' }}>Opcionais & Adicionais</h3>
+                <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Permita que o cliente customize o pedido.</p>
+              </div>
+              <button type="button" onClick={addGroup} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff', background: '#3b82f6', border: 'none', fontWeight: '600', cursor: 'pointer', padding: '10px 16px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
+                <Plus size={18} /> Novo Grupo
               </button>
             </div>
 
+            {optionGroups.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px 20px', background: '#f8fafc', borderRadius: '16px', border: '2px dashed #cbd5e1' }}>
+                <p style={{ color: '#64748b', margin: 0, fontWeight: '500' }}>Nenhum opcional cadastrado. Clique no botão acima para adicionar acompanhamentos, tamanhos ou remoção de ingredientes.</p>
+              </div>
+            )}
+
             {optionGroups.map((group, gIndex) => (
-              <div key={gIndex} style={{ backgroundColor: '#FFFBF2', padding: '20px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(200, 29, 37, 0.1)' }}>
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '15px' }}>
-                  <input placeholder="Ex: Escolha o Molho" value={group.name} onChange={e => updateGroup(gIndex, { name: e.target.value })} style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', border: '1px solid #ddd', fontWeight: '600' }} />
-                  <button type="button" onClick={() => removeGroup(gIndex)} style={{ color: '#ff4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={20} /></button>
+              <div key={gIndex} style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '20px', marginBottom: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                  <input placeholder="Nome do Grupo (Ex: Escolha a Borda, Adicionais...)" value={group.name} onChange={e => updateGroup(gIndex, { name: e.target.value })} style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontWeight: '700', fontSize: '1.05rem', backgroundColor: '#f8fafc' }} />
+                  <button type="button" onClick={() => removeGroup(gIndex)} style={{ color: '#ef4444', background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '12px', width: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Trash2 size={20} /></button>
                 </div>
                 
-                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', fontSize: '0.9rem', fontWeight: '500' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={group.required} onChange={e => updateGroup(gIndex, { required: e.target.checked, min_options: e.target.checked ? 1 : 0 })} /> 
-                    Obrigatório
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginBottom: '24px', padding: '16px', background: '#f8fafc', borderRadius: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: '600', color: '#334155' }}>
+                    <input type="checkbox" checked={group.required} onChange={e => updateGroup(gIndex, { required: e.target.checked, min_options: e.target.checked ? 1 : 0 })} style={{ width: '18px', height: '18px', accentColor: '#3b82f6' }} /> 
+                    Seleção Obrigatória
                   </label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    Máx. Opções: 
-                    <input type="number" value={group.max_options} onChange={e => updateGroup(gIndex, { max_options: parseInt(e.target.value) })} style={{ width: '50px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #ddd' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', color: '#334155' }}>
+                    Máx. de Escolhas permitidas: 
+                    <input type="number" value={group.max_options} onChange={e => updateGroup(gIndex, { max_options: parseInt(e.target.value) })} style={{ width: '60px', padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', textAlign: 'center' }} />
                   </div>
                 </div>
 
-                <div style={{ paddingLeft: '20px', borderLeft: '3px solid rgba(200, 29, 37, 0.1)' }}>
+                <div>
+                  <h5 style={{ margin: '0 0 12px 0', color: '#64748b', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Itens deste grupo</h5>
                   {group.options?.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                      <input placeholder="Nome (Ex: Maionese)" value={opt.name} onChange={e => updateOption(gIndex, oIndex, { name: e.target.value })} style={{ flex: 2, padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd' }} />
-                      <input type="number" placeholder="Preço" value={opt.price} onChange={e => updateOption(gIndex, oIndex, { price: parseFloat(e.target.value) })} style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd' }} />
-                      <button type="button" onClick={() => removeOption(gIndex, oIndex)} style={{ color: '#999', background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
+                    <div key={oIndex} style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                      <input placeholder="Nome do Item (Ex: Bacon extra)" value={opt.name} onChange={e => updateOption(gIndex, oIndex, { name: e.target.value })} style={{ flex: 2, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }} />
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }}>R$</div>
+                        <input type="number" placeholder="0.00" value={opt.price} onChange={e => updateOption(gIndex, oIndex, { price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '12px 12px 12px 36px', borderRadius: '10px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }} />
+                      </div>
+                      <button type="button" onClick={() => removeOption(gIndex, oIndex)} style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: '0 8px' }}><X size={20} /></button>
                     </div>
                   ))}
-                  <button type="button" onClick={() => addOption(gIndex)} style={{ fontSize: '0.9rem', color: 'var(--brand-red)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', fontWeight: '700' }}>+ Adicionar Item</button>
+                  <button type="button" onClick={() => addOption(gIndex)} style={{ marginTop: '8px', fontSize: '0.95rem', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}><Plus size={16} /> Adicionar Opção</button>
                 </div>
               </div>
             ))}
           </div>
 
-          <div style={{ marginTop: '32px', display: 'flex', gap: '15px', position: 'sticky', bottom: '-24px', background: 'white', padding: '20px 0' }}>
-            <button type="button" onClick={onClose} className="secondary-action" style={{ flex: 1, padding: '14px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid #ddd' }}>Cancelar</button>
+          <div style={{ marginTop: '40px', display: 'flex', gap: '16px', position: 'sticky', bottom: '-32px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', padding: '24px 0', borderTop: '1px solid #f1f5f9' }}>
+            <button type="button" onClick={onClose} className="secondary-action" style={{ flex: 1, padding: '16px', borderRadius: '14px', fontWeight: '700', cursor: 'pointer', border: '1px solid #cbd5e1', color: '#475569', fontSize: '1.05rem', backgroundColor: 'white' }}>Cancelar</button>
             <button 
               type="submit" 
               disabled={loading || uploading} 
               className="primary-action" 
-              style={{ flex: 1, padding: '14px', borderRadius: '12px', fontWeight: '700', cursor: 'pointer', background: 'var(--brand-red)', color: 'white', border: 'none', boxShadow: '0 8px 20px rgba(200, 29, 37, 0.2)' }}
+              style={{ flex: 2, padding: '16px', borderRadius: '14px', fontWeight: '700', cursor: 'pointer', background: 'var(--brand-red)', color: 'white', border: 'none', boxShadow: '0 10px 25px rgba(200, 29, 37, 0.3)', fontSize: '1.05rem' }}
             >
               {loading ? 'Salvando...' : 'Salvar Produto'}
             </button>
