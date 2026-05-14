@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import {
   Store, Users, BarChart2,
-  Plus, Trash2, ShieldCheck
+  Trash2, ShieldCheck, PlusCircle
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -23,12 +23,7 @@ interface StoreData {
   last_access_at?: string;
 }
 
-interface AuthorizedEmail {
-  email: string;
-  plan_type: string;
-  authorized_at: string;
-  kiwify_order_id?: string;
-}
+
 
 interface LeadData {
   id: string;
@@ -38,6 +33,7 @@ interface LeadData {
   last_access_at: string | null;
   status: string;
   phone?: string;
+  isManual?: boolean;
 }
 
 interface MonthlyData {
@@ -70,11 +66,10 @@ export default function SuperAdmin() {
     newThisMonth: 0,
   });
 
-  const [authorizedEmails, setAuthorizedEmails] = useState<AuthorizedEmail[]>([]);
   const [newEmail, setNewEmail] = useState('');
   const [newPlanType, setNewPlanType] = useState('Mensal');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<'stats' | 'lojistas' | 'leads' | 'whitelist'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'lojistas' | 'leads'>('stats');
   const [consolidatedLeads, setConsolidatedLeads] = useState<LeadData[]>([]);
 
   const fetchAuthorizedEmails = async () => {
@@ -85,7 +80,6 @@ export default function SuperAdmin() {
         .order('authorized_at', { ascending: false });
       
       if (emailsRes) {
-        setAuthorizedEmails(emailsRes);
         return emailsRes;
       }
       return [];
@@ -120,8 +114,15 @@ export default function SuperAdmin() {
 
       // A) Add people from Profiles who don't have a store
       profiles.forEach(p => {
-        if (!storesData.some(s => s.owner_id === p.id)) {
-          leadsMap.set(p.email?.toLowerCase(), {
+        const userEmail = p.email?.toLowerCase();
+        // Check if there is ANY store matching owner_id OR email
+        const hasStore = storesData.some(s => 
+          s.owner_id === p.id || 
+          (s.email?.toLowerCase() === userEmail && userEmail)
+        );
+
+        if (!hasStore && userEmail) {
+          leadsMap.set(userEmail, {
             id: p.id,
             email: p.email,
             name: p.full_name || 'Usuário do App',
@@ -129,6 +130,7 @@ export default function SuperAdmin() {
             last_access_at: p.last_access_at,
             status: 'Registrado no App (Pendente de Loja)',
             phone: p.phone,
+            isManual: false
           });
         }
       });
@@ -137,11 +139,14 @@ export default function SuperAdmin() {
       authEmails.forEach(a => {
         const email = a.email.toLowerCase();
         // Check if this email already has a store
-        if (!storesData.some(s => s.email?.toLowerCase() === email)) {
+        const hasStore = storesData.some(s => s.email?.toLowerCase() === email);
+
+        if (!hasStore) {
           if (leadsMap.has(email)) {
              // Update existing
              const existing = leadsMap.get(email)!;
              existing.status = 'Autorizado & Registrado (Pendente de Loja)';
+             existing.isManual = true; // Mark as authorized so it can be revoked
           } else {
              // Add new
              leadsMap.set(email, {
@@ -151,6 +156,7 @@ export default function SuperAdmin() {
                created_at: a.authorized_at,
                last_access_at: null,
                status: 'Autorizado (Ainda não entrou no app)',
+               isManual: true // Mark as authorized so it can be revoked
              });
           }
         }
@@ -232,7 +238,7 @@ export default function SuperAdmin() {
   };
 
   const handleRemoveEmail = async (email: string) => {
-    if (!confirm(`Remover ${email} da lista de autorizados?`)) return;
+    if (!confirm(`Tem certeza que deseja revogar o acesso do e-mail ${email}?`)) return;
     try {
       const { error } = await supabase.from('authorized_emails').delete().eq('email', email);
       if (error) throw error;
@@ -330,8 +336,7 @@ export default function SuperAdmin() {
         {[
           { id: 'stats', label: 'Visão Geral', icon: <BarChart2 size={18} /> },
           { id: 'lojistas', label: 'Lojistas', icon: <Store size={18} /> },
-          { id: 'leads', label: 'Leads (Sem Loja)', icon: <Users size={18} /> },
-          { id: 'whitelist', label: 'Whitelist', icon: <Plus size={18} /> },
+          { id: 'leads', label: 'Leads & Acessos', icon: <Users size={18} /> },
         ].map(tab => (
           <button
             key={tab.id}
@@ -404,7 +409,7 @@ export default function SuperAdmin() {
       {activeTab === 'lojistas' && (
         <div className="fade-in super-admin-panel">
           <div className="super-admin-panel-header">
-            <h2>Gestão de Lojistas</h2>
+            <h2>Gestão de Lojistas Ativos</h2>
           </div>
           <div className="responsive-table-wrapper">
             <table className="super-admin-table">
@@ -470,99 +475,87 @@ export default function SuperAdmin() {
       )}
 
       {activeTab === 'leads' && (
-        <div className="fade-in super-admin-panel">
-          <div className="super-admin-panel-header leads-header">
-            <h2>Leads Consolidados</h2>
-            <span className="leads-badge">
-              {consolidatedLeads.length} Oportunidades
-            </span>
+        <div className="fade-in">
+          <div className="super-admin-panel whitelist-form-panel" style={{ marginBottom: '24px' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                <div style={{ padding: '8px', background: '#ecfdf5', borderRadius: '8px', color: '#10b981' }}>
+                  <PlusCircle size={20} />
+                </div>
+                <div>
+                  <h3 className="panel-title" style={{ margin: 0 }}>Conceder Acesso VIP</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>Adicione e-mails para liberar o uso da plataforma gratuitamente.</p>
+                </div>
+             </div>
+             <form onSubmit={handleAddEmail} style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+               <div className="form-group" style={{ flex: '1', minWidth: '200px', marginBottom: 0 }}>
+                 <label>E-mail do Lojista</label>
+                 <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="cliente@email.com" required style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }} />
+               </div>
+               <div className="form-group" style={{ width: '150px', marginBottom: 0 }}>
+                 <label>Plano Liberado</label>
+                 <select value={newPlanType} onChange={e => setNewPlanType(e.target.value)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                   <option value="Mensal">Mensal</option>
+                   <option value="Anual">Anual</option>
+                 </select>
+               </div>
+               <button type="submit" disabled={isSubmitting} className="primary-action" style={{ height: '42px', padding: '0 24px', background: '#10b981', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}>
+                 {isSubmitting ? '...' : 'Liberar Acesso'}
+               </button>
+             </form>
           </div>
-          <div className="leads-grid">
-            {consolidatedLeads.map(lead => (
-              <div key={lead.id} className="lead-card">
-                <div className="lead-card-header">
-                  <div className="lead-avatar">
-                    {lead.email?.[0].toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="lead-name">{lead.name}</div>
-                    <div className="lead-email">{lead.email}</div>
-                  </div>
-                </div>
-                <div className="lead-status-badge" style={getLeadStatusStyle(lead.status)}>
-                  {lead.status}
-                </div>
-                <div className="lead-details">
-                  <span>Criado: {new Date(lead.created_at).toLocaleDateString('pt-BR')}</span>
-                  <span>Acesso: {lead.last_access_at ? new Date(lead.last_access_at).toLocaleDateString('pt-BR') : 'Nunca'}</span>
-                </div>
-                {lead.phone ? (
-                  <a href={`https://wa.me/${lead.phone}`} target="_blank" className="btn-whatsapp">
-                     Chamar no WhatsApp
-                  </a>
-                ) : (
-                  <a href={`mailto:${lead.email}`} className="btn-email">
-                     Enviar E-mail
-                  </a>
-                )}
-              </div>
-            ))}
-            {consolidatedLeads.length === 0 && (
-              <div style={{ padding: '20px', color: '#64748b' }}>Nenhum lead encontrado.</div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {activeTab === 'whitelist' && (
-        <div className="fade-in whitelist-grid">
-          <div className="super-admin-panel whitelist-form-panel">
-            <h3 className="panel-title">Liberar Acesso Manual</h3>
-            <form onSubmit={handleAddEmail}>
-              <div className="form-group">
-                <label>E-mail</label>
-                <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="cliente@email.com" required />
-              </div>
-              <div className="form-group">
-                <label>Plano</label>
-                <select value={newPlanType} onChange={e => setNewPlanType(e.target.value)}>
-                  <option value="Mensal">Mensal</option>
-                  <option value="Anual">Anual</option>
-                </select>
-              </div>
-              <button type="submit" disabled={isSubmitting} className="primary-action btn-full">
-                {isSubmitting ? 'Processando...' : 'Autorizar Acesso'}
-              </button>
-            </form>
-          </div>
-          <div className="super-admin-panel whitelist-table-panel">
-            <div className="super-admin-panel-header">
-              <h3 className="panel-title">E-mails na Whitelist</h3>
+          <div className="super-admin-panel">
+            <div className="super-admin-panel-header leads-header">
+              <h2>Leads & Acessos Pendentes</h2>
+              <span className="leads-badge">
+                {consolidatedLeads.length} Usuários
+              </span>
             </div>
-            <div className="responsive-table-wrapper">
-              <table className="super-admin-table">
-                <thead>
-                  <tr>
-                    <th>E-mail</th>
-                    <th>Plano</th>
-                    <th style={{ textAlign: 'right' }}>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {authorizedEmails.map(item => (
-                    <tr key={item.email}>
-                      <td data-label="E-mail" className="fw-700">{item.email}</td>
-                      <td data-label="Plano">{item.plan_type}</td>
-                      <td data-label="Ações" className="actions-cell">
-                        <button onClick={() => handleRemoveEmail(item.email)} className="btn-delete"><Trash2 size={18} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                  {authorizedEmails.length === 0 && (
-                    <tr><td colSpan={3} style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Nenhum email na whitelist.</td></tr>
-                  )}
-                </tbody>
-              </table>
+            <div className="leads-grid">
+              {consolidatedLeads.map(lead => (
+                <div key={lead.id} className="lead-card">
+                  <div className="lead-card-header">
+                    <div className="lead-avatar">
+                      {lead.email?.[0].toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <div className="lead-name">{lead.name}</div>
+                      <div className="lead-email" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.email}</div>
+                    </div>
+                  </div>
+                  <div className="lead-status-badge" style={getLeadStatusStyle(lead.status)}>
+                    {lead.status}
+                  </div>
+                  <div className="lead-details">
+                    <span>Criado: {new Date(lead.created_at).toLocaleDateString('pt-BR')}</span>
+                    <span>Acesso: {lead.last_access_at ? new Date(lead.last_access_at).toLocaleDateString('pt-BR') : 'Nunca'}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                    {lead.phone ? (
+                      <a href={`https://wa.me/${lead.phone}`} target="_blank" className="btn-whatsapp" style={{ flex: 1, textAlign: 'center' }}>
+                         WhatsApp
+                      </a>
+                    ) : (
+                      <a href={`mailto:${lead.email}`} className="btn-email" style={{ flex: 1, textAlign: 'center' }}>
+                         E-mail
+                      </a>
+                    )}
+                    {lead.isManual && (
+                      <button 
+                         onClick={() => handleRemoveEmail(lead.email)} 
+                         className="secondary-action" 
+                         style={{ padding: '8px', color: '#ef4444', border: '1px solid #fecaca', background: '#fef2f2' }}
+                         title="Revogar Acesso"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {consolidatedLeads.length === 0 && (
+                <div style={{ padding: '20px', color: '#64748b' }}>Nenhum lead encontrado.</div>
+              )}
             </div>
           </div>
         </div>
