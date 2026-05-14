@@ -356,7 +356,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
             />
           </div>
 
-          <div className="form-row" style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
+          <div className="responsive-flex-row" style={{ marginBottom: '24px' }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#334155' }}>Preço Base</label>
               <div style={{ position: 'relative' }}>
@@ -452,13 +452,13 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, productToEdit, ca
                 <div>
                   <h5 style={{ margin: '0 0 12px 0', color: '#64748b', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Itens deste grupo</h5>
                   {group.options?.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                    <div key={oIndex} className="responsive-options-item">
                       <input placeholder="Nome do Item (Ex: Bacon extra)" value={opt.name} onChange={e => updateOption(gIndex, oIndex, { name: e.target.value })} style={{ flex: 2, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }} />
                       <div style={{ flex: 1, position: 'relative' }}>
                         <div style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }}>R$</div>
                         <input type="number" placeholder="0.00" value={opt.price} onChange={e => updateOption(gIndex, oIndex, { price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '12px 12px 12px 36px', borderRadius: '10px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }} />
                       </div>
-                      <button type="button" onClick={() => removeOption(gIndex, oIndex)} style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: '0 8px' }}><X size={20} /></button>
+                      <button type="button" onClick={() => removeOption(gIndex, oIndex)} style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: '0 8px', alignSelf: 'center' }}><X size={20} /></button>
                     </div>
                   ))}
                   <button type="button" onClick={() => addOption(gIndex)} style={{ marginTop: '8px', fontSize: '0.95rem', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}><Plus size={16} /> Adicionar Opção</button>
