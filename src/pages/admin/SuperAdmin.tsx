@@ -88,10 +88,17 @@ export default function SuperAdmin() {
       setStores(storesData);
       const profiles = profilesRes.data || [];
       
+      // B) Fetch Authorized Emails (populated by Kiwify webhook)
+      const { data: authEmailsRes } = await supabase
+        .from('authorized_emails')
+        .select('*');
+      
+      const authEmails = authEmailsRes || [];
+
       // Consolidate Leads
       const leadsMap = new Map<string, LeadData>();
 
-      // A) Add people from Profiles who don't have a store
+      // 1) Add people from Profiles who don't have a store
       profiles.forEach(p => {
         const userEmail = p.email?.toLowerCase();
         // Check if there is ANY store matching owner_id OR email
@@ -111,6 +118,29 @@ export default function SuperAdmin() {
             phone: p.phone,
             isManual: false
           });
+        }
+      });
+
+      // 2) Add people from Authorized Emails (Kiwify buyers) who don't have a store yet
+      authEmails.forEach(a => {
+        const email = a.email.toLowerCase();
+        const hasStore = storesData.some(s => s.email?.toLowerCase() === email);
+
+        if (!hasStore) {
+          if (leadsMap.has(email)) {
+             const existing = leadsMap.get(email)!;
+             existing.status = 'Pagamento Confirmado (Pendente de Loja)';
+          } else {
+             leadsMap.set(email, {
+               id: email,
+               email: a.email,
+               name: 'Cliente Kiwify',
+               created_at: a.authorized_at || new Date().toISOString(),
+               last_access_at: null,
+               status: 'Pagamento Confirmado (Ainda não entrou)',
+               isManual: false
+             });
+          }
         }
       });
 
